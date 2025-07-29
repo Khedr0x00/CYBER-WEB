@@ -1,0 +1,1665 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nmap Web GUI</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons CDN -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #1a202c; /* Dark background */
+            color: #e2e8f0; /* Light text */
+        }
+        .tab-button.active {
+            background-color: #3498DB; /* Peter River Blue */
+            color: black;
+            font-weight: bold;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        /* Custom scrollbar for output area */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 12px;
+            height: 12px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #2C3E50; /* Dark Blue/Grey */
+            border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background-color: #3498DB; /* Peter River Blue */
+            border-radius: 10px;
+            border: 3px solid #2C3E50;
+        }
+        .custom-scrollbar::-webkit-scrollbar-corner {
+            background: #2C3E50;
+        }
+
+        /* Specific colors for Nmap output */
+        .output-green { color: #2ECC71; } /* Emerald Green */
+        .output-red { color: #E74C3C; }   /* Alizarin Red */
+        .output-blue { color: #3498DB; }  /* Peter River Blue */
+        .output-orange { color: #F39C12; } /* Orange */
+        .output-default { color: #ECF0F1; } /* Light Grey */
+        .highlight { background-color: yellow; color: black; }
+
+        /* Help popup styling */
+        .help-popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #2C3E50; /* Dark Blue/Grey */
+            border-radius: 0.5rem;
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            padding: 1.5rem;
+            width: 90%;
+            max-width: 500px;
+            max-height: 80vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            border: 1px solid #3498DB; /* Add a border for better visibility */
+        }
+        .help-popup-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 999;
+        }
+
+        /* Modal styles (from original index.html, adapted for new theme) */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.8); /* Dark modal background */
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-content {
+            background-color: #1a202c; /* Modal background */
+            margin: auto;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            width: 90%;
+            max-width: 700px;
+            max-height: 90vh;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid #3498DB; /* Blue border for modal */
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #3498DB;
+            margin-bottom: 15px;
+        }
+        .modal-header h2 {
+            @apply text-xl font-semibold text-blue-400; /* Blue modal title */
+        }
+        .modal-close {
+            @apply text-gray-400 hover:text-blue-400 text-2xl font-bold;
+            cursor: pointer;
+        }
+        .modal-body {
+            flex-grow: 1;
+            overflow-y: auto;
+            @apply text-gray-300;
+        }
+        .modal-footer {
+            padding-top: 15px;
+            border-top: 1px solid #3498DB;
+            margin-top: 15px;
+            text-align: right;
+        }
+
+        /* Input field styling */
+        input[type="text"], input[type="number"], select, textarea {
+            @apply bg-gray-600 text-white rounded-md border border-gray-500 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 p-2;
+        }
+        input[type="checkbox"] {
+            @apply form-checkbox h-5 w-5 text-blue-600 rounded bg-gray-600 border-gray-500;
+        }
+
+        /* Button styling */
+        .btn-primary {
+            @apply px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 flex items-center justify-center transition-colors duration-200;
+        }
+        .btn-secondary {
+            @apply px-4 py-2 bg-gray-700 text-gray-200 rounded-md hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-50 flex items-center justify-center transition-colors duration-200;
+        }
+        .btn-success {
+            @apply px-6 py-3 bg-green-600 text-white rounded-lg text-lg font-semibold hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50 flex items-center transition-colors duration-200 transform hover:scale-105;
+        }
+        .btn-danger {
+            @apply px-6 py-3 bg-red-600 text-white rounded-lg text-lg font-semibold hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50 flex items-center transition-colors duration-200 transform hover:scale-105;
+        }
+        .btn-info {
+            @apply px-6 py-3 bg-purple-600 text-white rounded-lg text-lg font-semibold hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50 flex items-center transition-colors duration-200 transform hover:scale-105;
+        }
+    </style>
+</head>
+<body class="p-4 min-h-screen flex flex-col items-center">
+    <div class="bg-gray-800 p-6 rounded-lg shadow-xl w-full max-w-6xl mb-6">
+        <div class="flex items-center justify-between mb-6">
+            <h1 class="text-3xl font-bold text-blue-400">Nmap Web GUI</h1>
+            <button id="install_nmap_button" class="btn-primary">
+                <i data-lucide="download" class="w-5 h-5 mr-2"></i> Install Requirements
+            </button>
+        </div>
+
+        <!-- Tabs Navigation -->
+        <div class="flex flex-wrap justify-center bg-gray-700 rounded-t-lg p-2 mb-4">
+            <button class="tab-button px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200 hover:bg-blue-600 active" data-tab="target">Target</button>
+            <button class="tab-button px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200 hover:bg-blue-600" data-tab="scan-types">Scan Types</button>
+            <button class="tab-button px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200 hover:bg-blue-600" data-tab="ports">Ports</button>
+            <button class="tab-button px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200 hover:bg-blue-600" data-tab="timing">Timing/Performance</button>
+            <button class="tab-button px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200 hover:bg-blue-600" data-tab="detection">Detection</button>
+            <button class="tab-button px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200 hover:bg-blue-600" data-tab="evasion">Evasion/Spoofing</button>
+            <button class="tab-button px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200 hover:bg-blue-600" data-tab="output">Output</button>
+            <button class="tab-button px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200 hover:bg-blue-600" data-tab="scripting">Scripting</button>
+            <button class="tab-button px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200 hover:bg-blue-600" data-tab="advanced">Advanced</button>
+            <button class="tab-button px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200 hover:bg-blue-600" data-tab="examples">Examples</button>
+        </div>
+
+        <!-- Tab Content -->
+        <div id="tab-content-container" class="bg-gray-700 p-4 rounded-b-lg mb-4 max-h-[500px] overflow-y-auto custom-scrollbar">
+            <!-- Target Tab -->
+            <div id="target" class="tab-content active">
+                <h2 class="text-xl font-semibold text-blue-300 mb-4">Target Options</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="flex items-center">
+                        <label for="target_entry" class="w-48 text-right pr-4">Target(s):</label>
+                        <input type="text" id="target_entry" name="target_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="generateCommand()">
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Target IP address(es), hostnames, ranges (e.g., 192.168.1.1, example.com, 192.168.1.1-10, 192.168.1.0/24). For multiple targets, separate with spaces or use a file.')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <label for="target_list_file_entry" class="w-48 text-right pr-4">Target List File (-iL):</label>
+                        <input type="text" id="target_list_file_entry" name="target_list_file_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="generateCommand()">
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('File containing a list of targets (one per line).')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <label for="exclude_hosts_entry" class="w-48 text-right pr-4">Exclude Hosts (--exclude):</label>
+                        <input type="text" id="exclude_hosts_entry" name="exclude_hosts_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="generateCommand()">
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Comma-separated list of hosts to exclude.')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <label for="exclude_file_entry" class="w-48 text-right pr-4">Exclude File (--excludefile):</label>
+                        <input type="text" id="exclude_file_entry" name="exclude_file_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="generateCommand()">
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('File containing a list of hosts to exclude (one per line).')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <label for="random_hosts_entry" class="w-48 text-right pr-4">Random Hosts (-iR):</label>
+                        <input type="number" id="random_hosts_entry" name="random_hosts_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="generateCommand()">
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Scan N random hosts (e.g., \'10\').')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" id="stdin_input_var" name="stdin_input_var" class="form-checkbox h-5 w-5 text-blue-600 rounded bg-gray-600 border-gray-500" onchange="generateCommand()">
+                        <label for="stdin_input_var" class="ml-2">Input from stdin (-iS)</label>
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Read targets from standard input.')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" id="no_ping_var" name="no_ping_var" class="form-checkbox h-5 w-5 text-blue-600 rounded bg-gray-600 border-gray-500" onchange="generateCommand()">
+                        <label for="no_ping_var" class="ml-2">No Ping (--Pn):</label>
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Treat all hosts as online -- skip host discovery.')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" id="ping_scan_var" name="ping_scan_var" class="form-checkbox h-5 w-5 text-blue-600 rounded bg-gray-600 border-gray-500" onchange="generateCommand()">
+                        <label for="ping_scan_var" class="ml-2">Ping Scan (-sP):</label>
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Only perform host discovery (ping scan).')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" id="list_scan_var" name="list_scan_var" class="form-checkbox h-5 w-5 text-blue-600 rounded bg-gray-600 border-gray-500" onchange="generateCommand()">
+                        <label for="list_scan_var" class="ml-2">List Scan (-sL):</label>
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('List targets to scan without running a scan.')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" id="no_dns_resolution_var" name="no_dns_resolution_var" class="form-checkbox h-5 w-5 text-blue-600 rounded bg-gray-600 border-gray-500" onchange="generateCommand()">
+                        <label for="no_dns_resolution_var" class="ml-2">Disable DNS Resolution (-n):</label>
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Never do DNS resolution.')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" id="force_dns_resolution_var" name="force_dns_resolution_var" class="form-checkbox h-5 w-5 text-blue-600 rounded bg-gray-600 border-gray-500" onchange="generateCommand()">
+                        <label for="force_dns_resolution_var" class="ml-2">Force DNS Resolution (-R):</label>
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Always resolve DNS for all target IPs.')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" id="system_dns_var" name="system_dns_var" class="form-checkbox h-5 w-5 text-blue-600 rounded bg-gray-600 border-gray-500" onchange="generateCommand()">
+                        <label for="system_dns_var" class="ml-2">System DNS Resolver (--system-dns):</label>
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Use system DNS resolver (slower).')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <label for="dns_servers_entry" class="w-48 text-right pr-4">DNS Servers (--dns-servers):</label>
+                        <input type="text" id="dns_servers_entry" name="dns_servers_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="generateCommand()">
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Comma-separated list of DNS servers to use.')">?</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Scan Types Tab -->
+            <div id="scan-types" class="tab-content">
+                <h2 class="text-xl font-semibold text-blue-300 mb-4">Scan Types</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="flex items-center">
+                        <input type="checkbox" id="syn_scan_var" name="syn_scan_var" class="form-checkbox h-5 w-5 text-blue-600 rounded bg-gray-600 border-gray-500" onchange="generateCommand()">
+                        <label for="syn_scan_var" class="ml-2">SYN Scan (-sS)</label>
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Stealth SYN scan (default and fastest). Requires root privileges.')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" id="connect_scan_var" name="connect_scan_var" class="form-checkbox h-5 w-5 text-blue-600 rounded bg-gray-600 border-gray-500" onchange="generateCommand()">
+                        <label for="connect_scan_var" class="ml-2">Connect Scan (-sT)</label>
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('TCP connect() scan. Slower than SYN, but works without root privileges.')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" id="udp_scan_var" name="udp_scan_var" class="form-checkbox h-5 w-5 text-blue-600 rounded bg-gray-600 border-gray-500" onchange="generateCommand()">
+                        <label for="udp_scan_var" class="ml-2">UDP Scan (-sU)</label>
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('UDP scan. Can be very slow.')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" id="ack_scan_var" name="ack_scan_var" class="form-checkbox h-5 w-5 text-blue-600 rounded bg-gray-600 border-gray-500" onchange="generateCommand()">
+                        <label for="ack_scan_var" class="ml-2">ACK Scan (-sA)</label>
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('ACK scan. Used to map firewall rulesets, not to determine open ports.')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" id="window_scan_var" name="window_scan_var" class="form-checkbox h-5 w-5 text-blue-600 rounded bg-gray-600 border-gray-500" onchange="generateCommand()">
+                        <label for="window_scan_var" class="ml-2">Window Scan (-sW)</label>
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Window scan. Similar to ACK scan, but can sometimes detect open ports.')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" id="maimon_scan_var" name="maimon_scan_var" class="form-checkbox h-5 w-5 text-blue-600 rounded bg-gray-600 border-gray-500" onchange="generateCommand()">
+                        <label for="maimon_scan_var" class="ml-2">Maimon Scan (-sM)</label>
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Maimon scan. Advanced scan type, similar to FIN/Xmas/Null.')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" id="fin_scan_var" name="fin_scan_var" class="form-checkbox h-5 w-5 text-blue-600 rounded bg-gray-600 border-gray-500" onchange="generateCommand()">
+                        <label for="fin_scan_var" class="ml-2">FIN Scan (-sF)</label>
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('FIN scan. Stealthy, sends FIN packets.')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" id="xmas_scan_var" name="xmas_scan_var" class="form-checkbox h-5 w-5 text-blue-600 rounded bg-gray-600 border-gray-500" onchange="generateCommand()">
+                        <label for="xmas_scan_var" class="ml-2">Xmas Scan (-sX)</label>
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Xmas scan. Stealthy, sets FIN, PSH, URG flags.')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" id="null_scan_var" name="null_scan_var" class="form-checkbox h-5 w-5 text-blue-600 rounded bg-gray-600 border-gray-500" onchange="generateCommand()">
+                        <label for="null_scan_var" class="ml-2">Null Scan (-sN)</label>
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Null scan. Stealthy, sends packets with no flags set.')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" id="ip_protocol_scan_var" name="ip_protocol_scan_var" class="form-checkbox h-5 w-5 text-blue-600 rounded bg-gray-600 border-gray-500" onchange="generateCommand()">
+                        <label for="ip_protocol_scan_var" class="ml-2">IP Protocol Scan (-sO)</label>
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('IP protocol scan. Discovers supported IP protocols (TCP, UDP, ICMP, etc.).')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" id="fast_scan_var" name="fast_scan_var" class="form-checkbox h-5 w-5 text-blue-600 rounded bg-gray-600 border-gray-500" onchange="generateCommand()">
+                        <label for="fast_scan_var" class="ml-2">Fast Scan (-F)</label>
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Scan fewer ports than the default scan.')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" id="fragment_packets_var" name="fragment_packets_var" class="form-checkbox h-5 w-5 text-blue-600 rounded bg-gray-600 border-gray-500" onchange="generateCommand()">
+                        <label for="fragment_packets_var" class="ml-2">Fragment Packets (-f)</label>
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Fragment IP packets into tiny pieces. Can evade simple firewalls.')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" id="no_reason_var" name="no_reason_var" class="form-checkbox h-5 w-5 text-blue-600 rounded bg-gray-600 border-gray-500" onchange="generateCommand()">
+                        <label for="no_reason_var" class="ml-2">Don't Show Reason (--noreason)</label>
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Don\'t print the reason a host or port is in a particular state.')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" id="ipv6_scan_var" name="ipv6_scan_var" class="form-checkbox h-5 w-5 text-blue-600 rounded bg-gray-600 border-gray-500" onchange="generateCommand()">
+                        <label for="ipv6_scan_var" class="ml-2">IPv6 Scan (-6)</label>
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Enable IPv6 scanning.')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" id="append_output_var" name="append_output_var" class="form-checkbox h-5 w-5 text-blue-600 rounded bg-gray-600 border-gray-500" onchange="generateCommand()">
+                        <label for="append_output_var" class="ml-2">Append Output (--append-output)</label>
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Append to specified output files rather than clobbering them.')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" id="disable_host_discovery_var" name="disable_host_discovery_var" class="form-checkbox h-5 w-5 text-blue-600 rounded bg-gray-600 border-gray-500" onchange="generateCommand()">
+                        <label for="disable_host_discovery_var" class="ml-2">Disable Host Discovery (-Pn)</label>
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Treat all hosts as online -- skip host discovery.')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" id="only_specified_ports_var" name="only_specified_ports_var" class="form-checkbox h-5 w-5 text-blue-600 rounded bg-gray-600 border-gray-500" onchange="generateCommand()">
+                        <label for="only_specified_ports_var" class="ml-2">Scan Only Specified Ports (-p)</label>
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Only scan ports specified with -p.')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <label for="syn_ack_discovery_entry" class="w-48 text-right pr-4">SYN/ACK Discovery (-PS/-PA):</label>
+                        <input type="text" id="syn_ack_discovery_entry" name="syn_ack_discovery_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="generateCommand()">
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('TCP SYN/ACK discovery on specified ports (e.g., \'22,80,443\').')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <label for="udp_discovery_entry" class="w-48 text-right pr-4">UDP Discovery (-PU):</label>
+                        <input type="text" id="udp_discovery_entry" name="udp_discovery_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="generateCommand()">
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('UDP discovery on specified ports (e.g., \'53,161\').')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" id="sctp_init_scan_var" name="sctp_init_scan_var" class="form-checkbox h-5 w-5 text-blue-600 rounded bg-gray-600 border-gray-500" onchange="generateCommand()">
+                        <label for="sctp_init_scan_var" class="ml-2">SCTP INIT Scan (-sY)</label>
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('SCTP INIT scan.')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" id="sctp_cookie_echo_scan_var" name="sctp_cookie_echo_scan_var" class="form-checkbox h-5 w-5 text-blue-600 rounded bg-gray-600 border-gray-500" onchange="generateCommand()">
+                        <label for="sctp_cookie_echo_scan_var" class="ml-2">SCTP COOKIE-ECHO Scan (-sZ)</label>
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('SCTP COOKIE-ECHO scan.')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <label for="idle_scan_entry" class="w-48 text-right pr-4">Idle Scan (-sI):</label>
+                        <input type="text" id="idle_scan_entry" name="idle_scan_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="generateCommand()">
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Idle scan (zombie host). e.g., \'zombie.example.com\'.')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" id="protocol_scan_var" name="protocol_scan_var" class="form-checkbox h-5 w-5 text-blue-600 rounded bg-gray-600 border-gray-500" onchange="generateCommand()">
+                        <label for="protocol_scan_var" class="ml-2">Protocol Scan (-sO)</label>
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('IP protocol scan.')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <label for="decoy_scan_entry" class="w-48 text-right pr-4">Decoy Scan (-D):</label>
+                        <input type="text" id="decoy_scan_entry" name="decoy_scan_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="generateCommand()">
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Comma-separated list of decoy IP addresses (e.g., \'ME,192.168.1.1,10.0.0.1\').')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <label for="spoof_mac_entry" class="w-48 text-right pr-4">Spoof MAC Address (--spoof-mac):</label>
+                        <input type="text" id="spoof_mac_entry" name="spoof_mac_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="generateCommand()">
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('MAC address to spoof (e.g., \'00:0C:29:12:34:56\' or \'Dell\').')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <label for="source_port_entry" class="w-48 text-right pr-4">Source Port (--source-port):</label>
+                        <input type="number" id="source_port_entry" name="source_port_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="generateCommand()">
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Specify source port number.')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <label for="data_length_entry" class="w-48 text-right pr-4">Data Length (--data-length):</label>
+                        <input type="number" id="data_length_entry" name="data_length_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="generateCommand()">
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Append random data to sent packets.')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" id="bad_checksum_var" name="bad_checksum_var" class="form-checkbox h-5 w-5 text-blue-600 rounded bg-gray-600 border-gray-500" onchange="generateCommand()">
+                        <label for="bad_checksum_var" class="ml-2">Bad Checksum (--badsum)</label>
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Send packets with a bogus TCP/UDP/SCTP checksum.')">?</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Port Specification Tab -->
+            <div id="ports" class="tab-content">
+                <h2 class="text-xl font-semibold text-blue-300 mb-4">Port Specification</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="flex items-center">
+                        <label for="ports_entry" class="w-48 text-right pr-4">Ports (-p):</label>
+                        <input type="text" id="ports_entry" name="ports_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="generateCommand()">
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Comma-separated list of ports or ranges (e.g., \'21,22,80,1-1024\').')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <label for="exclude_ports_entry" class="w-48 text-right pr-4">Exclude Ports (--exclude-ports):</label>
+                        <input type="text" id="exclude_ports_entry" name="exclude_ports_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="generateCommand()">
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Comma-separated list of ports or ranges to exclude.')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" id="fast_scan_ports_var" name="fast_scan_ports_var" class="form-checkbox h-5 w-5 text-blue-600 rounded bg-gray-600 border-gray-500" onchange="generateCommand()">
+                        <label for="fast_scan_ports_var" class="ml-2">Fast Scan (-F)</label>
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Scan fewer ports than the default scan (top 100).')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" id="all_ports_var" name="all_ports_var" class="form-checkbox h-5 w-5 text-blue-600 rounded bg-gray-600 border-gray-500" onchange="generateCommand()">
+                        <label for="all_ports_var" class="ml-2">All Ports (-p-)</label>
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Scan all 65535 ports.')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <label for="top_ports_entry" class="w-48 text-right pr-4">Top Ports (--top-ports):</label>
+                        <input type="number" id="top_ports_entry" name="top_ports_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="generateCommand()">
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Scan the N most common ports (e.g., \'1000\').')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <label for="port_ratio_entry" class="w-48 text-right pr-4">Port Ratio (--port-ratio):</label>
+                        <input type="number" step="0.01" id="port_ratio_entry" name="port_ratio_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="generateCommand()">
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Scan ports with a ratio greater than the given value (0.0-1.0).')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" id="service_version_detection_var" name="service_version_detection_var" class="form-checkbox h-5 w-5 text-blue-600 rounded bg-gray-600 border-gray-500" onchange="generateCommand()">
+                        <label for="service_version_detection_var" class="ml-2">Service/Version Detection (-sV)</label>
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Probe open ports to determine service/version info.')">?</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Timing/Performance Tab -->
+            <div id="timing" class="tab-content">
+                <h2 class="text-xl font-semibold text-blue-300 mb-4">Timing/Performance</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="flex items-center">
+                        <label for="timing_template_var" class="w-48 text-right pr-4">Timing Template (-T):</label>
+                        <select id="timing_template_var" name="timing_template_var" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onchange="generateCommand()">
+                            <option value="">(Default)</option>
+                            <option value="paranoid">0 (paranoid)</option>
+                            <option value="sneaky">1 (sneaky)</option>
+                            <option value="polite">2 (polite)</option>
+                            <option value="normal" selected>3 (normal)</option>
+                            <option value="aggressive">4 (aggressive)</option>
+                            <option value="insane">5 (insane)</option>
+                        </select>
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Set a timing template (0-5 or paranoid, sneaky, polite, normal, aggressive, insane).')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <label for="min_hostgroup_entry" class="w-48 text-right pr-4">Min Hostgroup (--min-hostgroup):</label>
+                        <input type="number" id="min_hostgroup_entry" name="min_hostgroup_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="generateCommand()">
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Minimum number of hosts to scan in parallel.')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <label for="max_hostgroup_entry" class="w-48 text-right pr-4">Max Hostgroup (--max-hostgroup):</label>
+                        <input type="number" id="max_hostgroup_entry" name="max_hostgroup_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="generateCommand()">
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Maximum number of hosts to scan in parallel.')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <label for="min_parallelism_entry" class="w-48 text-right pr-4">Min Parallelism (--min-parallelism):</label>
+                        <input type="number" id="min_parallelism_entry" name="min_parallelism_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="generateCommand()">
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Minimum number of probes to send in parallel.')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <label for="max_parallelism_entry" class="w-48 text-right pr-4">Max Parallelism (--max-parallelism):</label>
+                        <input type="number" id="max_parallelism_entry" name="max_parallelism_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="generateCommand()">
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Maximum number of probes to send in parallel.')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <label for="min_rtt_timeout_entry" class="w-48 text-right pr-4">Min RTT Timeout (--min-rtt-timeout):</label>
+                        <input type="text" id="min_rtt_timeout_entry" name="min_rtt_timeout_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="generateCommand()">
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Minimum round trip time timeout (ms).')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <label for="max_rtt_timeout_entry" class="w-48 text-right pr-4">Max RTT Timeout (--max-rtt-timeout):</label>
+                        <input type="text" id="max_rtt_timeout_entry" name="max_rtt_timeout_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="generateCommand()">
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Maximum round trip time timeout (ms).')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <label for="initial_rtt_timeout_entry" class="w-48 text-right pr-4">Initial RTT Timeout (--initial-rtt-timeout):</label>
+                        <input type="text" id="initial_rtt_timeout_entry" name="initial_rtt_timeout_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="generateCommand()">
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Initial round trip time timeout (ms).')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <label for="max_retries_entry" class="w-48 text-right pr-4">Max Retries (--max-retries):</label>
+                        <input type="number" id="max_retries_entry" name="max_retries_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="generateCommand()">
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Caps the number of port scan probe retransmissions.')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <label for="host_timeout_entry" class="w-48 text-right pr-4">Host Timeout (--host-timeout):</label>
+                        <input type="text" id="host_timeout_entry" name="host_timeout_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="generateCommand()">
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Give up on target host after this long (e.g., \'30m\', \'2h\').')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <label for="scan_delay_entry" class="w-48 text-right pr-4">Scan Delay (--scan-delay):</label>
+                        <input type="text" id="scan_delay_entry" name="scan_delay_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="generateCommand()">
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Delay between probes (e.g., \'10ms\', \'1s\').')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <label for="min_rate_entry" class="w-48 text-right pr-4">Min Rate (--min-rate):</label>
+                        <input type="number" id="min_rate_entry" name="min_rate_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="generateCommand()">
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Send packets no slower than &lt;number&gt; per second.')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <label for="max_rate_entry" class="w-48 text-right pr-4">Max Rate (--max-rate):</label>
+                        <input type="number" id="max_rate_entry" name="max_rate_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="generateCommand()">
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Send packets no faster than &lt;number&gt; per second.')">?</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Detection Tab -->
+            <div id="detection" class="tab-content">
+                <h2 class="text-xl font-semibold text-blue-300 mb-4">Detection</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="flex items-center">
+                        <input type="checkbox" id="os_detection_var" name="os_detection_var" class="form-checkbox h-5 w-5 text-blue-600 rounded bg-gray-600 border-gray-500" onchange="generateCommand()">
+                        <label for="os_detection_var" class="ml-2">OS Detection (-O)</label>
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Enable OS detection.')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" id="service_version_detection_det_var" name="service_version_detection_det_var" class="form-checkbox h-5 w-5 text-blue-600 rounded bg-gray-600 border-gray-500" onchange="generateCommand()">
+                        <label for="service_version_detection_det_var" class="ml-2">Service Version Detection (-sV)</label>
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Probe open ports to determine service/version info.')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" id="aggressive_detection_var" name="aggressive_detection_var" class="form-checkbox h-5 w-5 text-blue-600 rounded bg-gray-600 border-gray-500" onchange="generateCommand()">
+                        <label for="aggressive_detection_var" class="ml-2">Aggressive Detection (-A)</label>
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Enable OS detection, version detection, script scanning, and traceroute.')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <label for="version_intensity_entry" class="w-48 text-right pr-4">Version Intensity (--version-intensity):</label>
+                        <input type="number" id="version_intensity_entry" name="version_intensity_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="generateCommand()">
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Set version scan intensity (0-9). 9 is default.')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" id="version_light_var" name="version_light_var" class="form-checkbox h-5 w-5 text-blue-600 rounded bg-gray-600 border-gray-500" onchange="generateCommand()">
+                        <label for="version_light_var" class="ml-2">Version Light (--version-light)</label>
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Light mode for version scan (intensity 2).')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" id="version_all_var" name="version_all_var" class="form-checkbox h-5 w-5 text-blue-600 rounded bg-gray-600 border-gray-500" onchange="generateCommand()">
+                        <label for="version_all_var" class="ml-2">Version All (--version-all)</label>
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Try every single probe for version detection.')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" id="osscan_guess_var" name="osscan_guess_var" class="form-checkbox h-5 w-5 text-blue-600 rounded bg-gray-600 border-gray-500" onchange="generateCommand()">
+                        <label for="osscan_guess_var" class="ml-2">Aggressive OS Guessing (--osscan-guess)</label>
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Guess OS more aggressively.')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" id="osscan_limit_var" name="osscan_limit_var" class="form-checkbox h-5 w-5 text-blue-600 rounded bg-gray-600 border-gray-500" onchange="generateCommand()">
+                        <label for="osscan_limit_var" class="ml-2">Limit OS Guesses (--osscan-limit)</label>
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Limit OS detection to promising targets.')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" id="all_ports_service_var" name="all_ports_service_var" class="form-checkbox h-5 w-5 text-blue-600 rounded bg-gray-600 border-gray-500" onchange="generateCommand()">
+                        <label for="all_ports_service_var" class="ml-2">Service Info on All Ports (--all-ports)</label>
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Don\'t exclude any ports from the default service scan.')">?</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Evasion/Spoofing Tab -->
+            <div id="evasion" class="tab-content">
+                <h2 class="text-xl font-semibold text-blue-300 mb-4">Evasion/Spoofing</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="flex items-center">
+                        <input type="checkbox" id="fragment_packets_evasion_var" name="fragment_packets_evasion_var" class="form-checkbox h-5 w-5 text-blue-600 rounded bg-gray-600 border-gray-500" onchange="generateCommand()">
+                        <label for="fragment_packets_evasion_var" class="ml-2">Fragment Packets (-f)</label>
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Fragment IP packets into tiny pieces (8 bytes or less).')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <label for="mtu_entry" class="w-48 text-right pr-4">MTU (--mtu):</label>
+                        <input type="number" id="mtu_entry" name="mtu_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="generateCommand()">
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Specify your own offset size (e.g., \'24\', \'48\').')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <label for="decoy_scan_evasion_entry" class="w-48 text-right pr-4">Decoy Scan (-D):</label>
+                        <input type="text" id="decoy_scan_evasion_entry" name="decoy_scan_evasion_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="generateCommand()">
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Comma-separated list of decoy IP addresses (e.g., \'RND:10,ME,192.168.1.1\').')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <label for="idle_scan_evasion_entry" class="w-48 text-right pr-4">Idle Scan (-sI):</label>
+                        <input type="text" id="idle_scan_evasion_entry" name="idle_scan_evasion_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="generateCommand()">
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Idle scan (zombie host). e.g., \'zombie.example.com\'.')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <label for="spoof_mac_evasion_entry" class="w-48 text-right pr-4">Spoof MAC Address (--spoof-mac):</label>
+                        <input type="text" id="spoof_mac_evasion_entry" name="spoof_mac_evasion_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="generateCommand()">
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('MAC address to spoof (e.g., \'00:0C:29:12:34:56\' or \'Dell\').')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <label for="source_port_evasion_entry" class="w-48 text-right pr-4">Source Port (--source-port):</label>
+                        <input type="number" id="source_port_evasion_entry" name="source_port_evasion_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="generateCommand()">
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Specify source port number (e.g., \'53\', \'80\').')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <label for="data_length_evasion_entry" class="w-48 text-right pr-4">Data Length (--data-length):</label>
+                        <input type="number" id="data_length_evasion_entry" name="data_length_evasion_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="generateCommand()">
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Append random data to sent packets (e.g., \'25\').')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" id="bad_checksum_evasion_var" name="bad_checksum_evasion_var" class="form-checkbox h-5 w-5 text-blue-600 rounded bg-gray-600 border-gray-500" onchange="generateCommand()">
+                        <label for="bad_checksum_evasion_var" class="ml-2">Bad Checksum (--badsum)</label>
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Send packets with a bogus TCP/UDP/SCTP checksum.')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" id="randomize_hosts_var" name="randomize_hosts_var" class="form-checkbox h-5 w-5 text-blue-600 rounded bg-gray-600 border-gray-500" onchange="generateCommand()">
+                        <label for="randomize_hosts_var" class="ml-2">Randomize Hosts (--randomize-hosts)</label>
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Randomize target host order.')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" id="randomize_ports_var" name="randomize_ports_var" class="form-checkbox h-5 w-5 text-blue-600 rounded bg-gray-600 border-gray-500" onchange="generateCommand()">
+                        <label for="randomize_ports_var" class="ml-2">Randomize Ports (--randomize-ports)</label>
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Randomize scanned port order.')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <label for="ip_options_entry" class="w-48 text-right pr-4">IP Options (--ip-options):</label>
+                        <input type="text" id="ip_options_entry" name="ip_options_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="generateCommand()">
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Send packets with specified IP options (e.g., \'R\').')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <label for="ttl_entry" class="w-48 text-right pr-4">TTL (--ttl):</label>
+                        <input type="number" id="ttl_entry" name="ttl_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="generateCommand()">
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Set IPv4 time-to-live field (e.g., \'64\').')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <label for="data_string_entry" class="w-48 text-right pr-4">Data String (--data-string):</label>
+                        <input type="text" id="data_string_entry" name="data_string_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="generateCommand()">
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Append a custom ASCII string to sent packets.')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <label for="data_binary_entry" class="w-48 text-right pr-4">Data Binary (--data-binary):</label>
+                        <input type="text" id="data_binary_entry" name="data_binary_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="generateCommand()">
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Append a custom binary string to sent packets (e.g., \'0xDEADBEEF\').')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <label for="scan_flags_entry" class="w-48 text-right pr-4">Scan Flags (--scan-flags):</label>
+                        <input type="text" id="scan_flags_entry" name="scan_flags_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="generateCommand()">
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Specify custom TCP flags (e.g., \'SYNACK\', \'URGACKPSHRSTSYNFIN\').')">?</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Output Tab -->
+            <div id="output" class="tab-content">
+                <h2 class="text-xl font-semibold text-blue-300 mb-4">Output Options</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="flex items-center">
+                        <label for="normal_output_file_entry" class="w-48 text-right pr-4">Normal Output (-oN):</label>
+                        <input type="text" id="normal_output_file_entry" name="normal_output_file_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="generateCommand()">
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Output to normal text file.')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <label for="xml_output_file_entry" class="w-48 text-right pr-4">XML Output (-oX):</label>
+                        <input type="text" id="xml_output_file_entry" name="xml_output_file_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="generateCommand()">
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Output to XML file.')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <label for="grepable_output_file_entry" class="w-48 text-right pr-4">Grepable Output (-oG):</label>
+                        <input type="text" id="grepable_output_file_entry" name="grepable_output_file_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="generateCommand()">
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Output to grepable file.')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <label for="all_formats_output_file_entry" class="w-48 text-right pr-4">All Formats (-oA):</label>
+                        <input type="text" id="all_formats_output_file_entry" name="all_formats_output_file_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="generateCommand()">
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Output in all major formats (normal, XML, grepable).')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" id="verbose_var" name="verbose_var" class="form-checkbox h-5 w-5 text-blue-600 rounded bg-gray-600 border-gray-500" onchange="generateCommand()">
+                        <label for="verbose_var" class="ml-2">Verbose (-v)</label>
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Increase verbosity level (use -vv for more).')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" id="debug_var" name="debug_var" class="form-checkbox h-5 w-5 text-blue-600 rounded bg-gray-600 border-gray-500" onchange="generateCommand()">
+                        <label for="debug_var" class="ml-2">Debug (-d)</label>
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Increase debugging level (use -dd for more).')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" id="reason_var" name="reason_var" class="form-checkbox h-5 w-5 text-blue-600 rounded bg-gray-600 border-gray-500" onchange="generateCommand()">
+                        <label for="reason_var" class="ml-2">Reason (--reason)</label>
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Show the reason a host or port is in a particular state.')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" id="open_ports_only_var" name="open_ports_only_var" class="form-checkbox h-5 w-5 text-blue-600 rounded bg-gray-600 border-gray-500" onchange="generateCommand()">
+                        <label for="open_ports_only_var" class="ml-2">Open Ports Only (--open)</label>
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Only show open (or possibly open) ports.')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" id="packet_trace_var" name="packet_trace_var" class="form-checkbox h-5 w-5 text-blue-600 rounded bg-gray-600 border-gray-500" onchange="generateCommand()">
+                        <label for="packet_trace_var" class="ml-2">Packet Trace (--packet-trace)</label>
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Show all packets sent and received.')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <label for="resume_file_entry" class="w-48 text-right pr-4">Resume Scan (--resume):</label>
+                        <input type="text" id="resume_file_entry" name="resume_file_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="generateCommand()">
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Resume an aborted scan.')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" id="append_output_output_var" name="append_output_output_var" class="form-checkbox h-5 w-5 text-blue-600 rounded bg-gray-600 border-gray-500" onchange="generateCommand()">
+                        <label for="append_output_output_var" class="ml-2">Append Output (--append-output)</label>
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Append to specified output files rather than clobbering them.')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" id="no_host_discovery_var" name="no_host_discovery_var" class="form-checkbox h-5 w-5 text-blue-600 rounded bg-gray-600 border-gray-500" onchange="generateCommand()">
+                        <label for="no_host_discovery_var" class="ml-2">No Host Discovery (--no-host-discovery)</label>
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Do not perform host discovery.')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" id="show_version_var" name="show_version_var" class="form-checkbox h-5 w-5 text-blue-600 rounded bg-gray-600 border-gray-500" onchange="generateCommand()">
+                        <label for="show_version_var" class="ml-2">Show Version (--version)</label>
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Show Nmap version number and exit.')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" id="show_help_var" name="show_help_var" class="form-checkbox h-5 w-5 text-blue-600 rounded bg-gray-600 border-gray-500" onchange="generateCommand()">
+                        <label for="show_help_var" class="ml-2">Show Help (-h)</label>
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Display help message and exit.')">?</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Scripting Tab -->
+            <div id="scripting" class="tab-content">
+                <h2 class="text-xl font-semibold text-blue-300 mb-4">Scripting (NSE)</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="flex items-center">
+                        <input type="checkbox" id="script_scan_var" name="script_scan_var" class="form-checkbox h-5 w-5 text-blue-600 rounded bg-gray-600 border-gray-500" onchange="generateCommand()">
+                        <label for="script_scan_var" class="ml-2">Script Scan (-sC)</label>
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Perform a default script scan.')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <label for="scripts_entry" class="w-48 text-right pr-4">Scripts (--script):</label>
+                        <input type="text" id="scripts_entry" name="scripts_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="generateCommand()">
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Comma-separated list of scripts, script categories, or directory (e.g., \'default,vuln\', \'http-enum\', \'/path/to/scripts\').')">?</button>
+                    </div>
+                    <div class="flex items-start">
+                        <label for="script_args_entry" class="w-48 text-right pr-4 pt-2">Script Arguments (--script-args):</label>
+                        <textarea id="script_args_entry" name="script_args_entry" rows="4" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="generateCommand()"></textarea>
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Arguments for NSE scripts (e.g., \'http.useragent=Mozilla,http.max-pipeline=10\'). One argument per line.')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <label for="script_timeout_entry" class="w-48 text-right pr-4">Script Timeout (--script-timeout):</label>
+                        <input type="text" id="script_timeout_entry" name="script_timeout_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="generateCommand()">
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Set maximum execution time for scripts (e.g., \'5m\').')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" id="script_trace_var" name="script_trace_var" class="form-checkbox h-5 w-5 text-blue-600 rounded bg-gray-600 border-gray-500" onchange="generateCommand()">
+                        <label for="script_trace_var" class="ml-2">Script Trace (--script-trace)</label>
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Show all data sent and received by scripts.')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" id="script_debug_var" name="script_debug_var" class="form-checkbox h-5 w-5 text-blue-600 rounded bg-gray-600 border-gray-500" onchange="generateCommand()">
+                        <label for="script_debug_var" class="ml-2">Script Debug (--script-debug)</label>
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Increase debug level for scripts.')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <label for="script_help_entry" class="w-48 text-right pr-4">Script Help (--script-help):</label>
+                        <input type="text" id="script_help_entry" name="script_help_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="generateCommand()">
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Show help for specified scripts (e.g., \'http-enum\').')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" id="script_update_db_var" name="script_update_db_var" class="form-checkbox h-5 w-5 text-blue-600 rounded bg-gray-600 border-gray-500" onchange="generateCommand()">
+                        <label for="script_update_db_var" class="ml-2">Update Script DB (--script-updatedb)</label>
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Update the script database.')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" id="script_fags_var" name="script_fags_var" class="form-checkbox h-5 w-5 text-blue-600 rounded bg-gray-600 border-gray-500" onchange="generateCommand()">
+                        <label for="script_fags_var" class="ml-2">Show Failed Scripts (--script-fags)</label>
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Show scripts that failed to run.')">?</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Advanced Tab -->
+            <div id="advanced" class="tab-content">
+                <h2 class="text-xl font-semibold text-blue-300 mb-4">Advanced Options</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="flex items-center">
+                        <label for="interface_entry" class="w-48 text-right pr-4">Interface (-e):</label>
+                        <input type="text" id="interface_entry" name="interface_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="generateCommand()">
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Use specified network interface.')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <label for="source_address_entry" class="w-48 text-right pr-4">Source Address (-S):</label>
+                        <input type="text" id="source_address_entry" name="source_address_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="generateCommand()">
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Spoof source IP address.')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <label for="payload_length_entry" class="w-48 text-right pr-4">Payload Length (--data-length):</label>
+                        <input type="number" id="payload_length_entry" name="payload_length_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="generateCommand()">
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Append random data to sent packets (e.g., \'25\').')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <label for="max_parallelism_adv_entry" class="w-48 text-right pr-4">Max Parallelism (--max-parallelism):</label>
+                        <input type="number" id="max_parallelism_adv_entry" name="max_parallelism_adv_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="generateCommand()">
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Maximum number of probes to send in parallel.')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <label for="min_parallelism_adv_entry" class="w-48 text-right pr-4">Min Parallelism (--min-parallelism):</label>
+                        <input type="number" id="min_parallelism_adv_entry" name="min_parallelism_adv_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="generateCommand()">
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Minimum number of probes to send in parallel.')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" id="packet_trace_adv_var" name="packet_trace_adv_var" class="form-checkbox h-5 w-5 text-blue-600 rounded bg-gray-600 border-gray-500" onchange="generateCommand()">
+                        <label for="packet_trace_adv_var" class="ml-2">Packet Trace (--packet-trace)</label>
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Show all packets sent and received.')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" id="badsum_adv_var" name="badsum_adv_var" class="form-checkbox h-5 w-5 text-blue-600 rounded bg-gray-600 border-gray-500" onchange="generateCommand()">
+                        <label for="badsum_adv_var" class="ml-2">Bypass Firewall/IDS (--badsum)</label>
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Send packets with a bogus TCP/UDP/SCTP checksum.')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" id="fragment_packets_adv_var" name="fragment_packets_adv_var" class="form-checkbox h-5 w-5 text-blue-600 rounded bg-gray-600 border-gray-500" onchange="generateCommand()">
+                        <label for="fragment_packets_adv_var" class="ml-2">Fragment Packets (-f)</label>
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Fragment IP packets into tiny pieces.')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <label for="ip_options_adv_entry" class="w-48 text-right pr-4">IP Options (--ip-options):</label>
+                        <input type="text" id="ip_options_adv_entry" name="ip_options_adv_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="generateCommand()">
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Send packets with specified IP options.')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <label for="ttl_adv_entry" class="w-48 text-right pr-4">TTL (--ttl):</label>
+                        <input type="number" id="ttl_adv_entry" name="ttl_adv_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="generateCommand()">
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Set IPv4 time-to-live field.')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <label for="max_retries_adv_entry" class="w-48 text-right pr-4">Max Retries (--max-retries):</label>
+                        <input type="number" id="max_retries_adv_entry" name="max_retries_adv_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="generateCommand()">
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Caps the number of port scan probe retransmissions.')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <label for="host_timeout_adv_entry" class="w-48 text-right pr-4">Host Timeout (--host-timeout):</label>
+                        <input type="text" id="host_timeout_adv_entry" name="host_timeout_adv_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="generateCommand()">
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Give up on target host after this long.')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <label for="scan_delay_adv_entry" class="w-48 text-right pr-4">Scan Delay (--scan-delay):</label>
+                        <input type="text" id="scan_delay_adv_entry" name="scan_delay_adv_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="generateCommand()">
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Delay between probes.')">?</button>
+                    </div>
+                    <div class="flex items-start">
+                        <label for="additional_args_entry" class="w-48 text-right pr-4 pt-2">Additional Arguments:</label>
+                        <textarea id="additional_args_entry" name="additional_args_entry" rows="4" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="generateCommand()"></textarea>
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Any other Nmap arguments not covered by the GUI. Enter them exactly as you would on the command line (e.g., \'--exclude 192.168.1.5\').')">?</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Examples Tab -->
+            <div id="examples" class="tab-content">
+                <h2 class="text-xl font-semibold text-blue-300 mb-4">Examples</h2>
+                <div class="mb-4 flex items-center">
+                    <label for="example_search_entry" class="w-32 text-right pr-4">Search Examples:</label>
+                    <input type="text" id="example_search_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="filterExamples()">
+                    <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded" onclick="clearExampleSearch()">Clear Search</button>
+                </div>
+                <div id="examples_list" class="grid grid-cols-1 gap-4">
+                    <!-- Examples will be loaded here by JavaScript -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Generated Command -->
+        <div class="bg-gray-700 p-4 rounded-lg shadow-md mb-4">
+            <h2 class="text-xl font-semibold text-blue-300 mb-2">Generated Nmap Command</h2>
+            <textarea id="command_text" class="w-full h-24 p-2 rounded bg-gray-900 text-blue-400 font-mono text-sm resize-none custom-scrollbar" readonly></textarea>
+            <div class="flex justify-end mt-2 space-x-2">
+                <button class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md transition-colors duration-200" onclick="copyCommand()">Copy Command</button>
+                <button class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md transition-colors duration-200" onclick="generateCommand()">Generate Command</button>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex justify-center space-x-4 mb-4">
+            <button id="run_nmap_button" class="btn-success">
+                <i data-lucide="play" class="w-6 h-6 mr-2"></i> Run Nmap
+            </button>
+            <button class="btn-danger" onclick="clearOutput()">
+                <i data-lucide="trash-2" class="w-6 h-6 mr-2"></i> Clear Output
+            </button>
+            <button class="btn-info" onclick="saveOutput()">
+                <i data-lucide="save" class="w-6 h-6 mr-2"></i> Save Output
+            </button>
+        </div>
+
+        <!-- Status Bar -->
+        <div id="status_bar" class="bg-gray-900 text-white text-sm p-2 rounded-md mb-4 text-center">Ready</div>
+
+        <!-- Nmap Output -->
+        <div class="bg-gray-700 p-4 rounded-lg shadow-md">
+            <h2 class="text-xl font-semibold text-blue-300 mb-2">Nmap Output</h2>
+            <div class="flex items-center mb-2">
+                <label for="search_entry" class="pr-2">Search:</label>
+                <input type="text" id="search_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="searchOutput()">
+                <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded" onclick="searchOutput()">Search</button>
+                <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded" onclick="clearSearchHighlight()">Clear Search</button>
+            </div>
+            <pre id="output_text" class="w-full h-96 p-2 rounded bg-gray-900 text-gray-200 font-mono text-sm overflow-auto custom-scrollbar"></pre>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="text-gray-500 text-sm mt-4">
+        Created by khedr0x00
+    </div>
+
+    <!-- Global Message/Alert Modal (from original index.html) -->
+    <div id="messageModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="messageModalTitle">Alert</h2>
+                <span class="modal-close" onclick="closeMessageModal()">&times;</span>
+            </div>
+            <div class="modal-body" id="messageModalBody"></div>
+            <div class="modal-footer">
+                <button onclick="closeMessageModal()" class="btn-primary">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Example Output Modal (from original index.html, adapted for new theme) -->
+    <div id="exampleOutputModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="exampleOutputModalTitle">Example Output</h2>
+                <span class="modal-close" onclick="closeExampleOutputModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <pre id="exampleOutputModalText" class="w-full h-auto p-2 rounded bg-gray-900 text-gray-200 font-mono text-sm overflow-auto custom-scrollbar"></pre>
+            </div>
+            <div class="modal-footer">
+                <button onclick="closeExampleOutputModal()" class="btn-primary">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize Lucide icons
+        lucide.createIcons();
+
+        // Global variable to store examples
+        let allExamples = [];
+        let currentScanId = null;
+        let pollInterval = null;
+        let searchStartIndex = 0; // For incremental search in output
+        let currentOutputBuffer = ""; // Buffer to accumulate real-time output
+
+        // Function to show/hide tabs
+        function showTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab-button').forEach(button => {
+                button.classList.remove('active');
+            });
+            document.querySelector(`.tab-button[data-tab="${tabId}"]`).classList.add('active');
+            document.getElementById(tabId).classList.add('active');
+            generateCommand(); // Regenerate command on tab change
+        }
+
+        // Event listeners for tab buttons
+        document.querySelectorAll('.tab-button').forEach(button => {
+            button.addEventListener('click', () => {
+                showTab(button.dataset.tab);
+            });
+        });
+
+        // --- Helper for showing custom modals ---
+        function showMessageModal(title, message, isHtml = false) {
+            document.getElementById('messageModalTitle').innerText = title;
+            const messageBody = document.getElementById('messageModalBody');
+            if (isHtml) {
+                messageBody.innerHTML = message;
+            } else {
+                messageBody.innerText = message;
+            }
+            document.getElementById('messageModal').style.display = 'flex';
+        }
+
+        function closeMessageModal() {
+            document.getElementById('messageModal').style.display = 'none';
+        }
+
+        function showExampleOutputModal(title, output) {
+            document.getElementById('exampleOutputModalTitle').innerText = title;
+            const outputPre = document.getElementById('exampleOutputModalText');
+            outputPre.innerHTML = ''; // Clear previous content
+
+            // Apply coloring based on Nmap-like output
+            insertColoredText(outputPre, output);
+            document.getElementById('exampleOutputModal').style.display = 'flex';
+        }
+
+        function closeExampleOutputModal() {
+            document.getElementById('exampleOutputModal').style.display = 'none';
+        }
+
+
+        // Function to collect form data
+        function getFormData() {
+            const formData = {};
+            document.querySelectorAll('#tab-content-container input, #tab-content-container select, #tab-content-container textarea').forEach(element => {
+                if (element.type === 'checkbox') {
+                    formData[element.id] = element.checked;
+                } else if (element.type === 'number') {
+                    formData[element.id] = element.value ? parseFloat(element.value) : '';
+                }
+                else {
+                    formData[element.id] = element.value;
+                }
+            });
+            return formData;
+        }
+
+        // Function to generate Nmap command
+        async function generateCommand() {
+            const formData = getFormData();
+            try {
+                const response = await fetch('/generate_command', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData),
+                });
+                const data = await response.json();
+                document.getElementById('command_text').value = data.command;
+            } catch (error) {
+                console.error('Error generating command:', error);
+                document.getElementById('command_text').value = 'Error generating command.';
+            }
+        }
+
+        // Function to copy command to clipboard
+        function copyCommand() {
+            const commandText = document.getElementById('command_text');
+            commandText.select();
+            document.execCommand('copy');
+            showMessageModal('Copy Command', 'Command copied to clipboard!');
+        }
+
+        // Function to run Nmap
+        async function runNmap() {
+            if (currentScanId) {
+                showMessageModal('Nmap Running', 'Nmap is already running. Please wait for it to finish.');
+                return;
+            }
+
+            const command = document.getElementById('command_text').value;
+            if (!command) {
+                showMessageModal('Error', 'No command to run.');
+                return;
+            }
+
+            // Disable run button and clear output
+            document.getElementById('run_nmap_button').disabled = true;
+            document.getElementById('output_text').innerHTML = '';
+            currentOutputBuffer = "";
+            clearSearchHighlight();
+            showStatus('Nmap is starting...', 'blue');
+
+            try {
+                const response = await fetch('/run_nmap', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ command: command }),
+                });
+                const data = await response.json();
+                if (data.status === 'error') {
+                    showMessageModal('Error', data.message);
+                    showStatus(`Error: ${data.message}`, 'red');
+                    document.getElementById('run_nmap_button').disabled = false;
+                } else {
+                    currentScanId = data.scan_id;
+                    showStatus(`Nmap scan started (ID: ${currentScanId}). Polling for output...`, 'blue');
+                    // Start polling for output
+                    pollInterval = setInterval(pollOutput, 500); // Poll every 500ms
+                }
+            } catch (error) {
+                console.error('Error starting Nmap:', error);
+                showMessageModal('Error', 'An error occurred while starting Nmap.');
+                showStatus('An error occurred while starting Nmap.', 'red');
+                document.getElementById('run_nmap_button').disabled = false;
+            }
+        }
+
+        // Polling for Nmap output
+        async function pollOutput() {
+            if (!currentScanId) {
+                clearInterval(pollInterval);
+                pollInterval = null;
+                return;
+            }
+
+            try {
+                const response = await fetch(`/get_scan_output/${currentScanId}`);
+                const data = await response.json();
+                const outputTextElement = document.getElementById('output_text');
+                
+                if (data.output) {
+                    currentOutputBuffer += data.output;
+                    insertColoredText(outputTextElement, currentOutputBuffer);
+                }
+
+                if (data.status === 'running') {
+                    showStatus('Nmap is running...', 'blue');
+                } else if (data.status === 'completed') {
+                    clearInterval(pollInterval);
+                    pollInterval = null;
+                    currentScanId = null;
+                    currentOutputBuffer = data.output; // Get final complete output
+                    insertColoredText(outputTextElement, currentOutputBuffer);
+                    showStatus('Nmap scan completed.', 'green');
+                    document.getElementById('run_nmap_button').disabled = false;
+                } else if (data.status === 'not_found' || data.status === 'error') {
+                    clearInterval(pollInterval);
+                    pollInterval = null;
+                    currentScanId = null;
+                    if (data.output) {
+                        currentOutputBuffer += data.output;
+                        insertColoredText(outputTextElement, currentOutputBuffer);
+                    }
+                    showStatus(`Scan failed: ${data.message || 'Unknown error'}`, 'red');
+                    showMessageModal('Scan Error', data.message || 'An unknown error occurred during the scan.');
+                    document.getElementById('run_nmap_button').disabled = false;
+                }
+            } catch (error) {
+                console.error('Error polling output:', error);
+                showMessageModal('Polling Error', 'An error occurred while fetching output.');
+                showStatus('An error occurred while fetching output.', 'red');
+                clearInterval(pollInterval);
+                pollInterval = null;
+                currentScanId = null;
+                document.getElementById('run_nmap_button').disabled = false;
+            }
+        }
+
+        // Helper to insert colored text based on Nmap output patterns
+        function insertColoredText(element, text) {
+            element.innerHTML = ''; // Clear current content to re-insert with spans
+            const lines = text.split('\n');
+            const fragment = document.createDocumentFragment();
+
+            lines.forEach(line => {
+                const span = document.createElement('span');
+                let className = 'output-default';
+
+                if (line.toLowerCase().includes('open') && line.toLowerCase().includes('port')) {
+                    className = 'output-green';
+                } else if (line.toLowerCase().includes('error') || line.toLowerCase().includes('failed')) {
+                    className = 'output-red';
+                } else if (line.toLowerCase().includes('starting nmap') || line.toLowerCase().includes('completed') || line.toLowerCase().includes('host is up') || line.toLowerCase().includes('executing command')) {
+                    className = 'output-blue';
+                } else if (line.toLowerCase().includes('warning')) {
+                    className = 'output-orange';
+                }
+                
+                span.className = className;
+                span.textContent = line + '\n'; // Add newline back for pre tag
+                fragment.appendChild(span);
+            });
+            element.appendChild(fragment);
+            element.scrollTop = element.scrollHeight; // Scroll to bottom
+        }
+
+        // Function to clear output
+        function clearOutput() {
+            document.getElementById('output_text').innerHTML = '';
+            currentOutputBuffer = "";
+            showStatus('Ready');
+            clearSearchHighlight();
+            if (currentScanId) {
+                clearInterval(pollInterval);
+                pollInterval = null;
+                currentScanId = null;
+            }
+        }
+
+        // Function to save output
+        async function saveOutput() {
+            const outputContent = document.getElementById('output_text').innerText;
+            if (!outputContent.trim()) {
+                showMessageModal('Save Output', 'No output to save.');
+                return;
+            }
+
+            // Prompt for filename (simple browser prompt)
+            const defaultFilename = `nmap_output_${new Date().toISOString().slice(0,10)}.txt`;
+            const filename = prompt("Enter filename to save:", defaultFilename);
+
+            if (filename) {
+                try {
+                    const response = await fetch('/save_output', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ content: outputContent, filename: filename })
+                    });
+                    const data = await response.json();
+
+                    if (data.status === 'success') {
+                        showMessageModal('Save Output', `Output saved to server. You can download it now.`);
+                        // Offer download link
+                        if (data.download_url) {
+                            const downloadLink = document.createElement('a');
+                            downloadLink.href = data.download_url;
+                            downloadLink.download = filename; // Suggest filename for download
+                            downloadLink.style.display = 'none';
+                            document.body.appendChild(downloadLink);
+                            downloadLink.click();
+                            document.body.removeChild(downloadLink);
+                        }
+                    } else {
+                        showMessageModal('Save Error', `Failed to save file: ${data.message}`);
+                    }
+                } catch (error) {
+                    console.error('Error saving output:', error);
+                    showMessageModal('Save Error', `Failed to save file: ${error.message}`);
+                }
+            }
+        }
+
+        // Function to update status bar
+        function showStatus(message, color = 'white') {
+            const statusBar = document.getElementById('status_bar');
+            statusBar.textContent = message;
+            statusBar.style.color = color;
+        }
+
+        // Function to search output
+        function searchOutput() {
+            const searchTerm = document.getElementById('search_entry').value.trim().toLowerCase();
+            const outputTextElement = document.getElementById('output_text');
+            const fullText = outputTextElement.textContent; // Use textContent to get plain text
+
+            clearSearchHighlight(); // Clear existing highlights first
+
+            if (!searchTerm) {
+                searchStartIndex = 0;
+                return;
+            }
+
+            let found = false;
+            let newContent = '';
+            let lastIndex = 0;
+
+            const regex = new RegExp(searchTerm, 'gi'); // 'gi' for global and case-insensitive
+
+            let match;
+            while ((match = regex.exec(fullText)) !== null) {
+                found = true;
+                const index = match.index;
+                const matchedText = match[0];
+
+                // Append content before the match
+                newContent += escapeHtml(fullText.substring(lastIndex, index));
+                // Append the highlighted match
+                newContent += `<mark class="highlight">${escapeHtml(matchedText)}</mark>`;
+                lastIndex = index + matchedText.length;
+            }
+            newContent += escapeHtml(fullText.substring(lastIndex)); // Append remaining content
+
+            outputTextElement.innerHTML = newContent;
+
+            if (!found) {
+                showMessageModal('Search', `No occurrences of '${searchTerm}' found.`);
+            } else {
+                // Scroll to the first highlighted element
+                const firstHighlight = outputTextElement.querySelector('mark.highlight');
+                if (firstHighlight) {
+                    firstHighlight.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }
+        }
+
+        // Function to clear search highlight
+        function clearSearchHighlight() {
+            const outputTextElement = document.getElementById('output_text');
+            const currentContent = outputTextElement.textContent; // Get plain text content
+            outputTextElement.innerHTML = ''; // Clear existing content
+            insertColoredText(outputTextElement, currentContent); // Re-insert without highlights
+            searchStartIndex = 0;
+        }
+
+        // Function to show help popup
+        function showHelp(helpText) {
+            const overlay = document.createElement('div');
+            overlay.className = 'help-popup-overlay';
+            overlay.onclick = () => {
+                document.body.removeChild(overlay);
+                document.body.removeChild(popup);
+            };
+            document.body.appendChild(overlay);
+
+            const popup = document.createElement('div');
+            popup.className = 'help-popup';
+            popup.innerHTML = `
+                <h3 class="text-xl font-bold text-blue-300 mb-4">Help</h3>
+                <div class="flex-grow overflow-y-auto custom-scrollbar p-2 bg-gray-600 rounded text-gray-200 text-sm mb-4">
+                    ${helpText.replace(/\n/g, '<br>')}
+                </div>
+                <button class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md self-center" onclick="this.parentNode.parentNode.removeChild(this.parentNode); document.body.removeChild(document.querySelector('.help-popup-overlay'));">Close</button>
+            `;
+            document.body.appendChild(popup);
+        }
+
+        // --- Examples Tab Functions ---
+        async function loadExamples() {
+            try {
+                // Fetch examples from the backend (assuming /get_examples endpoint)
+                const response = await fetch('/get_examples');
+                if (response.ok) {
+                    allExamples = await response.json();
+                } else {
+                    // Fallback to hardcoded examples if backend fails
+                    console.warn("Could not fetch examples from backend, using hardcoded examples.");
+                    allExamples = [
+                        {
+                            name: "Basic Scan",
+                            description: "Scans for common open ports and services.",
+                            options: {
+                                target_entry: "scanme.nmap.org",
+                                syn_scan_var: true,
+                                service_version_detection_var: true
+                            },
+                            example_output: `Starting Nmap 7.91 ( https://nmap.org ) at 2025-07-29 10:00 EEST
+Nmap scan report for scanme.nmap.org (45.33.32.152)
+Host is up (0.050s latency).
+Not shown: 998 closed ports
+PORT     STATE SERVICE VERSION
+22/tcp   open  ssh     OpenSSH 7.9 (protocol 2.0)
+80/tcp   open  http    Apache httpd 2.4.6 ((CentOS) PHP/5.4.16)
+
+Nmap done: 1 IP address (1 host up) scanned in 1.23 seconds`
+                        },
+                        {
+                            name: "OS & Version Detection",
+                            description: "Aggressively detects OS and service versions.",
+                            options: {
+                                target_entry: "scanme.nmap.org",
+                                aggressive_detection_var: true
+                            },
+                            example_output: `Starting Nmap 7.91 ( https://nmap.org ) at 2025-07-29 10:01 EEST
+Nmap scan report for scanme.nmap.org (45.33.32.152)
+Host is up (0.050s latency).
+Not shown: 998 closed ports
+PORT     STATE SERVICE VERSION
+22/tcp   open  ssh     OpenSSH 7.9 (protocol 2.0)
+80/tcp   open  http    Apache httpd 2.4.6 ((CentOS) PHP/5.4.16)
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+OS detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 2.56 seconds`
+                        },
+                        {
+                            name: "Specific Port Scan",
+                            description: "Scans only specified ports (e.g., 80, 443).",
+                            options: {
+                                target_entry: "scanme.nmap.org",
+                                ports_entry: "80,443",
+                                syn_scan_var: true
+                            },
+                            example_output: `Starting Nmap 7.91 ( https://nmap.org ) at 2025-07-29 10:02 EEST
+Nmap scan report for scanme.nmap.org (45.33.32.152)
+Host is up (0.050s latency).
+PORT    STATE SERVICE
+80/tcp  open  http
+443/tcp closed https
+
+Nmap done: 1 IP address (1 host up) scanned in 0.87 seconds`
+                        },
+                        {
+                            name: "Stealth Scan (SYN)",
+                            description: "Performs a stealthy SYN scan (requires root).",
+                            options: {
+                                target_entry: "scanme.nmap.org",
+                                syn_scan_var: true
+                            },
+                            example_output: `Starting Nmap 7.91 ( https://nmap.org ) at 2025-07-29 10:03 EEST
+Nmap scan report for scanme.nmap.org (45.33.32.152)
+Host is up (0.050s latency).
+Not shown: 998 closed ports
+PORT     STATE SERVICE
+22/tcp   open  ssh
+80/tcp   open  http
+
+Nmap done: 1 IP address (1 host up) scanned in 1.15 seconds`
+                        },
+                        {
+                            name: "Ping Scan Only",
+                            description: "Only performs host discovery (no port scan).",
+                            options: {
+                                target_entry: "scanme.nmap.org",
+                                ping_scan_var: true
+                            },
+                            example_output: `Starting Nmap 7.91 ( https://nmap.org ) at 2025-07-29 10:04 EEST
+Nmap scan report for scanme.nmap.org (45.33.32.152)
+Host is up (0.050s latency).
+Nmap done: 1 IP address (1 host up) scanned in 0.05 seconds`
+                        }
+                    ];
+                }
+                filterExamples(); // Display all examples initially
+            } catch (error) {
+                console.error('Error loading examples:', error);
+                showStatus('Error loading examples. Using hardcoded examples.', 'red');
+                // Ensure allExamples is populated even if fetch fails
+                allExamples = [
+                    {
+                        name: "Basic Scan",
+                        description: "Scans for common open ports and services.",
+                        options: {
+                            target_entry: "scanme.nmap.org",
+                            syn_scan_var: true,
+                            service_version_detection_var: true
+                        },
+                        example_output: `Starting Nmap 7.91 ( https://nmap.org ) at 2025-07-29 10:00 EEST
+Nmap scan report for scanme.nmap.org (45.33.32.152)
+Host is up (0.050s latency).
+Not shown: 998 closed ports
+PORT     STATE SERVICE VERSION
+22/tcp   open  ssh     OpenSSH 7.9 (protocol 2.0)
+80/tcp   open  http    Apache httpd 2.4.6 ((CentOS) PHP/5.4.16)
+
+Nmap done: 1 IP address (1 host up) scanned in 1.23 seconds`
+                    },
+                    {
+                        name: "OS & Version Detection",
+                        description: "Aggressively detects OS and service versions.",
+                        options: {
+                            target_entry: "scanme.nmap.org",
+                            aggressive_detection_var: true
+                        },
+                        example_output: `Starting Nmap 7.91 ( https://nmap.org ) at 2025-07-29 10:01 EEST
+Nmap scan report for scanme.nmap.org (45.33.32.152)
+Host is up (0.050s latency).
+Not shown: 998 closed ports
+PORT     STATE SERVICE VERSION
+22/tcp   open  ssh     OpenSSH 7.9 (protocol 2.0)
+80/tcp   open  http    Apache httpd 2.4.6 ((CentOS) PHP/5.4.16)
+Service Info: OS: Linux; CPE: cpe:/o:linux:linux_kernel
+
+OS detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+Nmap done: 1 IP address (1 host up) scanned in 2.56 seconds`
+                    },
+                    {
+                        name: "Specific Port Scan",
+                        description: "Scans only specified ports (e.g., 80, 443).",
+                        options: {
+                            target_entry: "scanme.nmap.org",
+                            ports_entry: "80,443",
+                            syn_scan_var: true
+                        },
+                        example_output: `Starting Nmap 7.91 ( https://nmap.org ) at 2025-07-29 10:02 EEST
+Nmap scan report for scanme.nmap.org (45.33.32.152)
+Host is up (0.050s latency).
+PORT    STATE SERVICE
+80/tcp  open  http
+443/tcp closed https
+        
+Nmap done: 1 IP address (1 host up) scanned in 0.87 seconds`
+                    },
+                    {
+                        name: "Stealth Scan (SYN)",
+                        description: "Performs a stealthy SYN scan (requires root).",
+                        options: {
+                            target_entry: "scanme.nmap.org",
+                            syn_scan_var: true
+                        },
+                        example_output: `Starting Nmap 7.91 ( https://nmap.org ) at 2025-07-29 10:03 EEST
+Nmap scan report for scanme.nmap.org (45.33.32.152)
+Host is up (0.050s latency).
+Not shown: 998 closed ports
+PORT     STATE SERVICE
+22/tcp   open  ssh
+80/tcp   open  http
+        
+Nmap done: 1 IP address (1 host up) scanned in 1.15 seconds`
+                    },
+                    {
+                        name: "Ping Scan Only",
+                        description: "Only performs host discovery (no port scan).",
+                        options: {
+                            target_entry: "scanme.nmap.org",
+                            ping_scan_var: true
+                        },
+                        example_output: `Starting Nmap 7.91 ( https://nmap.org ) at 2025-07-29 10:04 EEST
+Nmap scan report for scanme.nmap.org (45.33.32.152)
+Host is up (0.050s latency).
+Nmap done: 1 IP address (1 host up) scanned in 0.05 seconds`
+                    }
+                ];
+                filterExamples();
+            }
+        }
+
+
+        function filterExamples() {
+            const searchQuery = document.getElementById('example_search_entry').value.toLowerCase();
+            const examplesList = document.getElementById('examples_list');
+            examplesList.innerHTML = ''; // Clear current list
+
+            allExamples.forEach(example => {
+                if (example.name.toLowerCase().includes(searchQuery) || example.description.toLowerCase().includes(searchQuery)) {
+                    const exampleDiv = document.createElement('div');
+                    exampleDiv.className = 'bg-gray-800 p-4 rounded-lg shadow-md flex flex-col md:flex-row justify-between items-start md:items-center';
+                    exampleDiv.innerHTML = `
+                        <div>
+                            <h3 class="text-lg font-semibold text-blue-300">${escapeHtml(example.name)}</h3>
+                            <p class="text-sm text-gray-400 mb-2 md:mb-0">${escapeHtml(example.description)}</p>
+                        </div>
+                        <div class="flex mt-2 md:mt-0 space-x-2">
+                            <button class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded-md text-sm" onclick="loadExampleOptions(${escapeHtml(JSON.stringify(example.options))})">Select</button>
+                            <button class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1 rounded-md text-sm" onclick="showExampleOutputModal('${escapeHtml(example.name)} Output', ${escapeHtml(JSON.stringify(example.example_output))})">Output</button>
+                        </div>
+                    `;
+                    examplesList.appendChild(exampleDiv);
+                }
+            });
+            lucide.createIcons(); // Re-render Lucide icons for new elements
+        }
+
+        function clearExampleSearch() {
+            document.getElementById('example_search_entry').value = '';
+            filterExamples();
+        }
+
+        function loadExampleOptions(options) {
+            clearAllInputs(); // Clear all inputs first
+
+            // Populate form fields with example options
+            for (const key in options) {
+                const element = document.getElementById(key);
+                if (element) {
+                    if (element.type === 'checkbox') {
+                        element.checked = options[key];
+                    } else if (element.tagName === 'TEXTAREA') {
+                        element.value = options[key];
+                    } else {
+                        element.value = options[key];
+                    }
+                }
+            }
+            generateCommand(); // Re-generate command after loading
+            showMessageModal('Example Loaded', 'Example options have been loaded. Check other tabs and the generated command.');
+            showTab('target'); // Switch to target tab
+        }
+
+        // Helper to escape HTML for safe display
+        function escapeHtml(text) {
+            if (typeof text !== 'string') {
+                text = String(text);
+            }
+            const map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+            return text.replace(/[&<>"']/g, function(m) { return map[m]; });
+        }
+
+        // Helper to unescape HTML entities
+        function unescapeHtml(html) {
+            const doc = new DOMParser().parseFromString(html, 'text/html');
+            return doc.documentElement.textContent;
+        }
+
+        function clearAllInputs() {
+            document.querySelectorAll('#tab-content-container input[type="text"], #tab-content-container input[type="number"], #tab-content-container textarea').forEach(element => {
+                element.value = '';
+            });
+            document.querySelectorAll('#tab-content-container input[type="checkbox"]').forEach(element => {
+                element.checked = false;
+            });
+            document.querySelectorAll('#tab-content-container select').forEach(element => {
+                element.value = ''; // Clear dropdown selection
+            });
+            // Reset specific default values
+            document.getElementById('timing_template_var').value = 'normal';
+            generateCommand();
+        }
+
+        // Function to handle Nmap installation
+        async function installNmapRequirements() {
+            const platform = navigator.platform;
+            const installButton = document.getElementById('install_nmap_button');
+            installButton.disabled = true;
+            showStatus('Checking system and preparing for installation...', 'blue');
+            document.getElementById('output_text').innerHTML = ''; // Clear output area
+
+            if (platform.includes("Linux")) {
+                showMessageModal('Nmap Installation', 'Attempting to install Nmap. This requires `sudo` privileges and may prompt for your password in the server\'s console. Check the server output for details.', false);
+                try {
+                    const response = await fetch('/install_nmap', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({}) // No specific data needed for this endpoint
+                    });
+                    const data = await response.json();
+
+                    if (data.status === 'success') {
+                        showStatus('Nmap installation/update completed successfully.', 'green');
+                        showMessageModal('Nmap Installation', 'Nmap has been installed/updated successfully. You can now run scans.');
+                        insertColoredText(document.getElementById('output_text'), data.output);
+                    } else {
+                        showStatus(`Nmap installation failed: ${data.message}`, 'red');
+                        showMessageModal('Nmap Installation Failed', `Nmap installation/update failed: ${data.message}<br><br>Output:<pre>${escapeHtml(data.output)}</pre>`, true);
+                        insertColoredText(document.getElementById('output_text'), data.output);
+                    }
+                } catch (error) {
+                    console.error('Error during Nmap installation fetch:', error);
+                    showStatus('An error occurred during installation.', 'red');
+                    showMessageModal('Nmap Installation Error', `An error occurred while trying to install Nmap: ${error.message}. Check server logs for more details.`);
+                }
+            } else if (platform.includes("Win")) {
+                const downloadMessage = `Nmap is not directly installable via this web interface on Windows.
+                <br><br>
+                Please download it from the official Nmap website:
+                <br><br>
+                <a href="https://nmap.org/download.html" target="_blank" class="text-blue-400 hover:underline">Download Nmap for Windows</a>`;
+                showMessageModal('Nmap Installation', downloadMessage, true); // Use isHtml = true
+                showStatus('Nmap installation not supported directly on Windows via this interface.', 'orange');
+            } else {
+                showMessageModal('Nmap Installation', `Nmap installation is not automatically supported for your operating system (${platform}). Please install Nmap manually.`);
+                showStatus('Nmap installation not supported for this OS.', 'orange');
+            }
+            installButton.disabled = false;
+        }
+
+
+        // Initial setup
+        document.addEventListener('DOMContentLoaded', () => {
+            generateCommand(); // Generate command on page load
+            loadExamples(); // Load examples for the Examples tab
+            document.getElementById('run_nmap_button').addEventListener('click', runNmap);
+            document.getElementById('install_nmap_button').addEventListener('click', installNmapRequirements); // New event listener
+        });
+    </script>
+</body>
+</html>
