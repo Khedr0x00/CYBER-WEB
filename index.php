@@ -10,10 +10,8 @@ $pidsDir = __DIR__ . DIRECTORY_SEPARATOR . 'pids';
 $nextPortFile = __DIR__ . DIRECTORY_SEPARATOR . 'next_port.txt';
 
 // Define the web server's port for PHP app URLs.
-// Adjust this if your XAMPP/Apache is running on a different port (e.g., 8080).
-// For PHP's built-in server (php -S localhost:8000), it would be 8000.
-// For default Apache, it's 80.
-const WEB_SERVER_PORT = 80; // Assuming default HTTP port for PHP apps
+// This is set to 8000 to match 'php -S localhost:8000'.
+const WEB_SERVER_PORT = 8000; 
 
 // Ensure necessary directories exist and are writable
 if (!is_dir($scriptsBaseDir)) {
@@ -33,6 +31,7 @@ if (!file_exists($nextPortFile)) {
 
 /**
  * Helper function to get the next available port and increment the counter.
+ * @param string $file The path to the file storing the next port.
  * @return int The next available port.
  */
 function getNextAvailablePort($file) {
@@ -151,6 +150,7 @@ function killProcess($pid) {
             return false;
         }
     } else {
+        // Attempt to kill the process group first for better cleanup of child processes
         $command = "kill -9 -" . escapeshellarg($pid) . " 2>&1";
         exec($command, $output, $return_var);
         error_log("killProcess (Unix) Command: {$command}");
@@ -198,7 +198,21 @@ function findPythonExecutable() {
             $pythonPath = trim($output[0]);
             error_log("findPythonExecutable (Unix): Found Python at {$pythonPath}");
         } else {
-            error_log("findPythonExecutable (Unix): Python not found using 'which python'.");
+            // Try common Termux Python paths if 'which python' fails
+            $termuxPythonPaths = [
+                '/data/data/com.termux/files/usr/bin/python',
+                '/data/data/com.termux/files/usr/bin/python3'
+            ];
+            foreach ($termuxPythonPaths as $path) {
+                if (file_exists($path) && is_executable($path)) {
+                    $pythonPath = $path;
+                    error_log("findPythonExecutable (Unix): Found Termux Python at {$pythonPath}");
+                    break;
+                }
+            }
+            if (!$pythonPath) {
+                error_log("findPythonExecutable (Unix): Python not found using 'which python' or common Termux paths.");
+            }
         }
     }
     return $pythonPath;
@@ -262,7 +276,8 @@ switch ($action) {
                 } elseif ($isPhpApp) {
                     // PHP apps are always "running" as they are served by the web server
                     // The URL will be relative to the web server's document root
-                    $phpAppUrl = (WEB_SERVER_PORT == 80 ? 'http://' : 'http://127.0.0.1:' . WEB_SERVER_PORT . '/') . basename(__DIR__) . '/scripts/' . $folderName . '/index.php';
+                    // Use WEB_SERVER_PORT to construct the URL for PHP apps
+                    $phpAppUrl = "http://localhost:" . WEB_SERVER_PORT . '/' . basename(__DIR__) . '/scripts/' . $folderName . '/index.php';
 
                     $folders[] = [
                         'name' => $folderName,
@@ -701,8 +716,8 @@ switch ($action) {
                         const portText = folder.port ? `Port: ${folder.port}` : '';
                         
                         // Determine the base URL for PHP apps, assuming index.php is in the same directory as this dashboard
-                        const baseUrl = window.location.origin + window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/') + 1);
-                        const phpAppUrl = `${baseUrl}scripts/${folder.name}/index.php`;
+                        // Construct the URL using localhost and the defined WEB_SERVER_PORT
+                        const phpAppUrl = `http://localhost:${WEB_SERVER_PORT}/scripts/${folder.name}/index.php`;
 
 
                         card.innerHTML = `
@@ -749,6 +764,10 @@ switch ($action) {
                         if (response.ok) {
                             showMessage(result.message);
                             fetchAndDisplayFolders(); // Refresh to update status and show Open URL button
+                            if (result.url) {
+                                // Open the URL in a new tab if provided by the backend
+                                window.open(result.url, '_blank');
+                            }
                         } else {
                             showMessage(result.message, 'error');
                         }
