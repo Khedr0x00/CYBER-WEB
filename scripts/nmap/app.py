@@ -544,4 +544,3 @@ if __name__ == '__main__':
     
     print(f"Nmap sub-app is starting on port {port}...") # Added for clarity in logs
     app.run(debug=True, host='0.0.0.0', port=port)
-
