@@ -1,0 +1,1547 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WPScan Web GUI</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons CDN -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #1a202c; /* Dark background */
+            color: #e2e8f0; /* Light text */
+        }
+        .tab-button.active {
+            background-color: #3498DB; /* Peter River Blue */
+            color: black;
+            font-weight: bold;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        /* Custom scrollbar for output area */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 12px;
+            height: 12px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #2C3E50; /* Dark Blue/Grey */
+            border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background-color: #3498DB; /* Peter River Blue */
+            border-radius: 10px;
+            border: 3px solid #2C3E50;
+        }
+        .custom-scrollbar::-webkit-scrollbar-corner {
+            background: #2C3E50;
+        }
+
+        /* Specific colors for WPScan output */
+        .output-green { color: #2ECC71; } /* Emerald Green (Success/Found) */
+        .output-red { color: #E74C3C; }   /* Alizarin Red (Error/Vulnerability) */
+        .output-blue { color: #3498DB; }  /* Peter River Blue (Info/Starting) */
+        .output-orange { color: #F39C12; } /* Orange (Warning) */
+        .output-yellow { color: #F1C40F; } /* Yellow (Warning/Notice) */
+        .output-default { color: #ECF0F1; } /* Light Grey */
+        .highlight { background-color: yellow; color: black; }
+
+        /* Help popup styling */
+        .help-popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #2C3E50; /* Dark Blue/Grey */
+            border-radius: 0.5rem;
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            padding: 1.5rem;
+            width: 90%;
+            max-width: 500px;
+            max-height: 80vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            border: 1px solid #3498DB; /* Add a border for better visibility */
+        }
+        .help-popup-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 999;
+        }
+
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.8); /* Dark modal background */
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-content {
+            background-color: #1a202c; /* Modal background */
+            margin: auto;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            width: 90%;
+            max-width: 700px;
+            max-height: 90vh;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid #3498DB; /* Blue border for modal */
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #3498DB;
+            margin-bottom: 15px;
+        }
+        .modal-header h2 {
+            @apply text-xl font-semibold text-blue-400; /* Blue modal title */
+        }
+        .modal-close {
+            @apply text-gray-400 hover:text-blue-400 text-2xl font-bold;
+            cursor: pointer;
+        }
+        .modal-body {
+            flex-grow: 1;
+            overflow-y: auto;
+            @apply text-gray-300;
+        }
+        .modal-footer {
+            padding-top: 15px;
+            border-top: 1px solid #3498DB;
+            margin-top: 15px;
+            text-align: right;
+        }
+
+        /* Input field styling */
+        input[type="text"], input[type="number"], select, textarea {
+            @apply bg-gray-600 text-white rounded-md border border-gray-500 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 p-2;
+        }
+        input[type="checkbox"] {
+            @apply form-checkbox h-5 w-5 text-blue-600 rounded bg-gray-600 border-gray-500;
+        }
+
+        /* Button styling */
+        .btn-primary {
+            @apply px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 flex items-center justify-center transition-colors duration-200;
+        }
+        .btn-secondary {
+            @apply px-4 py-2 bg-gray-700 text-gray-200 rounded-md hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-50 flex items-center justify-center transition-colors duration-200;
+        }
+        .btn-success {
+            @apply px-6 py-3 bg-green-600 text-white rounded-lg text-lg font-semibold hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50 flex items-center transition-colors duration-200 transform hover:scale-105;
+        }
+        .btn-danger {
+            @apply px-6 py-3 bg-red-600 text-white rounded-lg text-lg font-semibold hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50 flex items-center transition-colors duration-200 transform hover:scale-105;
+        }
+        .btn-info {
+            @apply px-6 py-3 bg-purple-600 text-white rounded-lg text-lg font-semibold hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50 flex items-center transition-colors duration-200 transform hover:scale-105;
+        }
+    </style>
+</head>
+<body class="p-4 min-h-screen flex flex-col items-center">
+    <div class="bg-gray-800 p-6 rounded-lg shadow-xl w-full max-w-6xl mb-6">
+        <div class="flex items-center justify-between mb-6">
+            <h1 class="text-3xl font-bold text-blue-400">WPScan Web GUI</h1>
+            <div class="flex space-x-2">
+                <button id="install_wpscan_linux_button" class="btn-primary">
+                    <i data-lucide="download" class="w-5 h-5 mr-2"></i> Install WPScan (Linux)
+                </button>
+                <button id="install_wpscan_termux_button" class="btn-primary">
+                    <i data-lucide="download" class="w-5 h-5 mr-2"></i> Install WPScan (Termux)
+                </button>
+                <button id="download_wpscan_windows_button" class="btn-primary">
+                    <i data-lucide="download" class="w-5 h-5 mr-2"></i> Download WPScan (Windows)
+                </button>
+            </div>
+        </div>
+
+        <!-- Tabs Navigation -->
+        <div class="flex flex-wrap justify-center bg-gray-700 rounded-t-lg p-2 mb-4">
+            <button class="tab-button px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200 hover:bg-blue-600 active" data-tab="target">Target</button>
+            <button class="tab-button px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200 hover:bg-blue-600" data-tab="enumeration">Enumeration</button>
+            <button class="tab-button px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200 hover:bg-blue-600" data-tab="vulnerability">Vulnerability</button>
+            <button class="tab-button px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200 hover:bg-blue-600" data-tab="bruteforce">Bruteforce</button>
+            <button class="tab-button px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200 hover:bg-blue-600" data-tab="timing">Timing/Performance</button>
+            <button class="tab-button px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200 hover:bg-blue-600" data-tab="output">Output</button>
+            <button class="tab-button px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200 hover:bg-blue-600" data-tab="advanced">Advanced</button>
+            <button class="tab-button px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200 hover:bg-blue-600" data-tab="examples">Examples</button>
+        </div>
+
+        <!-- Tab Content -->
+        <div id="tab-content-container" class="bg-gray-700 p-4 rounded-b-lg mb-4 max-h-[500px] overflow-y-auto custom-scrollbar">
+            <!-- Target Tab -->
+            <div id="target" class="tab-content active">
+                <h2 class="text-xl font-semibold text-blue-300 mb-4">Target Options</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="flex items-center">
+                        <label for="target_url_entry" class="w-48 text-right pr-4">Target URL (--url):</label>
+                        <input type="text" id="target_url_entry" name="target_url_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="generateCommand()">
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('The URL of the WordPress installation to scan (e.g., https://example.com).')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" id="random_agent_var" name="random_agent_var" class="form-checkbox h-5 w-5 text-blue-600 rounded bg-gray-600 border border-gray-500" onchange="generateCommand()">
+                        <label for="random_agent_var" class="ml-2">Random User Agent (--random-agent)</label>
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Use a random User-Agent string for requests.')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <label for="user_agent_entry" class="w-48 text-right pr-4">Custom User Agent (--user-agent):</label>
+                        <input type="text" id="user_agent_entry" name="user_agent_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="generateCommand()">
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Specify a custom User-Agent string.')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <label for="proxy_entry" class="w-48 text-right pr-4">Proxy (--proxy):</label>
+                        <input type="text" id="proxy_entry" name="proxy_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="generateCommand()">
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Specify an HTTP/SOCKS proxy (e.g., http://127.0.0.1:8080, socks5://127.0.0.1:9050).')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <label for="proxy_auth_entry" class="w-48 text-right pr-4">Proxy Auth (--proxy-auth):</label>
+                        <input type="text" id="proxy_auth_entry" name="proxy_auth_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="generateCommand()">
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Proxy authentication (user:password).')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <label for="cookie_entry" class="w-48 text-right pr-4">Cookie (--cookie):</label>
+                        <input type="text" id="cookie_entry" name="cookie_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="generateCommand()">
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Cookie string to send with requests.')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <label for="cookie_string_entry" class="w-48 text-right pr-4">Cookie String (--cookie-string):</label>
+                        <input type="text" id="cookie_string_entry" name="cookie_string_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="generateCommand()">
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Cookie string to send with requests (alternative to --cookie).')">?</button>
+                    </div>
+                    <div class="flex items-start">
+                        <label for="headers_entry" class="w-48 text-right pr-4 pt-2">Custom Headers (--headers):</label>
+                        <textarea id="headers_entry" name="headers_entry" rows="4" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="generateCommand()"></textarea>
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Custom headers to send with requests (one per line, e.g., "X-Custom-Header: value").')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" id="ignore_main_redirect_var" name="ignore_main_redirect_var" class="form-checkbox h-5 w-5 text-blue-600 rounded bg-gray-600 border border-gray-500" onchange="generateCommand()">
+                        <label for="ignore_main_redirect_var" class="ml-2">Ignore Main Redirect (--ignore-main-redirect)</label>
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Do not follow the main redirect from the target URL.')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" id="follow_redirects_var" name="follow_redirects_var" class="form-checkbox h-5 w-5 text-blue-600 rounded bg-gray-600 border border-gray-500" onchange="generateCommand()">
+                        <label for="follow_redirects_var" class="ml-2">Follow Redirects (--follow-redirects)</label>
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Follow all redirects.')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" id="force_var" name="force_var" class="form-checkbox h-5 w-5 text-blue-600 rounded bg-gray-600 border border-gray-500" onchange="generateCommand()">
+                        <label for="force_var" class="ml-2">Force Scan (--force)</label>
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Force WPScan to run even if it detects issues (e.g., website down).')">?</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Enumeration Tab -->
+            <div id="enumeration" class="tab-content">
+                <h2 class="text-xl font-semibold text-blue-300 mb-4">Enumeration Options (--enumerate)</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="flex items-center">
+                        <input type="checkbox" id="enumerate_users_var" name="enumerate_users_var" class="form-checkbox h-5 w-5 text-blue-600 rounded bg-gray-600 border border-gray-500" onchange="generateCommand()">
+                        <label for="enumerate_users_var" class="ml-2">Users (u)</label>
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Enumerate WordPress users.')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" id="enumerate_plugins_var" name="enumerate_plugins_var" class="form-checkbox h-5 w-5 text-blue-600 rounded bg-gray-600 border border-gray-500" onchange="generateCommand()">
+                        <label for="enumerate_plugins_var" class="ml-2">Plugins (p)</label>
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Enumerate WordPress plugins.')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" id="enumerate_themes_var" name="enumerate_themes_var" class="form-checkbox h-5 w-5 text-blue-600 rounded bg-gray-600 border border-gray-500" onchange="generateCommand()">
+                        <label for="enumerate_themes_var" class="ml-2">Themes (t)</label>
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Enumerate WordPress themes.')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" id="enumerate_timthumb_var" name="enumerate_timthumb_var" class="form-checkbox h-5 w-5 text-blue-600 rounded bg-gray-600 border border-gray-500" onchange="generateCommand()">
+                        <label for="enumerate_timthumb_var" class="ml-2">TimThumb (tt)</label>
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Enumerate TimThumb vulnerabilities.')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" id="enumerate_media_var" name="enumerate_media_var" class="form-checkbox h-5 w-5 text-blue-600 rounded bg-gray-600 border border-gray-500" onchange="generateCommand()">
+                        <label for="enumerate_media_var" class="ml-2">Media (m)</label>
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Enumerate media files.')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" id="enumerate_config_backups_var" name="enumerate_config_backups_var" class="form-checkbox h-5 w-5 text-blue-600 rounded bg-gray-600 border border-gray-500" onchange="generateCommand()">
+                        <label for="enumerate_config_backups_var" class="ml-2">Config Backups (cb)</label>
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Enumerate configuration backup files.')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" id="enumerate_db_exports_var" name="enumerate_db_exports_var" class="form-checkbox h-5 w-5 text-blue-600 rounded bg-gray-600 border border-gray-500" onchange="generateCommand()">
+                        <label for="enumerate_db_exports_var" class="ml-2">DB Exports (dbe)</label>
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Enumerate database export files.')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" id="enumerate_uploads_var" name="enumerate_uploads_var" class="form-checkbox h-5 w-5 text-blue-600 rounded bg-gray-600 border border-gray-500" onchange="generateCommand()">
+                        <label for="enumerate_uploads_var" class="ml-2">Uploads (uploads)</label>
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Enumerate uploaded files.')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <label for="enumerate_profile_select" class="w-48 text-right pr-4">Enumeration Profile:</label>
+                        <select id="enumerate_profile_select" name="enumerate_profile_select" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onchange="generateCommand()">
+                            <option value="">None</option>
+                            <option value="v">Vulnerable Plugins & Themes (v)</option>
+                            <option value="vp">Vulnerable Plugins (vp)</option>
+                            <option value="vt">Vulnerable Themes (vt)</option>
+                            <option value="ap">All Plugins (ap)</option>
+                            <option value="at">All Themes (at)</option>
+                            <option value="e">All Enumeration (e)</option>
+                        </select>
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Select a common enumeration profile. This will override individual enumeration checkboxes.')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <label for="exclude_content_based_entry" class="w-48 text-right pr-4">Exclude Content Based (--exclude-content-based):</label>
+                        <input type="text" id="exclude_content_based_entry" name="exclude_content_based_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="generateCommand()">
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Exclude content-based detection patterns (comma-separated).')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <label for="exclude_status_code_entry" class="w-48 text-right pr-4">Exclude Status Code (--exclude-status-code):</label>
+                        <input type="text" id="exclude_status_code_entry" name="exclude_status_code_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="generateCommand()">
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Exclude specific HTTP status codes from detection (comma-separated, e.g., "404,500").')">?</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Vulnerability Detection Tab -->
+            <div id="vulnerability" class="tab-content">
+                <h2 class="text-xl font-semibold text-blue-300 mb-4">Vulnerability Detection</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="flex items-center">
+                        <label for="api_token_entry" class="w-48 text-right pr-4">API Token (--api-token):</label>
+                        <input type="text" id="api_token_entry" name="api_token_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="generateCommand()">
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Your WPScan API token for vulnerability database lookup. Get one from wpscan.com.')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" id="wp_version_detection_var" name="wp_version_detection_var" class="form-checkbox h-5 w-5 text-blue-600 rounded bg-gray-600 border border-gray-500" onchange="generateCommand()">
+                        <label for="wp_version_detection_var" class="ml-2">WordPress Version Detection (--wp-version-detection)</label>
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Detect WordPress version.')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" id="plugins_detection_var" name="plugins_detection_var" class="form-checkbox h-5 w-5 text-blue-600 rounded bg-gray-600 border border-gray-500" onchange="generateCommand()">
+                        <label for="plugins_detection_var" class="ml-2">Plugins Detection (--plugins-detection)</label>
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Detect installed plugins.')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" id="themes_detection_var" name="themes_detection_var" class="form-checkbox h-5 w-5 text-blue-600 rounded bg-gray-600 border border-gray-500" onchange="generateCommand()">
+                        <label for="themes_detection_var" class="ml-2">Themes Detection (--themes-detection)</label>
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Detect installed themes.')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" id="latest_versions_var" name="latest_versions_var" class="form-checkbox h-5 w-5 text-blue-600 rounded bg-gray-600 border border-gray-500" onchange="generateCommand()">
+                        <label for="latest_versions_var" class="ml-2">Latest Versions (--latest-versions)</label>
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Check for latest versions of detected components.')">?</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bruteforce Tab -->
+            <div id="bruteforce" class="tab-content">
+                <h2 class="text-xl font-semibold text-blue-300 mb-4">Bruteforce Options</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="flex items-center">
+                        <label for="usernames_entry" class="w-48 text-right pr-4">Usernames (--usernames):</label>
+                        <input type="text" id="usernames_entry" name="usernames_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="generateCommand()">
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Comma-separated list of usernames to bruteforce.')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <label for="usernames_file_entry" class="w-48 text-right pr-4">Usernames File (--usernames-file):</label>
+                        <input type="text" id="usernames_file_entry" name="usernames_file_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="generateCommand()">
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Path to a file containing usernames (one per line).')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <label for="passwords_entry" class="w-48 text-right pr-4">Passwords (--passwords):</label>
+                        <input type="text" id="passwords_entry" name="passwords_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="generateCommand()">
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Comma-separated list of passwords to bruteforce.')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <label for="passwords_file_entry" class="w-48 text-right pr-4">Passwords File (--passwords-file):</label>
+                        <input type="text" id="passwords_file_entry" name="passwords_file_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="generateCommand()">
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Path to a file containing passwords (one per line).')">?</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Timing/Performance Tab -->
+            <div id="timing" class="tab-content">
+                <h2 class="text-xl font-semibold text-blue-300 mb-4">Timing/Performance</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="flex items-center">
+                        <label for="request_timeout_entry" class="w-48 text-right pr-4">Request Timeout (--request-timeout):</label>
+                        <input type="number" step="0.1" id="request_timeout_entry" name="request_timeout_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="generateCommand()">
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Timeout for HTTP requests in seconds (default: 30).')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <label for="connect_timeout_entry" class="w-48 text-right pr-4">Connect Timeout (--connect-timeout):</label>
+                        <input type="number" step="0.1" id="connect_timeout_entry" name="connect_timeout_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="generateCommand()">
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Timeout for TCP connection in seconds (default: 10).')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <label for="max_threads_entry" class="w-48 text-right pr-4">Max Threads (--max-threads):</label>
+                        <input type="number" id="max_threads_entry" name="max_threads_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="generateCommand()">
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Maximum number of threads to use (default: 5).')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <label for="batch_size_entry" class="w-48 text-right pr-4">Batch Size (--batch-size):</label>
+                        <input type="number" id="batch_size_entry" name="batch_size_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="generateCommand()">
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Number of requests to send in a batch (default: 100).')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <label for="throttle_entry" class="w-48 text-right pr-4">Throttle (--throttle):</label>
+                        <input type="number" step="0.1" id="throttle_entry" name="throttle_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="generateCommand()">
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Delay between requests in seconds (default: 0).')">?</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Output Tab -->
+            <div id="output" class="tab-content">
+                <h2 class="text-xl font-semibold text-blue-300 mb-4">Output Options</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="flex items-center">
+                        <label for="log_file_entry" class="w-48 text-right pr-4">Log File (--log-file):</label>
+                        <input type="text" id="log_file_entry" name="log_file_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="generateCommand()">
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Path to save the scan output.')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <label for="format_select" class="w-48 text-right pr-4">Output Format (--format):</label>
+                        <select id="format_select" name="format_select" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onchange="generateCommand()">
+                            <option value="">Default (CLI)</option>
+                            <option value="json">JSON</option>
+                            <option value="cli-no-color">CLI (No Color)</option>
+                            <option value="cli-color">CLI (Color)</option>
+                        </select>
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Specify the output format.')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" id="no_color_var" name="no_color_var" class="form-checkbox h-5 w-5 text-blue-600 rounded bg-gray-600 border border-gray-500" onchange="generateCommand()">
+                        <label for="no_color_var" class="ml-2">No Color (--no-color)</label>
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Disable colored output.')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" id="no_banner_var" name="no_banner_var" class="form-checkbox h-5 w-5 text-blue-600 rounded bg-gray-600 border border-gray-500" onchange="generateCommand()">
+                        <label for="no_banner_var" class="ml-2">No Banner (--no-banner)</label>
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Do not display the WPScan banner.')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" id="no_progress_bar_var" name="no_progress_bar_var" class="form-checkbox h-5 w-5 text-blue-600 rounded bg-gray-600 border border-gray-500" onchange="generateCommand()">
+                        <label for="no_progress_bar_var" class="ml-2">No Progress Bar (--no-progress-bar)</label>
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Disable the progress bar during scans.')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" id="verbose_var" name="verbose_var" class="form-checkbox h-5 w-5 text-blue-600 rounded bg-gray-600 border border-gray-500" onchange="generateCommand()">
+                        <label for="verbose_var" class="ml-2">Verbose (--verbose)</label>
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Show more detailed output.')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" id="debug_var" name="debug_var" class="form-checkbox h-5 w-5 text-blue-600 rounded bg-gray-600 border border-gray-500" onchange="generateCommand()">
+                        <label for="debug_var" class="ml-2">Debug (--debug)</label>
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Show debug information.')">?</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Advanced Tab -->
+            <div id="advanced" class="tab-content">
+                <h2 class="text-xl font-semibold text-blue-300 mb-4">Advanced Options</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="flex items-center">
+                        <label for="url_detection_select" class="w-48 text-right pr-4">URL Detection (--url-detection):</label>
+                        <select id="url_detection_select" name="url_detection_select" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onchange="generateCommand()">
+                            <option value="">Default</option>
+                            <option value="aggressive">Aggressive</option>
+                            <option value="passive">Passive</option>
+                        </select>
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Control how WPScan detects the WordPress URL.')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <label for="scope_entry" class="w-48 text-right pr-4">Scope (--scope):</label>
+                        <input type="text" id="scope_entry" name="scope_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="generateCommand()">
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Limit scan to specific paths or patterns.')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <label for="exclude_pattern_entry" class="w-48 text-right pr-4">Exclude Pattern (--exclude-pattern):</label>
+                        <input type="text" id="exclude_pattern_entry" name="exclude_pattern_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="generateCommand()">
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Exclude URLs matching a regex pattern.')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <label for="include_pattern_entry" class="w-48 text-right pr-4">Include Pattern (--include-pattern):</label>
+                        <input type="text" id="include_pattern_entry" name="include_pattern_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="generateCommand()">
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Include URLs matching a regex pattern.')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <label for="max_scan_duration_entry" class="w-48 text-right pr-4">Max Scan Duration (--max-scan-duration):</label>
+                        <input type="text" id="max_scan_duration_entry" name="max_scan_duration_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="generateCommand()">
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Maximum duration for the scan (e.g., 1h, 30m, 600s).')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <label for="max_scan_retries_entry" class="w-48 text-right pr-4">Max Scan Retries (--max-scan-retries):</label>
+                        <input type="number" id="max_scan_retries_entry" name="max_scan_retries_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="generateCommand()">
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Maximum number of retries for failed requests.')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <label for="scan_timeout_entry" class="w-48 text-right pr-4">Scan Timeout (--scan-timeout):</label>
+                        <input type="number" step="0.1" id="scan_timeout_entry" name="scan_timeout_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="generateCommand()">
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Overall scan timeout in seconds.')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <label for="user_agent_file_entry" class="w-48 text-right pr-4">User Agent File (--user-agent-file):</label>
+                        <input type="text" id="user_agent_file_entry" name="user_agent_file_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="generateCommand()">
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Path to a file containing User-Agent strings (one per line).')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" id="random_user_agent_var" name="random_user_agent_var" class="form-checkbox h-5 w-5 text-blue-600 rounded bg-gray-600 border border-gray-500" onchange="generateCommand()">
+                        <label for="random_user_agent_var" class="ml-2">Random User Agent (--random-user-agent)</label>
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Use a random User-Agent from the default list or a specified file.')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <label for="plugins_file_entry" class="w-48 text-right pr-4">Plugins File (--plugins-file):</label>
+                        <input type="text" id="plugins_file_entry" name="plugins_file_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="generateCommand()">
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Path to a file containing plugin slugs to enumerate.')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <label for="themes_file_entry" class="w-48 text-right pr-4">Themes File (--themes-file):</label>
+                        <input type="text" id="themes_file_entry" name="themes_file_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="generateCommand()">
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Path to a file containing theme slugs to enumerate.')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <label for="ignore_vulnerable_regex_entry" class="w-48 text-right pr-4">Ignore Vulnerable Regex (--ignore-vulnerable-regex):</label>
+                        <input type="text" id="ignore_vulnerable_regex_entry" name="ignore_vulnerable_regex_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="generateCommand()">
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Ignore vulnerabilities whose description matches the regex.')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <label for="ignore_vulnerable_slug_entry" class="w-48 text-right pr-4">Ignore Vulnerable Slug (--ignore-vulnerable-slug):</label>
+                        <input type="text" id="ignore_vulnerable_slug_entry" name="ignore_vulnerable_slug_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="generateCommand()">
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Ignore vulnerabilities for a specific plugin/theme slug.')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <label for="ignore_vulnerable_version_entry" class="w-48 text-right pr-4">Ignore Vulnerable Version (--ignore-vulnerable-version):</label>
+                        <input type="text" id="ignore_vulnerable_version_entry" name="ignore_vulnerable_version_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="generateCommand()">
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Ignore vulnerabilities for a specific version.')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <label for="ignore_vulnerable_status_entry" class="w-48 text-right pr-4">Ignore Vulnerable Status (--ignore-vulnerable-status):</label>
+                        <input type="text" id="ignore_vulnerable_status_entry" name="ignore_vulnerable_status_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="generateCommand()">
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Ignore vulnerabilities with a specific status (e.g., "fixed").')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <label for="ignore_vulnerable_type_entry" class="w-48 text-right pr-4">Ignore Vulnerable Type (--ignore-vulnerable-type):</label>
+                        <input type="text" id="ignore_vulnerable_type_entry" name="ignore_vulnerable_type_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="generateCommand()">
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Ignore vulnerabilities of a specific type (e.g., "plugin", "theme").')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <label for="ignore_vulnerable_severity_entry" class="w-48 text-right pr-4">Ignore Vulnerable Severity (--ignore-vulnerable-severity):</label>
+                        <input type="text" id="ignore_vulnerable_severity_entry" name="ignore_vulnerable_severity_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="generateCommand()">
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Ignore vulnerabilities with a specific severity (e.g., "high", "medium").')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <label for="ignore_vulnerable_cvss_entry" class="w-48 text-right pr-4">Ignore Vulnerable CVSS (--ignore-vulnerable-cvss):</label>
+                        <input type="text" id="ignore_vulnerable_cvss_entry" name="ignore_vulnerable_cvss_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="generateCommand()">
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Ignore vulnerabilities with a CVSS score less than or equal to the specified value.')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <label for="ignore_vulnerable_references_entry" class="w-48 text-right pr-4">Ignore Vulnerable References (--ignore-vulnerable-references):</label>
+                        <input type="text" id="ignore_vulnerable_references_entry" name="ignore_vulnerable_references_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="generateCommand()">
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Ignore vulnerabilities with references matching the regex.')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <label for="ignore_vulnerable_patch_entry" class="w-48 text-right pr-4">Ignore Vulnerable Patch (--ignore-vulnerable-patch):</label>
+                        <input type="text" id="ignore_vulnerable_patch_entry" name="ignore_vulnerable_patch_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="generateCommand()">
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Ignore vulnerabilities that have a patch available.')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <label for="ignore_vulnerable_fix_entry" class="w-48 text-right pr-4">Ignore Vulnerable Fix (--ignore-vulnerable-fix):</label>
+                        <input type="text" id="ignore_vulnerable_fix_entry" name="ignore_vulnerable_fix_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="generateCommand()">
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Ignore vulnerabilities that have a fix available.')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <label for="ignore_vulnerable_date_entry" class="w-48 text-right pr-4">Ignore Vulnerable Date (--ignore-vulnerable-date):</label>
+                        <input type="text" id="ignore_vulnerable_date_entry" name="ignore_vulnerable_date_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="generateCommand()">
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Ignore vulnerabilities published after a specific date (YYYY-MM-DD).')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <label for="ignore_vulnerable_tags_entry" class="w-48 text-right pr-4">Ignore Vulnerable Tags (--ignore-vulnerable-tags):</label>
+                        <input type="text" id="ignore_vulnerable_tags_entry" name="ignore_vulnerable_tags_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="generateCommand()">
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Ignore vulnerabilities with specific tags (comma-separated).')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <label for="ignore_vulnerable_notes_entry" class="w-48 text-right pr-4">Ignore Vulnerable Notes (--ignore-vulnerable-notes):</label>
+                        <input type="text" id="ignore_vulnerable_notes_entry" name="ignore_vulnerable_notes_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="generateCommand()">
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Ignore vulnerabilities with notes matching the regex.')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <label for="ignore_vulnerable_description_entry" class="w-48 text-right pr-4">Ignore Vulnerable Description (--ignore-vulnerable-description):</label>
+                        <input type="text" id="ignore_vulnerable_description_entry" name="ignore_vulnerable_description_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="generateCommand()">
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Ignore vulnerabilities whose description matches the regex.')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <label for="ignore_vulnerable_title_entry" class="w-48 text-right pr-4">Ignore Vulnerable Title (--ignore-vulnerable-title):</label>
+                        <input type="text" id="ignore_vulnerable_title_entry" name="ignore_vulnerable_title_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="generateCommand()">
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Ignore vulnerabilities whose title matches the regex.')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <label for="ignore_vulnerable_cve_entry" class="w-48 text-right pr-4">Ignore Vulnerable CVE (--ignore-vulnerable-cve):</label>
+                        <input type="text" id="ignore_vulnerable_cve_entry" name="ignore_vulnerable_cve_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="generateCommand()">
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Ignore vulnerabilities with specific CVE IDs (comma-separated).')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <label for="ignore_vulnerable_exploit_entry" class="w-48 text-right pr-4">Ignore Vulnerable Exploit (--ignore-vulnerable-exploit):</label>
+                        <input type="text" id="ignore_vulnerable_exploit_entry" name="ignore_vulnerable_exploit_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="generateCommand()">
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Ignore vulnerabilities with an exploit available.')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <label for="ignore_vulnerable_disclosure_entry" class="w-48 text-right pr-4">Ignore Vulnerable Disclosure (--ignore-vulnerable-disclosure):</label>
+                        <input type="text" id="ignore_vulnerable_disclosure_entry" name="ignore_vulnerable_disclosure_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="generateCommand()">
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Ignore vulnerabilities with a disclosure date after a specific date (YYYY-MM-DD).')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <label for="ignore_vulnerable_references_url_entry" class="w-48 text-right pr-4">Ignore Vulnerable References URL (--ignore-vulnerable-references-url):</label>
+                        <input type="text" id="ignore_vulnerable_references_url_entry" name="ignore_vulnerable_references_url_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="generateCommand()">
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Ignore vulnerabilities with references matching the URL regex.')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <label for="ignore_vulnerable_references_type_entry" class="w-48 text-right pr-4">Ignore Vulnerable References Type (--ignore-vulnerable-references-type):</label>
+                        <input type="text" id="ignore_vulnerable_references_type_entry" name="ignore_vulnerable_references_type_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="generateCommand()">
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Ignore vulnerabilities with references of a specific type.')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <label for="ignore_vulnerable_references_id_entry" class="w-48 text-right pr-4">Ignore Vulnerable References ID (--ignore-vulnerable-references-id):</label>
+                        <input type="text" id="ignore_vulnerable_references_id_entry" name="ignore_vulnerable_references_id_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="generateCommand()">
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Ignore vulnerabilities with references matching the ID regex.')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <label for="ignore_vulnerable_references_title_entry" class="w-48 text-right pr-4">Ignore Vulnerable References Title (--ignore-vulnerable-references-title):</label>
+                        <input type="text" id="ignore_vulnerable_references_title_entry" name="ignore_vulnerable_references_title_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="generateCommand()">
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Ignore vulnerabilities with references whose title matches the regex.')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <label for="ignore_vulnerable_references_date_entry" class="w-48 text-right pr-4">Ignore Vulnerable References Date (--ignore-vulnerable-references-date):</label>
+                        <input type="text" id="ignore_vulnerable_references_date_entry" name="ignore_vulnerable_references_date_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="generateCommand()">
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Ignore vulnerabilities with references published after a specific date (YYYY-MM-DD).')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <label for="ignore_vulnerable_references_tags_entry" class="w-48 text-right pr-4">Ignore Vulnerable References Tags (--ignore-vulnerable-references-tags):</label>
+                        <input type="text" id="ignore_vulnerable_references_tags_entry" name="ignore_vulnerable_references_tags_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="generateCommand()">
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Ignore vulnerabilities with references having specific tags (comma-separated).')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <label for="ignore_vulnerable_references_notes_entry" class="w-48 text-right pr-4">Ignore Vulnerable References Notes (--ignore-vulnerable-references-notes):</label>
+                        <input type="text" id="ignore_vulnerable_references_notes_entry" name="ignore_vulnerable_references_notes_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="generateCommand()">
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Ignore vulnerabilities with references whose notes match the regex.')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <label for="ignore_vulnerable_references_description_entry" class="w-48 text-right pr-4">Ignore Vulnerable References Description (--ignore-vulnerable-references-description):</label>
+                        <input type="text" id="ignore_vulnerable_references_description_entry" name="ignore_vulnerable_references_description_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="generateCommand()">
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Ignore vulnerabilities with references whose description matches the regex.')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <label for="ignore_vulnerable_references_cve_entry" class="w-48 text-right pr-4">Ignore Vulnerable References CVE (--ignore-vulnerable-references-cve):</label>
+                        <input type="text" id="ignore_vulnerable_references_cve_entry" name="ignore_vulnerable_references_cve_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="generateCommand()">
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Ignore vulnerabilities with references having specific CVE IDs (comma-separated).')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <label for="ignore_vulnerable_references_exploit_entry" class="w-48 text-right pr-4">Ignore Vulnerable References Exploit (--ignore-vulnerable-references-exploit):</label>
+                        <input type="text" id="ignore_vulnerable_references_exploit_entry" name="ignore_vulnerable_references_exploit_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="generateCommand()">
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Ignore vulnerabilities with references having an exploit available.')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <label for="ignore_vulnerable_references_disclosure_entry" class="w-48 text-right pr-4">Ignore Vulnerable References Disclosure (--ignore-vulnerable-references-disclosure):</label>
+                        <input type="text" id="ignore_vulnerable_references_disclosure_entry" name="ignore_vulnerable_references_disclosure_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="generateCommand()">
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Ignore vulnerabilities with references whose disclosure date is after a specific date (YYYY-MM-DD).')">?</button>
+                    </div>
+                    <div class="flex items-start">
+                        <label for="additional_args_entry" class="w-48 text-right pr-4 pt-2">Additional Arguments:</label>
+                        <textarea id="additional_args_entry" name="additional_args_entry" rows="4" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="generateCommand()"></textarea>
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Any other WPScan arguments not covered by the GUI. Enter them exactly as you would on the command line (e.g., "--detection-mode aggressive").')">?</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Examples Tab -->
+            <div id="examples" class="tab-content">
+                <h2 class="text-xl font-semibold text-blue-300 mb-4">Examples</h2>
+                <div class="mb-4 flex items-center">
+                    <label for="example_search_entry" class="w-32 text-right pr-4">Search Examples:</label>
+                    <input type="text" id="example_search_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="filterExamples()">
+                    <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded" onclick="clearExampleSearch()">Clear Search</button>
+                </div>
+                <div id="examples_list" class="grid grid-cols-1 gap-4">
+                    <!-- Examples will be loaded here by JavaScript -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Generated Command -->
+        <div class="bg-gray-700 p-4 rounded-lg shadow-md mb-4">
+            <h2 class="text-xl font-semibold text-blue-300 mb-2">Generated WPScan Command</h2>
+            <textarea id="command_text" class="w-full h-24 p-2 rounded bg-gray-900 text-blue-400 font-mono text-sm resize-none custom-scrollbar" readonly></textarea>
+            <div class="flex justify-end mt-2 space-x-2">
+                <button class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md transition-colors duration-200" onclick="copyCommand()">Copy Command</button>
+                <button class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md transition-colors duration-200" onclick="generateCommand()">Generate Command</button>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex justify-center space-x-4 mb-4">
+            <button id="run_wpscan_button" class="btn-success">
+                <i data-lucide="play" class="w-6 h-6 mr-2"></i> Run WPScan
+            </button>
+            <button class="btn-danger" onclick="clearOutput()">
+                <i data-lucide="trash-2" class="w-6 h-6 mr-2"></i> Clear Output
+            </button>
+            <button class="btn-info" onclick="saveOutput()">
+                <i data-lucide="save" class="w-6 h-6 mr-2"></i> Save Output
+            </button>
+        </div>
+
+        <!-- Status Bar -->
+        <div id="status_bar" class="bg-gray-900 text-white text-sm p-2 rounded-md mb-4 text-center">Ready</div>
+
+        <!-- WPScan Output -->
+        <div class="bg-gray-700 p-4 rounded-lg shadow-md">
+            <h2 class="text-xl font-semibold text-blue-300 mb-2">WPScan Output</h2>
+            <div class="flex items-center mb-2">
+                <label for="search_entry" class="pr-2">Search:</label>
+                <input type="text" id="search_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="searchOutput()">
+                <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded" onclick="searchOutput()">Search</button>
+                <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded" onclick="clearSearchHighlight()">Clear Search</button>
+            </div>
+            <pre id="output_text" class="w-full h-96 p-2 rounded bg-gray-900 text-gray-200 font-mono text-sm overflow-auto custom-scrollbar"></pre>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="text-gray-500 text-sm mt-4">
+        Created by khedr0x00
+    </div>
+
+    <!-- Global Message/Alert Modal -->
+    <div id="messageModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="messageModalTitle">Alert</h2>
+                <span class="modal-close" onclick="closeMessageModal()">&times;</span>
+            </div>
+            <div class="modal-body" id="messageModalBody"></div>
+            <div class="modal-footer">
+                <button onclick="closeMessageModal()" class="btn-primary">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirmation Modal for Linux/Termux Installation -->
+    <div id="installConfirmModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="installConfirmModalTitle">Confirm Installation</h2>
+                <span class="modal-close" onclick="closeInstallConfirmModal()">&times;</span>
+            </div>
+            <div class="modal-body" id="installConfirmModalBody"></div>
+            <div class="modal-footer flex justify-end space-x-4">
+                <button onclick="closeInstallConfirmModal()" class="btn-secondary">Cancel</button>
+                <button id="confirmInstallButton" class="btn-success">Install Now</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Example Output Modal -->
+    <div id="exampleOutputModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="exampleOutputModalTitle">Example Output</h2>
+                <span class="modal-close" onclick="closeExampleOutputModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <pre id="exampleOutputModalText" class="w-full h-auto p-2 rounded bg-gray-900 text-gray-200 font-mono text-sm overflow-auto custom-scrollbar"></pre>
+            </div>
+            <div class="modal-footer">
+                <button onclick="closeExampleOutputModal()" class="btn-primary">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize Lucide icons
+        lucide.createIcons();
+
+        // Global variable to store examples
+        let allExamples = [];
+        let currentScanId = null;
+        let pollInterval = null;
+        let searchStartIndex = 0; // For incremental search in output
+        let currentOutputBuffer = ""; // Buffer to accumulate real-time output
+
+        // Function to show/hide tabs
+        function showTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab-button').forEach(button => {
+                button.classList.remove('active');
+            });
+            document.querySelector(`.tab-button[data-tab="${tabId}"]`).classList.add('active');
+            document.getElementById(tabId).classList.add('active');
+            generateCommand(); // Regenerate command on tab change
+        }
+
+        // Event listeners for tab buttons
+        document.querySelectorAll('.tab-button').forEach(button => {
+            button.addEventListener('click', () => {
+                showTab(button.dataset.tab);
+            });
+        });
+
+        // --- Helper for showing custom modals ---
+        function showMessageModal(title, message, isHtml = false) {
+            document.getElementById('messageModalTitle').innerText = title;
+            const messageBody = document.getElementById('messageModalBody');
+            if (isHtml) {
+                messageBody.innerHTML = message;
+            } else {
+                messageBody.innerText = message;
+            }
+            document.getElementById('messageModal').style.display = 'flex';
+        }
+
+        function closeMessageModal() {
+            document.getElementById('messageModal').style.display = 'none';
+        }
+
+        function showInstallConfirmModal(title, message, onConfirm) {
+            document.getElementById('installConfirmModalTitle').innerText = title;
+            document.getElementById('installConfirmModalBody').innerHTML = message;
+            const confirmButton = document.getElementById('confirmInstallButton');
+            confirmButton.onclick = () => {
+                closeInstallConfirmModal();
+                onConfirm();
+            };
+            document.getElementById('installConfirmModal').style.display = 'flex';
+        }
+
+        function closeInstallConfirmModal() {
+            document.getElementById('installConfirmModal').style.display = 'none';
+        }
+
+        function showExampleOutputModal(title, output) {
+            document.getElementById('exampleOutputModalTitle').innerText = title;
+            const outputPre = document.getElementById('exampleOutputModalText');
+            outputPre.innerHTML = ''; // Clear previous content
+
+            // Apply coloring based on WPScan-like output
+            insertColoredText(outputPre, output);
+            document.getElementById('exampleOutputModal').style.display = 'flex';
+        }
+
+        function closeExampleOutputModal() {
+            document.getElementById('exampleOutputModal').style.display = 'none';
+        }
+
+        // Function to collect form data
+        function getFormData() {
+            const formData = {};
+            document.querySelectorAll('#tab-content-container input, #tab-content-container select, #tab-content-container textarea').forEach(element => {
+                if (element.type === 'checkbox') {
+                    formData[element.id] = element.checked;
+                } else if (element.type === 'number') {
+                    formData[element.id] = element.value ? parseFloat(element.value) : '';
+                }
+                else {
+                    formData[element.id] = element.value;
+                }
+            });
+            return formData;
+        }
+
+        // Function to generate WPScan command
+        async function generateCommand() {
+            const formData = getFormData();
+            try {
+                const response = await fetch('/generate_command', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData),
+                });
+                const data = await response.json();
+                document.getElementById('command_text').value = data.command;
+            } catch (error) {
+                console.error('Error generating command:', error);
+                document.getElementById('command_text').value = 'Error generating command.';
+            }
+        }
+
+        // Function to copy command to clipboard
+        function copyCommand() {
+            const commandText = document.getElementById('command_text');
+            commandText.select();
+            document.execCommand('copy');
+            showMessageModal('Command Copied', 'The command has been copied to your clipboard!');
+        }
+
+        // Function to run WPScan
+        async function runWPScan() {
+            if (currentScanId) {
+                showMessageModal('WPScan Running', 'WPScan is already running. Please wait for it to finish.');
+                return;
+            }
+
+            const command = document.getElementById('command_text').value;
+            if (!command) {
+                showMessageModal('Error', 'No command to run.');
+                return;
+            }
+
+            // Disable run button and clear output
+            document.getElementById('run_wpscan_button').disabled = true;
+            document.getElementById('output_text').innerHTML = '';
+            currentOutputBuffer = "";
+            clearSearchHighlight();
+            showStatus('Starting WPScan...', 'blue');
+
+            try {
+                const response = await fetch('/run_wpscan', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ command: command }),
+                });
+                const data = await response.json();
+                if (data.status === 'error') {
+                    showMessageModal('Error', data.message);
+                    showStatus(`Error: ${data.message}`, 'red');
+                    document.getElementById('run_wpscan_button').disabled = false;
+                } else {
+                    currentScanId = data.scan_id;
+                    showStatus(`WPScan started (ID: ${currentScanId}). Fetching output...`, 'blue');
+                    // Start polling for output
+                    pollInterval = setInterval(pollOutput, 500); // Poll every 500ms
+                }
+            } catch (error) {
+                console.error('Error starting WPScan:', error);
+                showMessageModal('Error', 'An error occurred while starting WPScan.');
+                showStatus('An error occurred while starting WPScan.', 'red');
+                document.getElementById('run_wpscan_button').disabled = false;
+            }
+        }
+
+        // Polling for WPScan output
+        async function pollOutput() {
+            if (!currentScanId) {
+                clearInterval(pollInterval);
+                pollInterval = null;
+                return;
+            }
+
+            try {
+                const response = await fetch(`/get_scan_output/${currentScanId}`);
+                const data = await response.json();
+                const outputTextElement = document.getElementById('output_text');
+                
+                if (data.output) {
+                    // Only append new output to the buffer
+                    const newOutputSegment = data.output.substring(currentOutputBuffer.length);
+                    currentOutputBuffer += newOutputSegment;
+                    insertColoredText(outputTextElement, currentOutputBuffer);
+                }
+
+                if (data.status === 'running') {
+                    showStatus('WPScan is running...', 'blue');
+                } else if (data.status === 'completed' || data.status === 'success' || data.status === 'error') {
+                    clearInterval(pollInterval);
+                    pollInterval = null;
+                    currentScanId = null;
+                    currentOutputBuffer = data.output; // Get final complete output
+                    insertColoredText(outputTextElement, currentOutputBuffer);
+                    if (data.status === 'completed' || data.status === 'success') {
+                        showStatus('WPScan scan completed successfully.', 'green');
+                    } else {
+                        showStatus(`Scan failed: ${data.message || 'Unknown error'}`, 'red');
+                        showMessageModal('Scan Error', data.message || 'An unknown error occurred during the scan.');
+                    }
+                    document.getElementById('run_wpscan_button').disabled = false;
+                    // Re-enable install buttons if they were disabled for installation
+                    document.getElementById('install_wpscan_linux_button').disabled = false;
+                    document.getElementById('install_wpscan_termux_button').disabled = false;
+                    document.getElementById('download_wpscan_windows_button').disabled = false;
+                } else if (data.status === 'not_found') {
+                    clearInterval(pollInterval);
+                    pollInterval = null;
+                    currentScanId = null;
+                    showStatus(`Scan failed: ${data.message || 'Scan ID not found or expired.'}`, 'red');
+                    showMessageModal('Scan Error', data.message || 'Scan ID not found or expired.');
+                    document.getElementById('run_wpscan_button').disabled = false;
+                    // Re-enable install buttons if they were disabled for installation
+                    document.getElementById('install_wpscan_linux_button').disabled = false;
+                    document.getElementById('install_wpscan_termux_button').disabled = false;
+                    document.getElementById('download_wpscan_windows_button').disabled = false;
+                }
+            } catch (error) {
+                console.error('Error polling output:', error);
+                showMessageModal('Polling Error', 'An error occurred while fetching output.');
+                showStatus('An error occurred while fetching output.', 'red');
+                clearInterval(pollInterval);
+                pollInterval = null;
+                currentScanId = null;
+                document.getElementById('run_wpscan_button').disabled = false;
+                // Re-enable install buttons if they were disabled for installation
+                document.getElementById('install_wpscan_linux_button').disabled = false;
+                document.getElementById('install_wpscan_termux_button').disabled = false;
+                document.getElementById('download_wpscan_windows_button').disabled = false;
+            }
+        }
+
+        // Helper to insert colored text based on WPScan output patterns
+        function insertColoredText(element, text) {
+            element.innerHTML = ''; // Clear current content to re-insert with spans
+            const lines = text.split('\n');
+            const fragment = document.createDocumentFragment();
+
+            lines.forEach(line => {
+                const span = document.createElement('span');
+                let className = 'output-default';
+
+                if (line.toLowerCase().includes('[+]') || line.toLowerCase().includes('vulnerable')) {
+                    className = 'output-red'; // Vulnerabilities are red
+                } else if (line.toLowerCase().includes('[i]') || line.toLowerCase().includes('info')) {
+                    className = 'output-blue'; // Information is blue
+                } else if (line.toLowerCase().includes('[s]') || line.toLowerCase().includes('success')) {
+                    className = 'output-green'; // Success messages are green
+                } else if (line.toLowerCase().includes('[!]') || line.toLowerCase().includes('warning')) {
+                    className = 'output-orange'; // Warnings are orange
+                } else if (line.toLowerCase().includes('[?]') || line.toLowerCase().includes('notice')) {
+                    className = 'output-yellow'; // Notices are yellow
+                }
+                
+                span.className = className;
+                span.textContent = line + '\n'; // Add newline back for pre tag
+                fragment.appendChild(span);
+            });
+            element.appendChild(fragment);
+            element.scrollTop = element.scrollHeight; // Scroll to bottom
+        }
+
+        // Function to clear output
+        function clearOutput() {
+            document.getElementById('output_text').innerHTML = '';
+            currentOutputBuffer = "";
+            showStatus('Ready');
+            clearSearchHighlight();
+            if (currentScanId) {
+                clearInterval(pollInterval);
+                pollInterval = null;
+                currentScanId = null;
+            }
+        }
+
+        // Function to save output
+        async function saveOutput() {
+            const outputContent = document.getElementById('output_text').innerText;
+            if (!outputContent.trim()) {
+                showMessageModal('Save Output', 'No output to save.');
+                return;
+            }
+
+            // Prompt for filename (simple browser prompt)
+            const defaultFilename = `wpscan_output_${new Date().toISOString().slice(0,10)}.txt`;
+            const filename = prompt("Enter filename to save:", defaultFilename);
+
+            if (filename) {
+                try {
+                    const response = await fetch('/save_output', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ content: outputContent, filename: filename })
+                    });
+                    const data = await response.json();
+
+                    if (data.status === 'success') {
+                        showMessageModal('Save Output', `Output saved on the server. You can download it now.`);
+                        // Offer download link
+                        if (data.download_url) {
+                            const downloadLink = document.createElement('a');
+                            downloadLink.href = data.download_url;
+                            downloadLink.download = filename; // Suggest filename for download
+                            downloadLink.style.display = 'none';
+                            document.body.appendChild(downloadLink);
+                            downloadLink.click();
+                            document.body.removeChild(downloadLink);
+                        }
+                    } else {
+                        showMessageModal('Save Error', `Failed to save file: ${data.message}`);
+                    }
+                } catch (error) {
+                    console.error('Error saving output:', error);
+                    showMessageModal('Save Error', `Failed to save file: ${error.message}`);
+                }
+            }
+        }
+
+        // Function to update status bar
+        function showStatus(message, color = 'white') {
+            const statusBar = document.getElementById('status_bar');
+            statusBar.textContent = message;
+            statusBar.style.color = color;
+        }
+
+        // Function to search output
+        function searchOutput() {
+            const searchTerm = document.getElementById('search_entry').value.trim().toLowerCase();
+            const outputTextElement = document.getElementById('output_text');
+            const fullText = outputTextElement.textContent; // Use textContent to get plain text
+
+            clearSearchHighlight(); // Clear existing highlights first
+
+            if (!searchTerm) {
+                searchStartIndex = 0;
+                return;
+            }
+
+            let found = false;
+            let newContent = '';
+            let lastIndex = 0;
+
+            const regex = new RegExp(searchTerm, 'gi'); // 'gi' for global and case-insensitive
+
+            let match;
+            while ((match = regex.exec(fullText)) !== null) {
+                found = true;
+                const index = match.index;
+                const matchedText = match[0];
+
+                // Append content before the match
+                newContent += escapeHtml(fullText.substring(lastIndex, index));
+                // Append the highlighted match
+                newContent += `<mark class="highlight">${escapeHtml(matchedText)}</mark>`;
+                lastIndex = index + matchedText.length;
+            }
+            newContent += escapeHtml(fullText.substring(lastIndex)); // Append remaining content
+
+            outputTextElement.innerHTML = newContent;
+
+            if (!found) {
+                showMessageModal('Search', `No occurrences of '${searchTerm}' found.`);
+            } else {
+                // Scroll to the first highlighted element
+                const firstHighlight = outputTextElement.querySelector('mark.highlight');
+                if (firstHighlight) {
+                    firstHighlight.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }
+        }
+
+        // Function to clear search highlight
+        function clearSearchHighlight() {
+            const outputTextElement = document.getElementById('output_text');
+            const currentContent = outputTextElement.textContent; // Get plain text content
+            outputTextElement.innerHTML = ''; // Clear existing content
+            insertColoredText(outputTextElement, currentContent); // Re-insert without highlights
+            searchStartIndex = 0;
+        }
+
+        // Function to show help popup
+        function showHelp(helpText) {
+            const overlay = document.createElement('div');
+            overlay.className = 'help-popup-overlay';
+            overlay.onclick = () => {
+                document.body.removeChild(overlay);
+                document.body.removeChild(popup);
+            };
+            document.body.appendChild(overlay);
+
+            const popup = document.createElement('div');
+            popup.className = 'help-popup';
+            popup.innerHTML = `
+                <h3 class="text-xl font-bold text-blue-300 mb-4">Help</h3>
+                <div class="flex-grow overflow-y-auto custom-scrollbar p-2 bg-gray-600 rounded text-gray-200 text-sm mb-4">
+                    ${helpText.replace(/\n/g, '<br>')}
+                </div>
+                <button class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md self-center" onclick="this.parentNode.parentNode.removeChild(this.parentNode); document.body.removeChild(document.querySelector('.help-popup-overlay'));">Close</button>
+            `;
+            document.body.appendChild(popup);
+        }
+
+        // --- Examples Tab Functions ---
+        async function loadExamples() {
+            try {
+                // Fetch examples from the backend (assuming /get_examples endpoint)
+                const response = await fetch('/get_examples');
+                if (response.ok) {
+                    allExamples = await response.json();
+                } else {
+                    // Fallback to hardcoded examples if backend fails
+                    console.warn("Could not fetch examples from backend, using hardcoded examples.");
+                    allExamples = [
+                        {
+                            "name": "Basic Scan",
+                            "description": "Performs a basic scan for WordPress version, themes, and plugins.",
+                            "options": {
+                                "target_url_entry": "http://example.com"
+                            },
+                            "example_output": `
+[i] Running WPScan 3.x.x (https://wpscan.com)
+[i] Detected WordPress version 6.5.2
+[i] Detected theme: Twenty Twenty-Four 1.0
+[i] Detected plugin: Akismet 5.3
+[+] No vulnerabilities found.
+`
+                        },
+                        {
+                            "name": "Enumerate Users",
+                            "description": "Enumerates WordPress users.",
+                            "options": {
+                                "target_url_entry": "http://example.com",
+                                "enumerate_users_var": true
+                            },
+                            "example_output": `
+[i] Running WPScan 3.x.x (https://wpscan.com)
+[i] Detected WordPress version 6.5.2
+[+] Found user: 'admin' (ID: 1)
+[+] Found user: 'editor' (ID: 2)
+[+] No vulnerabilities found.
+`
+                        },
+                        {
+                            "name": "Enumerate Vulnerable Plugins",
+                            "description": "Enumerates plugins and checks for known vulnerabilities (requires API token).",
+                            "options": {
+                                "target_url_entry": "http://example.com",
+                                "api_token_entry": "YOUR_API_TOKEN",
+                                "enumerate_profile_select": "vp"
+                            },
+                            "example_output": `
+[i] Running WPScan 3.x.x (https://wpscan.com)
+[i] Detected WordPress version 6.5.2
+[i] Detected plugin: 'wp-file-manager' 6.0 (Vulnerable)
+    [!] Title: WP File Manager <= 6.0 - Unauthenticated Arbitrary File Upload
+        Reference: https://wpscan.com/vulnerability/10360
+        CVSSv3: 9.8 (CRITICAL)
+[+] No other vulnerabilities found.
+`
+                        },
+                        {
+                            "name": "Bruteforce Login",
+                            "description": "Attempts to bruteforce login for a specific user.",
+                            "options": {
+                                "target_url_entry": "http://example.com/wp-login.php",
+                                "usernames_entry": "admin",
+                                "passwords_file_entry": "passwords.txt"
+                            },
+                            "example_output": `
+[i] Running WPScan 3.x.x (https://wpscan.com)
+[i] Bruteforcing 'admin' user...
+[!] Password found for 'admin': 'password123'
+[+] No vulnerabilities found.
+`
+                        },
+                        {
+                            "name": "Scan with Custom User-Agent & Proxy",
+                            "description": "Performs a scan using a custom User-Agent and a proxy.",
+                            "options": {
+                                "target_url_entry": "http://example.com",
+                                "user_agent_entry": "Mozilla/5.0 (WPScan-Custom-Agent)",
+                                "proxy_entry": "http://127.0.0.1:8080"
+                            },
+                            "example_output": `
+[i] Running WPScan 3.x.x (https://wpscan.com)
+[i] Using proxy: http://127.0.0.1:8080
+[i] Detected WordPress version 6.5.2
+[+] No vulnerabilities found.
+`
+                        }
+                    ];
+                }
+                filterExamples(); // Display all examples initially
+            } catch (error) {
+                console.error('Error loading examples:', error);
+                showStatus('Error loading examples. Using hardcoded examples.', 'red');
+                // Ensure allExamples is populated even if fetch fails
+                allExamples = [
+                    {
+                        "name": "Basic Scan",
+                        "description": "Performs a basic scan for WordPress version, themes, and plugins.",
+                        "options": {
+                            "target_url_entry": "http://example.com"
+                        },
+                        "example_output": `
+[i] Running WPScan 3.x.x (https://wpscan.com)
+[i] Detected WordPress version 6.5.2
+[i] Detected theme: Twenty Twenty-Four 1.0
+[i] Detected plugin: Akismet 5.3
+[+] No vulnerabilities found.
+`
+                    },
+                    {
+                        "name": "Enumerate Users",
+                        "description": "Enumerates WordPress users.",
+                        "options": {
+                            "target_url_entry": "http://example.com",
+                            "enumerate_users_var": true
+                        },
+                        "example_output": `
+[i] Running WPScan 3.x.x (https://wpscan.com)
+[i] Detected WordPress version 6.5.2
+[+] Found user: 'admin' (ID: 1)
+[+] Found user: 'editor' (ID: 2)
+[+] No vulnerabilities found.
+`
+                    },
+                    {
+                        "name": "Enumerate Vulnerable Plugins",
+                        "description": "Enumerates plugins and checks for known vulnerabilities (requires API token).",
+                        "options": {
+                            "target_url_entry": "http://example.com",
+                            "api_token_entry": "YOUR_API_TOKEN",
+                            "enumerate_profile_select": "vp"
+                        },
+                        "example_output": `
+[i] Running WPScan 3.x.x (https://wpscan.com)
+[i] Detected WordPress version 6.5.2
+[i] Detected plugin: 'wp-file-manager' 6.0 (Vulnerable)
+    [!] Title: WP File Manager <= 6.0 - Unauthenticated Arbitrary File Upload
+        Reference: https://wpscan.com/vulnerability/10360
+        CVSSv3: 9.8 (CRITICAL)
+[+] No other vulnerabilities found.
+`
+                    },
+                    {
+                        "name": "Bruteforce Login",
+                        "description": "Attempts to bruteforce login for a specific user.",
+                        "options": {
+                            "target_url_entry": "http://example.com/wp-login.php",
+                            "usernames_entry": "admin",
+                            "passwords_file_entry": "passwords.txt"
+                        },
+                        "example_output": `
+[i] Running WPScan 3.x.x (https://wpscan.com)
+[i] Bruteforcing 'admin' user...
+[!] Password found for 'admin': 'password123'
+[+] No vulnerabilities found.
+`
+                    },
+                    {
+                        "name": "Scan with Custom User-Agent & Proxy",
+                        "description": "Performs a scan using a custom User-Agent and a proxy.",
+                        "options": {
+                            "target_url_entry": "http://example.com",
+                            "user_agent_entry": "Mozilla/5.0 (WPScan-Custom-Agent)",
+                            "proxy_entry": "http://127.0.0.1:8080"
+                        },
+                        "example_output": `
+[i] Running WPScan 3.x.x (https://wpscan.com)
+[i] Using proxy: http://127.0.0.1:8080
+[i] Detected WordPress version 6.5.2
+[+] No vulnerabilities found.
+`
+                    }
+                ];
+                filterExamples();
+            }
+        }
+
+        function filterExamples() {
+            const searchQuery = document.getElementById('example_search_entry').value.toLowerCase();
+            const examplesList = document.getElementById('examples_list');
+            examplesList.innerHTML = ''; // Clear current list
+
+            allExamples.forEach(example => {
+                if (example.name.toLowerCase().includes(searchQuery) || example.description.toLowerCase().includes(searchQuery)) {
+                    const exampleDiv = document.createElement('div');
+                    exampleDiv.className = 'bg-gray-800 p-4 rounded-lg shadow-md flex flex-col md:flex-row justify-between items-start md:items-center';
+                    exampleDiv.innerHTML = `
+                        <div>
+                            <h3 class="text-lg font-semibold text-blue-300">${escapeHtml(example.name)}</h3>
+                            <p class="text-sm text-gray-400 mb-2 md:mb-0">${escapeHtml(example.description)}</p>
+                        </div>
+                        <div class="flex mt-2 md:mt-0 space-x-2">
+                            <button class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded-md text-sm" onclick="loadExampleOptions(${escapeHtml(JSON.stringify(example.options))})">Select</button>
+                            <button class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1 rounded-md text-sm" onclick="showExampleOutputModal('${escapeHtml(example.name)} Output', ${escapeHtml(JSON.stringify(example.example_output))})">Output</button>
+                        </div>
+                    `;
+                    examplesList.appendChild(exampleDiv);
+                }
+            });
+            lucide.createIcons(); // Re-render Lucide icons for new elements
+        }
+
+        function clearExampleSearch() {
+            document.getElementById('example_search_entry').value = '';
+            filterExamples();
+        }
+
+        function loadExampleOptions(options) {
+            clearAllInputs(); // Clear all inputs first
+
+            // Populate form fields with example options
+            for (const key in options) {
+                const element = document.getElementById(key);
+                if (element) {
+                    if (element.type === 'checkbox') {
+                        element.checked = options[key];
+                    } else if (element.tagName === 'TEXTAREA') {
+                        element.value = options[key];
+                    } else {
+                        element.value = options[key];
+                    }
+                }
+            }
+            generateCommand(); // Re-generate command after loading
+            showMessageModal('Example Loaded', 'Example options have been loaded. Check other tabs and the generated command.');
+            showTab('target'); // Switch to target tab
+        }
+
+        // Helper to escape HTML for safe display
+        function escapeHtml(text) {
+            if (typeof text !== 'string') {
+                text = String(text);
+            }
+            const map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+            return text.replace(/[&<>"']/g, function(m) { return map[m]; });
+        }
+
+        // Helper to unescape HTML entities
+        function unescapeHtml(html) {
+            const doc = new DOMParser().parseFromString(html, 'text/html');
+            return doc.documentElement.textContent;
+        }
+
+        function clearAllInputs() {
+            document.querySelectorAll('#tab-content-container input[type="text"], #tab-content-container input[type="number"], #tab-content-container textarea').forEach(element => {
+                element.value = '';
+            });
+            document.querySelectorAll('#tab-content-container input[type="checkbox"]').forEach(element => {
+                element.checked = false;
+            });
+            document.querySelectorAll('#tab-content-container select').forEach(element => {
+                element.value = ''; // Clear dropdown selection
+            });
+            // Reset specific default values if any
+            document.getElementById('enumerate_profile_select').value = '';
+            document.getElementById('format_select').value = '';
+            document.getElementById('url_detection_select').value = '';
+            generateCommand();
+        }
+
+        // Function to handle WPScan installation
+        async function handleWPScanInstallation(platformType) {
+            const linuxButton = document.getElementById('install_wpscan_linux_button');
+            const termuxButton = document.getElementById('install_wpscan_termux_button');
+            const windowsButton = document.getElementById('download_wpscan_windows_button');
+
+            // Disable all install buttons during an installation attempt
+            linuxButton.disabled = true;
+            termuxButton.disabled = true;
+            windowsButton.disabled = true;
+
+            showStatus('Checking system and preparing for installation...', 'blue');
+            document.getElementById('output_text').innerHTML = ''; // Clear output area
+            currentOutputBuffer = ""; // Clear output buffer for installation logs
+
+            if (platformType === 'linux' || platformType === 'termux') {
+                const osName = platformType === 'termux' ? "Termux" : "Linux";
+                showInstallConfirmModal(
+                    'Install WPScan',
+                    `Your operating system is <strong>${osName}</strong>. Do you want to install WPScan now? This will require superuser privileges and might ask for your password in the server console.`,
+                    async () => {
+                        // This function will be called if the user confirms
+                        showStatus(`Installing WPScan on ${osName}...`, 'blue');
+                        try {
+                            const response = await fetch('/install_wpscan', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ platform: platformType }) // Pass platform type to backend
+                            });
+                            const data = await response.json();
+
+                            if (data.status === 'error') {
+                                showStatus(`WPScan installation failed: ${data.message}`, 'red');
+                                showMessageModal('WPScan Installation Failed', `Failed to install/update WPScan: ${data.message}<br><br>Output:<pre>${escapeHtml(data.output)}</pre>`, true);
+                                insertColoredText(document.getElementById('output_text'), data.output);
+                                // Re-enable buttons on error
+                                linuxButton.disabled = false;
+                                termuxButton.disabled = false;
+                                windowsButton.disabled = false;
+                            } else { // status is 'running' for real-time output
+                                currentScanId = data.scan_id; // Use the scan_id returned by the backend
+                                showStatus(`WPScan installation started (ID: ${currentScanId}). Fetching output...`, 'blue');
+                                pollInterval = setInterval(pollOutput, 500); // Start polling for output
+                            }
+                        } catch (error) {
+                            console.error('Error during WPScan installation fetch:', error);
+                            showStatus('An error occurred during installation.', 'red');
+                            showMessageModal('WPScan Installation Error', `An error occurred while trying to install WPScan: ${error.message}. Check server logs for more details.`);
+                            // Re-enable buttons on error
+                            linuxButton.disabled = false;
+                            termuxButton.disabled = false;
+                            windowsButton.disabled = false;
+                        }
+                    }
+                );
+            } else if (platformType === 'windows') {
+                const downloadMessage = `WPScan cannot be installed directly via this web interface on Windows.
+                <br><br>
+                WPScan is a Ruby gem. You will need to install Ruby first, then install WPScan via RubyGems.
+                <br><br>
+                Please follow the official installation guide:
+                <br><br>
+                <a href="https://github.com/wpscanteam/wpscan#installation" target="_blank" class="text-blue-400 hover:underline">WPScan Installation Guide</a>`;
+                showMessageModal('Install WPScan', downloadMessage, true); // Use isHtml = true
+                showStatus('WPScan installation is not directly supported on Windows via this interface.', 'orange');
+                // Re-enable buttons immediately for Windows as no backend process is started
+                linuxButton.disabled = false;
+                termuxButton.disabled = false;
+                windowsButton.disabled = false;
+            } else {
+                showMessageModal('Install WPScan', `WPScan installation is not automatically supported for your operating system (${navigator.platform}). Please install WPScan manually.`);
+                showStatus('WPScan installation is not supported for this system.', 'orange');
+                // Re-enable buttons immediately for unsupported OS
+                linuxButton.disabled = false;
+                termuxButton.disabled = false;
+                windowsButton.disabled = false;
+            }
+        }
+
+        // Initial setup
+        document.addEventListener('DOMContentLoaded', () => {
+            generateCommand(); // Generate command on page load
+            loadExamples(); // Load examples for the Examples tab
+            document.getElementById('run_wpscan_button').addEventListener('click', runWPScan);
+            
+            // New event listeners for specific installation buttons
+            document.getElementById('install_wpscan_linux_button').addEventListener('click', () => handleWPScanInstallation('linux'));
+            document.getElementById('install_wpscan_termux_button').addEventListener('click', () => handleWPScanInstallation('termux'));
+            document.getElementById('download_wpscan_windows_button').addEventListener('click', () => handleWPScanInstallation('windows'));
+        });
+    </script>
+</body>
+</html>

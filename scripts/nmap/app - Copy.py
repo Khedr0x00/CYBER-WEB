@@ -8,7 +8,7 @@ import queue
 import time
 import uuid # For unique filenames
 import shutil # Added for shutil.which
-import sys # To detect OS and get command-line arguments
+import sys # To detect OS
 
 app = Flask(__name__)
 
@@ -316,7 +316,6 @@ def run_nmap():
 
     return jsonify({'status': 'running', 'scan_id': scan_id, 'message': 'Nmap scan started.'})
 
-# Modified get_scan_output to handle 'nmap_install' ID
 @app.route('/get_scan_output/<scan_id>', methods=['GET'])
 def get_scan_output(scan_id):
     """
@@ -326,33 +325,18 @@ def get_scan_output(scan_id):
     output_queue = scan_queues.get(scan_id)
     if not output_queue:
         # If queue is not found, check if the scan completed and its final output is stored
-        final_output = scan_outputs.get(scan_id)
-        final_status = scan_outputs.get(scan_id + "_status") # Check for installation status
-        if final_output and final_status:
-            return jsonify({'status': final_status, 'output': final_output})
-        elif final_output: # If it's a regular scan that completed
-            return jsonify({'status': 'completed', 'output': final_output})
+        if scan_id in scan_outputs:
+            return jsonify({'status': 'completed', 'output': scan_outputs[scan_id]})
         return jsonify({'status': 'not_found', 'message': 'Scan ID not found or expired.'}), 404
 
     new_output_lines = []
     scan_finished = False
-    install_success = False
-    install_failure = False
-
     try:
         while True:
             # Get items from queue without blocking
             line = output_queue.get_nowait()
             if line == "---SCAN_COMPLETE---":
                 scan_finished = True
-                break
-            elif line == "---INSTALL_COMPLETE_SUCCESS---":
-                install_success = True
-                scan_finished = True # Treat installation completion as a scan completion for frontend
-                break
-            elif line == "---INSTALL_COMPLETE_FAILURE---":
-                install_failure = True
-                scan_finished = True # Treat installation completion as a scan completion for frontend
                 break
             new_output_lines.append(line)
     except queue.Empty:
@@ -361,19 +345,11 @@ def get_scan_output(scan_id):
     current_output_segment = "".join(new_output_lines)
 
     if scan_finished:
-        # Scan or installation is truly complete, clean up the queue
+        # Scan is truly complete, clean up the queue
         del scan_queues[scan_id]
-        status_to_return = 'completed'
-        if install_success:
-            status_to_return = 'success'
-        elif install_failure:
-            status_to_return = 'error'
-        
-        # Ensure the final output includes all accumulated output
-        final_output_content = scan_outputs.get(scan_id, "Scan/Installation completed, but output not fully captured.")
-        return jsonify({'status': status_to_return, 'output': final_output_content})
+        return jsonify({'status': 'completed', 'output': scan_outputs.get(scan_id, "Scan completed, but output not fully captured.")})
     else:
-        # Scan/Installation is still running, return partial output
+        # Scan is still running, return partial output
         return jsonify({'status': 'running', 'output': current_output_segment})
 
 
@@ -407,141 +383,74 @@ def download_output(filename):
 @app.route('/install_nmap', methods=['POST'])
 def install_nmap():
     """
-    Attempts to install Nmap on the server (Linux/Termux only).
+    Attempts to install Nmap on the server (Linux only).
     WARNING: This endpoint executes system commands with 'sudo'.
     This is a significant security risk and should ONLY be used in a
     controlled, isolated development environment where you fully trust
     the users and the environment. In a production setting, exposing
     such functionality is highly discouraged.
     """
-    data = request.json
-    platform_type = data.get('platform') # 'linux' or 'termux'
-
-    # Check if running on Linux or Termux (sys.platform for Termux is 'linux')
     if sys.platform.startswith('linux'):
-        scan_id = str(uuid.uuid4()) # Unique ID for this installation process
         full_output = []
-        output_queue = queue.Queue()
-        scan_queues[scan_id] = output_queue
-        scan_outputs[scan_id] = "" # Initialize full output storage for this ID
+        try:
+            # First, update apt package list
+            update_command = shlex.split("sudo apt update -y")
+            update_process = subprocess.run(
+                update_command,
+                capture_output=True,
+                text=True,
+                check=True # Raise CalledProcessError for non-zero exit codes
+            )
+            full_output.append(update_process.stdout)
+            if update_process.stderr:
+                full_output.append(update_process.stderr)
 
-        def _install_thread(q, current_scan_id, p_type):
-            temp_buffer_thread = [] # Local buffer for the thread
-            try:
-                if p_type == 'termux':
-                    update_command = shlex.split("pkg update -y")
-                    install_command = shlex.split("pkg install nmap -y")
-                    q.put("Detected Termux. Using 'pkg' for installation.\n")
-                elif p_type == 'linux':
-                    update_command = shlex.split("sudo apt update -y")
-                    install_command = shlex.split("sudo apt install nmap -y")
-                    q.put("Detected Linux. Using 'sudo apt' for installation.\n")
-                else:
-                    q.put("Error: Unsupported platform type for installation.\n")
-                    q.put("---INSTALL_COMPLETE_FAILURE---")
-                    return
+            # Then, install nmap
+            install_command = shlex.split("sudo apt install nmap -y")
+            install_process = subprocess.run(
+                install_command,
+                capture_output=True,
+                text=True,
+                check=True # Raise CalledProcessError for non-zero exit codes
+            )
+            full_output.append(install_process.stdout)
+            if install_process.stderr:
+                full_output.append(install_process.stderr)
 
-                # First, update package list
-                q.put(f"Executing: {' '.join(update_command)}\n")
-                update_process = subprocess.Popen(
-                    update_command,
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.STDOUT,
-                    text=True,
-                    bufsize=1,
-                    universal_newlines=True
-                )
-                for line in iter(update_process.stdout.readline, ''):
-                    q.put(line)
-                    temp_buffer_thread.append(line)
-                update_process.wait()
-                if update_process.returncode != 0:
-                    q.put(f"Update command failed with exit code {update_process.returncode}\n")
-                    raise subprocess.CalledProcessError(update_process.returncode, update_command, "".join(temp_buffer_thread), "")
-
-                # Then, install nmap
-                q.put(f"\nExecuting: {' '.join(install_command)}\n")
-                install_process = subprocess.Popen(
-                    install_command,
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.STDOUT,
-                    text=True,
-                    bufsize=1,
-                    universal_newlines=True
-                )
-                for line in iter(install_process.stdout.readline, ''):
-                    q.put(line)
-                    temp_buffer_thread.append(line)
-                install_process.wait()
-                if install_process.returncode != 0:
-                    q.put(f"Install command failed with exit code {install_process.returncode}\n")
-                    raise subprocess.CalledProcessError(install_process.returncode, install_command, "".join(temp_buffer_thread), "")
-                
-                # Signal success and store final output
-                q.put("---INSTALL_COMPLETE_SUCCESS---")
-                scan_outputs[current_scan_id] = "".join(temp_buffer_thread)
-
-            except subprocess.CalledProcessError as e:
-                error_output = f"Command failed with exit code {e.returncode}:\n{e.stdout}"
-                q.put(error_output)
-                q.put("---INSTALL_COMPLETE_FAILURE---")
-                scan_outputs[current_scan_id] = "".join(temp_buffer_thread) + error_output
-            except FileNotFoundError as e:
-                error_msg = f"Error: Command not found ({e}). Ensure 'sudo'/'apt'/'pkg' is installed and in PATH.\n"
-                q.put(error_msg)
-                q.put("---INSTALL_COMPLETE_FAILURE---")
-                scan_outputs[current_scan_id] = "".join(temp_buffer_thread) + error_msg
-            except Exception as e:
-                error_msg = f"An unexpected error occurred during installation: {str(e)}\n"
-                q.put(error_msg)
-                q.put("---INSTALL_COMPLETE_FAILURE---")
-                scan_outputs[current_scan_id] = "".join(temp_buffer_thread) + error_msg
-
-        # Start the installation in a separate thread
-        install_thread = threading.Thread(target=_install_thread, args=(output_queue, scan_id, platform_type))
-        install_thread.daemon = True
-        install_thread.start()
-
-        return jsonify({
-            'status': 'running',
-            'scan_id': scan_id, # Return the unique ID for polling
-            'message': f'Nmap installation for {platform_type} started. Polling for output...'
-        })
+            return jsonify({
+                'status': 'success',
+                'message': 'Nmap installed/updated successfully.',
+                'output': "".join(full_output)
+            })
+        except subprocess.CalledProcessError as e:
+            error_output = f"Command failed with exit code {e.returncode}:\n{e.stdout}\n{e.stderr}"
+            full_output.append(error_output)
+            return jsonify({
+                'status': 'error',
+                'message': f"Failed to install Nmap. Check output for details. (Error: {e.returncode})",
+                'output': "".join(full_output)
+            }), 500
+        except FileNotFoundError:
+            return jsonify({
+                'status': 'error',
+                'message': "sudo or apt command not found. Ensure they are in PATH and you have necessary permissions.",
+                'output': "sudo or apt command not found."
+            }), 500
+        except Exception as e:
+            return jsonify({
+                'status': 'error',
+                'message': f"An unexpected error occurred during installation: {str(e)}",
+                'output': str(e)
+            }), 500
     else:
         return jsonify({
             'status': 'error',
-            'message': 'Nmap installation via this interface is only supported on Linux/Termux systems.',
-            'output': 'Operating system is not Linux or Termux.'
+            'message': 'Nmap installation via this interface is only supported on Linux systems.',
+            'output': 'Operating system is not Linux.'
         }), 400
 
-# Function to gracefully shut down the Flask server
-def shutdown_server():
-    func = request.environ.get('werkzeug.server.shutdown')
-    if func is None:
-        raise RuntimeError('Not running with the Werkzeug Server')
-    func()
-
-@app.route('/shutdown', methods=['POST'])
-def shutdown():
-    """Endpoint to gracefully shut down the Flask application."""
-    print("Received shutdown request.")
-    # You might want to add authentication/authorization here in a real app
-    shutdown_server()
-    return 'Server shutting down...', 200
 
 if __name__ == '__main__':
-    # Default port if no argument is provided (e.g., if run directly)
-    port = 5000 # This will be overridden by the PHP dashboard
-
-    # Check for a --port argument passed from the PHP dashboard
-    if '--port' in sys.argv:
-        try:
-            # Get the index of '--port' and then the next argument (which is the port number)
-            port_index = sys.argv.index('--port') + 1
-            port = int(sys.argv[port_index])
-        except (ValueError, IndexError):
-            print("Warning: Invalid or missing port argument for sub-app. Using default port.")
-    
-    print(f"Nmap sub-app is starting on port {port}...") # Added for clarity in logs
-    app.run(debug=True, host='0.0.0.0', port=port)
-
+    # For development, run with debug=True.
+    # For production, use a production-ready WSGI server like Gunicorn or uWSGI.
+    app.run(debug=True, host='0.0.0.0', port=5000)
