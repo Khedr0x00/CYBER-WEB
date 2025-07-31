@@ -822,7 +822,7 @@ switch ($action) {
 
         // Save app.py code
         if (file_put_contents($appPyFilePath, $appPyCode) === false) {
-            // Clean up created directories
+            // Clean up created files and directories
             rmdir($templatesPath);
             rmdir($projectPath);
             echo json_encode(['status' => 'error', 'message' => "Failed to save app.py for project '{$projectName}'."]);
@@ -1018,17 +1018,17 @@ switch ($action) {
                     color: var(--text-light);
                     min-height: 100vh;
                     overflow-y: auto;
-                    padding: 2rem;
+                    padding: 1rem; /* Adjusted for mobile */
                 }
 
                 .container {
                     background-color: var(--card-bg);
                     border-radius: var(--radius);
                     box-shadow: 0 10px 25px var(--shadow-dark);
-                    padding: 2.5rem;
+                    padding: 1.5rem; /* Adjusted for mobile */
                     width: 100%;
                     max-width: 900px;
-                    margin: 2rem auto;
+                    margin: 1rem auto; /* Adjusted for mobile */
                     border: 1px solid var(--border-color);
                 }
 
@@ -1389,14 +1389,122 @@ switch ($action) {
                     margin-bottom: 0.25rem;
                 }
 
+                /* Media Queries for Mobile Responsiveness */
+                @media (max-width: 767px) {
+                    body {
+                        padding: 0.5rem; /* Even less padding on very small screens */
+                    }
+
+                    .container {
+                        padding: 1rem; /* Reduced container padding */
+                        margin: 0.5rem auto; /* Reduced container margin */
+                    }
+
+                    .h1 {
+                        font-size: 2.5rem; /* Adjust main title size */
+                    }
+
+                    /* Adjust button group for smaller screens */
+                    .flex.justify-center.space-x-4.mb-6 {
+                        flex-direction: column;
+                        align-items: center;
+                        gap: 0.75rem; /* Add gap for vertical spacing */
+                        margin-bottom: 1rem; /* Adjust margin */
+                    }
+
+                    .btn {
+                        width: 100%; /* Make buttons full width on small screens */
+                        max-width: 280px; /* Limit max width for buttons */
+                        padding: 0.6rem 1.2rem; /* Slightly smaller button padding */
+                        font-size: 0.9rem; /* Slightly smaller button font */
+                    }
+
+                    .search-input {
+                        margin-bottom: 1rem; /* Adjust margin */
+                        padding: 0.6rem 0.8rem; /* Smaller padding for search input */
+                        font-size: 0.9rem; /* Smaller font for search input */
+                    }
+
+                    .folder-card {
+                        padding: 1rem; /* Adjust card padding for smaller screens */
+                    }
+
+                    .folder-name {
+                        font-size: 1.25rem; /* Slightly smaller font for folder names */
+                        margin-top: 1rem; /* Adjust margin */
+                    }
+
+                    .app-type {
+                        font-size: 0.7rem; /* Smaller text for app type */
+                        padding: 0.1rem 0.4rem;
+                    }
+
+                    .status-indicator {
+                        font-size: 0.8rem; /* Smaller text for status */
+                        padding: 0.2rem 0.6rem;
+                    }
+
+                    .port-display, .category-display {
+                        font-size: 0.75rem; /* Smaller text for details */
+                        margin-bottom: 0.75rem; /* Adjust margin */
+                    }
+
+                    /* Adjust icon positions on smaller cards if they overlap */
+                    .download-icon, .install-script-icon {
+                        top: 8px;
+                        right: 35px;
+                        font-size: 1.3rem;
+                    }
+                    .install-script-icon {
+                        right: 8px;
+                    }
+                    .upload-icon {
+                        top: 8px;
+                        left: 8px;
+                        font-size: 1.3rem;
+                    }
+                    .edit-icon {
+                        bottom: 8px;
+                        left: 8px;
+                        font-size: 1.3rem;
+                    }
+
+                    /* Modal adjustments for mobile */
+                    .modal-content {
+                        padding: 1.5rem; /* Adjust modal padding */
+                        margin: 0.5rem; /* Add some margin to prevent sticking to edges */
+                        width: calc(100% - 1rem); /* Full width minus margin */
+                        max-width: none; /* Remove max-width constraint for mobile */
+                    }
+
+                    .modal-close-btn {
+                        font-size: 1.75rem; /* Smaller close button */
+                        top: 0.75rem;
+                        right: 0.75rem;
+                    }
+
+                    .modal-input, .modal-textarea {
+                        font-size: 0.9rem; /* Smaller font for modal inputs */
+                        padding: 0.6rem; /* Smaller padding for modal inputs */
+                    }
+
+                    .modal-textarea {
+                        min-height: 120px; /* Adjust min-height for mobile textareas */
+                    }
+
+                    /* Ensure grid layout adapts to 1 column on small screens */
+                    #folderCards {
+                        grid-template-columns: 1fr;
+                    }
+                }
             </style>
         </head>
         <body>
             <div class="container">
-                <h1 class="text-4xl font-bold text-center mb-8">PHP & Python App Launcher</h1>
+                <h1 class="text-4xl font-bold text-center mb-8">SPACE WEB CREATED BY KHEDR0X00</h1>
 
                 <!-- Settings, Stop All, and Create Project Buttons -->
-                <div class="flex justify-center space-x-4 mb-6">
+                <div class="flex justify-center space-x-4 mb-6 flex-wrap">
                     <button id="settingsBtn" class="btn bg-indigo-600 hover:bg-indigo-700">Settings</button>
                     <button id="stopAllAppsBtn" class="btn bg-red-600 hover:bg-red-700">Stop All</button>
                     <button id="createProjectBtn" class="btn btn-create-project">Create Project</button>
@@ -1425,7 +1533,7 @@ switch ($action) {
                 <div id="messageBox" class="message-box"></div>
             </div>
 
-            <!-- Image Upload Modal (Existing) -->
+            <!-- Image Upload Modal (Existing - used for individual card upload) -->
             <div id="imageUploadModal" class="modal-overlay hidden">
                 <div class="modal-content w-full max-w-md">
                     <button id="closeModalBtn" class="modal-close-btn">&times;</button>
@@ -1510,6 +1618,22 @@ switch ($action) {
                         <textarea id="indexHtmlCodeTextarea" class="modal-textarea" placeholder="Write your HTML code for the main template here..."></textarea>
                     </div>
 
+                    <!-- New: Image Upload for Create Project -->
+                    <div class="mb-6">
+                        <label for="createImageInput" class="block text-gray-300 text-sm font-bold mb-2">Upload Cover Image (Optional):</label>
+                        <input type="file" id="createImageInput" accept="image/png, image/jpeg, image/gif, image/webp" class="block w-full text-sm text-gray-300
+                            file:mr-4 file:py-2 file:px-4
+                            file:rounded-full file:border-0
+                            file:text-sm file:font-semibold
+                            file:bg-indigo-500 file:text-white
+                            hover:file:bg-indigo-600 cursor-pointer">
+                    </div>
+
+                    <div id="createImagePreviewContainer" class="mb-6 flex justify-center items-center h-48 bg-gray-800 rounded-lg overflow-hidden border border-gray-600">
+                        <img id="createImagePreview" src="#" alt="Image Preview" class="hidden max-h-full max-w-full object-contain">
+                        <p id="createImagePreviewPlaceholder" class="text-gray-400">No image selected</p>
+                    </div>
+
                     <button id="saveProjectBtn" class="btn bg-indigo-600 hover:bg-indigo-700 w-full">Save Project</button>
                 </div>
             </div>
@@ -1545,6 +1669,22 @@ switch ($action) {
                         <textarea id="editIndexHtmlCodeTextarea" class="modal-textarea" placeholder="Edit your HTML code for the main template here..."></textarea>
                     </div>
 
+                    <!-- New: Image Upload for Edit Folder -->
+                    <div class="mb-6">
+                        <label for="editImageInput" class="block text-gray-300 text-sm font-bold mb-2">Update Cover Image (Optional):</label>
+                        <input type="file" id="editImageInput" accept="image/png, image/jpeg, image/gif, image/webp" class="block w-full text-sm text-gray-300
+                            file:mr-4 file:py-2 file:px-4
+                            file:rounded-full file:border-0
+                            file:text-sm file:font-semibold
+                            file:bg-indigo-500 file:text-white
+                            hover:file:bg-indigo-600 cursor-pointer">
+                    </div>
+
+                    <div id="editImagePreviewContainer" class="mb-6 flex justify-center items-center h-48 bg-gray-800 rounded-lg overflow-hidden border border-gray-600">
+                        <img id="editImagePreview" src="#" alt="Image Preview" class="hidden max-h-full max-w-full object-contain">
+                        <p id="editImagePreviewPlaceholder" class="text-gray-400">No image selected</p>
+                    </div>
+
                     <button id="saveFolderContentBtn" class="btn bg-indigo-600 hover:bg-indigo-700 w-full">Save Changes</button>
                 </div>
             </div>
@@ -1559,14 +1699,14 @@ switch ($action) {
                 const stopAllAppsBtn = document.getElementById('stopAllAppsBtn');
                 const createProjectBtn = document.getElementById('createProjectBtn');
 
-                // Image Upload Modal elements
+                // Image Upload Modal elements (for individual card upload)
                 const imageUploadModal = document.getElementById('imageUploadModal');
                 const closeModalBtn = document.getElementById('closeModalBtn');
                 const modalFolderNameSpan = document.getElementById('modalFolderName');
-                const imageInput = document.getElementById('imageInput');
-                const imagePreview = document.getElementById('imagePreview');
-                const imagePreviewPlaceholder = document.getElementById('imagePreviewPlaceholder');
-                const uploadImageBtn = document.getElementById('uploadImageBtn');
+                const imageInput = document.getElementById('imageInput'); // For individual card upload
+                const imagePreview = document.getElementById('imagePreview'); // For individual card upload
+                const imagePreviewPlaceholder = document.getElementById('imagePreviewPlaceholder'); // For individual card upload
+                const uploadImageBtn = document.getElementById('uploadImageBtn'); // For individual card upload
 
                 // NEW: Settings Modal elements
                 const settingsModal = document.getElementById('settingsModal');
@@ -1586,6 +1726,10 @@ switch ($action) {
                 const requirementsTxtTextarea = document.getElementById('requirementsTxtTextarea');
                 const installScriptTextarea = document.getElementById('installScriptTextarea');
                 const saveProjectBtn = document.getElementById('saveProjectBtn');
+                // New elements for Create Project Modal's image upload
+                const createImageInput = document.getElementById('createImageInput');
+                const createImagePreview = document.getElementById('createImagePreview');
+                const createImagePreviewPlaceholder = document.getElementById('createImagePreviewPlaceholder');
 
                 // NEW: Edit Folder Modal elements
                 const editFolderModal = document.getElementById('editFolderModal');
@@ -1597,6 +1741,10 @@ switch ($action) {
                 const editInstallScriptTextarea = document.getElementById('editInstallScriptTextarea');
                 const editCategoryTxtInput = document.getElementById('editCategoryTxtInput');
                 const saveFolderContentBtn = document.getElementById('saveFolderContentBtn');
+                // New elements for Edit Folder Modal's image upload
+                const editImageInput = document.getElementById('editImageInput');
+                const editImagePreview = document.getElementById('editImagePreview');
+                const editImagePreviewPlaceholder = document.getElementById('editImagePreviewPlaceholder');
 
 
                 let allFolders = [];
@@ -1605,7 +1753,7 @@ switch ($action) {
                 let enableCardAnimation = <?php echo $enableCardAnimationJs; ?>; // Pass new setting from PHP
                 const renderedCards = new Map(); // Map to store references to rendered card elements by folder name
 
-                let currentFolderForUpload = null; // To store the folder name for the current upload operation
+                let currentFolderForUpload = null; // To store the folder name for the current upload operation (for the dedicated upload modal)
                 let currentFolderForEdit = null; // NEW: To store the folder name for the current edit operation
 
 
@@ -1850,7 +1998,7 @@ switch ($action) {
                     if (uploadIcon) {
                         uploadIcon.onclick = (event) => {
                             event.stopPropagation();
-                            openImageUploadModal(folder.name);
+                            openImageUploadModal(folder.name); // This uses the dedicated image upload modal
                         };
                     }
                     // NEW: Add event listener for the edit icon
@@ -2094,7 +2242,7 @@ switch ($action) {
                     renderFolders(filteredFolders);
                 }
 
-                // Image Upload Modal Functions
+                // Image Upload Modal Functions (for the dedicated upload modal)
                 /**
                  * Opens the image upload modal for a specific folder.
                  * @param {string} folderName - The name of the folder to upload an image for.
@@ -2105,7 +2253,7 @@ switch ($action) {
                     imagePreview.src = '#';
                     imagePreview.classList.add('hidden');
                     imagePreviewPlaceholder.classList.remove('hidden');
-                    imageInput.value = '';
+                    imageInput.value = ''; // Clear file input
                     imageUploadModal.classList.remove('hidden');
                     imageUploadModal.classList.add('show');
                 }
@@ -2122,44 +2270,47 @@ switch ($action) {
                 /**
                  * Handles the change event for the image input, displaying a preview.
                  * @param {Event} event - The input change event.
+                 * @param {HTMLImageElement} previewElement - The <img> element for preview.
+                 * @param {HTMLElement} placeholderElement - The placeholder element.
                  */
-                function handleImageSelect(event) {
+                function handleImageSelect(event, previewElement, placeholderElement) {
                     const file = event.target.files[0];
                     if (file) {
                         const reader = new FileReader();
                         reader.onload = (e) => {
-                            imagePreview.src = e.target.result;
-                            imagePreview.classList.remove('hidden');
-                            imagePreviewPlaceholder.classList.add('hidden');
+                            previewElement.src = e.target.result;
+                            previewElement.classList.remove('hidden');
+                            placeholderElement.classList.add('hidden');
                         };
                         reader.readAsDataURL(file);
                     } else {
-                        imagePreview.src = '#';
-                        imagePreview.classList.add('hidden');
-                        imagePreviewPlaceholder.classList.remove('hidden');
+                        previewElement.src = '#';
+                        previewElement.classList.add('hidden');
+                        placeholderElement.classList.remove('hidden');
                     }
                 }
 
                 /**
-                 * Handles the upload of the selected image to the server.
+                 * Handles the upload of the selected image to the server for a given folder.
+                 * @param {string} folderName - The name of the folder to upload the image for.
+                 * @param {HTMLInputElement} fileInput - The file input element.
+                 * @param {HTMLButtonElement} buttonElement - The button element that triggered the upload.
+                 * @returns {Promise<boolean>} True if upload was successful, false otherwise.
                  */
-                async function uploadCoverImage() {
-                    if (!currentFolderForUpload) {
-                        showMessage('No folder selected for upload.', 'error');
-                        return;
-                    }
-
-                    const file = imageInput.files[0];
+                async function uploadImageForProject(folderName, fileInput, buttonElement) {
+                    const file = fileInput.files[0];
                     if (!file) {
-                        showMessage('Please select an image to upload.', 'error');
-                        return;
+                        // No file selected, consider it a success if no image was intended to be uploaded
+                        return true;
                     }
 
-                    showMessage(`Uploading cover image for ${currentFolderForUpload}...`, 'info');
-                    uploadImageBtn.disabled = true;
+                    showMessage(`Uploading cover image for ${folderName}...`, 'info');
+                    if (buttonElement) {
+                        buttonElement.disabled = true;
+                    }
 
                     const formData = new FormData();
-                    formData.append('folder_name', currentFolderForUpload);
+                    formData.append('folder_name', folderName);
                     formData.append('cover_image', file);
 
                     try {
@@ -2171,18 +2322,33 @@ switch ($action) {
 
                         if (response.ok && result.status === 'success') {
                             showMessage(result.message);
-                            fetchAndDisplayFolders();
-                            closeImageUploadModal();
+                            return true;
                         } else {
                             showMessage(result.message, 'error');
+                            return false;
                         }
                     } catch (error) {
                         console.error('Error uploading image:', error);
                         showMessage('An error occurred while trying to upload the image.', 'error');
+                        return false;
                     } finally {
-                        uploadImageBtn.disabled = false;
+                        if (buttonElement) {
+                            buttonElement.disabled = false;
+                        }
                     }
                 }
+
+                // Existing uploadImageBtn listener (for the dedicated upload modal)
+                uploadImageBtn.addEventListener('click', async () => {
+                    if (currentFolderForUpload) {
+                        const success = await uploadImageForProject(currentFolderForUpload, imageInput, uploadImageBtn);
+                        if (success) {
+                            fetchAndDisplayFolders(); // Refresh cards to show new cover image
+                            closeImageUploadModal();
+                        }
+                    }
+                });
+
 
                 // NEW: Settings Modal Functions
                 /**
@@ -2261,6 +2427,12 @@ switch ($action) {
                     categoryInput.value = '';
                     requirementsTxtTextarea.value = '';
                     installScriptTextarea.value = '';
+                    // Reset image input and preview for create project modal
+                    createImageInput.value = '';
+                    createImagePreview.src = '#';
+                    createImagePreview.classList.add('hidden');
+                    createImagePreviewPlaceholder.classList.remove('hidden');
+
                     createProjectModal.classList.remove('hidden');
                     createProjectModal.classList.add('show');
                 }
@@ -2309,8 +2481,16 @@ switch ($action) {
 
                         if (response.ok && result.status === 'success') {
                             showMessage(result.message);
-                            closeCreateProjectModal();
-                            fetchAndDisplayFolders();
+                            // If project creation is successful, attempt to upload the image
+                            const uploadSuccess = await uploadImageForProject(projectName, createImageInput, saveProjectBtn);
+                            if (uploadSuccess) {
+                                closeCreateProjectModal();
+                                fetchAndDisplayFolders();
+                            } else {
+                                // If image upload failed, still close modal and refresh, but keep error message
+                                closeCreateProjectModal();
+                                fetchAndDisplayFolders();
+                            }
                         } else {
                             showMessage(result.message, 'error');
                         }
@@ -2339,6 +2519,12 @@ switch ($action) {
                     editCategoryTxtInput.value = 'Loading...';
                     saveFolderContentBtn.disabled = true;
 
+                    // Reset image input and preview for edit folder modal
+                    editImageInput.value = '';
+                    editImagePreview.src = '#';
+                    editImagePreview.classList.add('hidden');
+                    editImagePreviewPlaceholder.classList.remove('hidden');
+
                     try {
                         const response = await fetch(`index.php?action=get_folder_content&folder_name=${encodeURIComponent(folderName)}`);
                         const result = await response.json();
@@ -2349,6 +2535,25 @@ switch ($action) {
                             editRequirementsTxtTextarea.value = result.content.requirements_txt;
                             editInstallScriptTextarea.value = result.content.install_sh;
                             editCategoryTxtInput.value = result.content.category_txt;
+
+                            // Load existing cover image if it exists
+                            const baseUrl = window.location.origin + window.location.pathname.substring(0, window.location.pathname.lastIndexOf('/') + 1);
+                            const imagePath = `${baseUrl}scripts/${folderName}/cover.png?t=${new Date().getTime()}`; // Add timestamp to bust cache
+                            
+                            // Check if image exists by trying to load it
+                            const img = new Image();
+                            img.onload = () => {
+                                editImagePreview.src = imagePath;
+                                editImagePreview.classList.remove('hidden');
+                                editImagePreviewPlaceholder.classList.add('hidden');
+                            };
+                            img.onerror = () => {
+                                // Image does not exist or failed to load, show placeholder
+                                editImagePreview.src = '#';
+                                editImagePreview.classList.add('hidden');
+                                editImagePreviewPlaceholder.classList.remove('hidden');
+                            };
+                            img.src = imagePath; // Attempt to load the image
                         } else {
                             showMessage(result.message, 'error');
                             // Clear fields if loading failed
@@ -2414,8 +2619,16 @@ switch ($action) {
 
                         if (response.ok && result.status === 'success') {
                             showMessage(result.message);
-                            closeEditFolderModal();
-                            fetchAndDisplayFolders(); // Refresh folder list to reflect changes (e.g., category)
+                            // If content save is successful, attempt to upload the image
+                            const uploadSuccess = await uploadImageForProject(currentFolderForEdit, editImageInput, saveFolderContentBtn);
+                            if (uploadSuccess) {
+                                closeEditFolderModal();
+                                fetchAndDisplayFolders(); // Refresh folder list to reflect changes (e.g., category, new cover)
+                            } else {
+                                // If image upload failed, still close modal and refresh, but keep error message
+                                closeEditFolderModal();
+                                fetchAndDisplayFolders();
+                            }
                         } else {
                             showMessage(result.message, 'error');
                         }
@@ -2443,18 +2656,21 @@ switch ($action) {
                 saveSettingsBtn.addEventListener('click', saveSettingsFromModal);
                 backToLauncherBtn.addEventListener('click', closeSettingsModal);
 
-                // Image Upload Modal event listeners
+                // Image Upload Modal event listeners (for dedicated upload modal)
                 closeModalBtn.addEventListener('click', closeImageUploadModal);
-                imageInput.addEventListener('change', handleImageSelect);
-                uploadImageBtn.addEventListener('click', uploadCoverImage);
+                imageInput.addEventListener('change', (event) => handleImageSelect(event, imagePreview, imagePreviewPlaceholder));
+                // uploadImageBtn listener is defined above, outside this block, using the refactored uploadImageForProject
 
                 // Create Project Modal event listeners
                 closeCreateProjectModalBtn.addEventListener('click', closeCreateProjectModal);
                 saveProjectBtn.addEventListener('click', saveProject);
+                createImageInput.addEventListener('change', (event) => handleImageSelect(event, createImagePreview, createImagePreviewPlaceholder));
+
 
                 // NEW: Edit Folder Modal event listeners
                 closeEditFolderModalBtn.addEventListener('click', closeEditFolderModal);
                 saveFolderContentBtn.addEventListener('click', saveFolderContent);
+                editImageInput.addEventListener('change', (event) => handleImageSelect(event, editImagePreview, editImagePreviewPlaceholder));
 
 
                 // Initial fetch and polling for updates
