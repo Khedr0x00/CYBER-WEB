@@ -7,10 +7,9 @@
 
 ```
 pip install flask
-```
-
-then run php server 
-
-```
+git clone https://github.com/Khedr0x00/Space-Web
+cd Space-Web
 php -S localhost:8000
 ```
+
+Then visit : http://localhost:8080
