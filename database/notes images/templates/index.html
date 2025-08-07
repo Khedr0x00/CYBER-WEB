@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Gallery</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons CDN -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #1a202c; /* Dark background */
+            color: #e2e8f0; /* Light text */
+        }
+        /* Custom scrollbar */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 12px;
+            height: 12px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #2C3E50; /* Dark Blue/Grey */
+            border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background-color: #3498DB; /* Peter River Blue */
+            border-radius: 10px;
+            border: 3px solid #2C3E50;
+        }
+        .custom-scrollbar::-webkit-scrollbar-corner {
+            background: #2C3E50;
+        }
+        /* Button styling */
+        .btn-primary {
+            @apply px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 flex items-center justify-center transition-colors duration-200;
+        }
+        .btn-secondary {
+            @apply px-4 py-2 bg-gray-700 text-gray-200 rounded-md hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-50 flex items-center justify-center transition-colors duration-200;
+        }
+        .btn-nav {
+            @apply p-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition-colors duration-200;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.8);
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-content {
+            background-color: #1a202c;
+            margin: auto;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            width: 90%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid #3498DB;
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #3498DB;
+            margin-bottom: 15px;
+        }
+        .modal-header h2 {
+            @apply text-xl font-semibold text-blue-400;
+        }
+        .modal-close {
+            @apply text-gray-400 hover:text-blue-400 text-2xl font-bold;
+            cursor: pointer;
+        }
+        .modal-body {
+            flex-grow: 1;
+            overflow-y: auto;
+            @apply text-gray-300;
+        }
+        .modal-footer {
+            padding-top: 15px;
+            border-top: 1px solid #3498DB;
+            margin-top: 15px;
+            text-align: right;
+        }
+    </style>
+</head>
+<body class="p-4 min-h-screen flex flex-col items-center">
+    <div class="bg-gray-800 p-6 rounded-lg shadow-xl w-full max-w-7xl mb-6">
+        <h1 class="text-3xl font-bold text-blue-400 text-center mb-6">Image Gallery</h1>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <!-- Category Box -->
+            <div class="bg-gray-700 p-4 rounded-lg shadow-md">
+                <h2 class="text-xl font-semibold text-blue-300 mb-4">Categories</h2>
+                <div id="category-list" class="space-y-2 max-h-64 overflow-y-auto custom-scrollbar">
+                    <!-- Categories will be loaded here -->
+                    <p class="text-gray-400">Loading categories...</p>
+                </div>
+            </div>
+
+            <!-- Subfolder Box -->
+            <div class="bg-gray-700 p-4 rounded-lg shadow-md">
+                <h2 class="text-xl font-semibold text-blue-300 mb-4">Subfolders</h2>
+                <!-- Search Box for Subfolders -->
+                <input type="text" id="subfolder-search-box" placeholder="Search subfolders..."
+                       class="w-full p-2 mb-4 rounded-md bg-gray-600 text-white border border-gray-500 focus:outline-none focus:border-blue-500">
+                <div id="subfolder-list" class="space-y-2 max-h-64 overflow-y-auto custom-scrollbar">
+                    <!-- Subfolders will be loaded here -->
+                    <p class="text-gray-400">Select a category first.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Image Display Area - Now full width below the two boxes -->
+        <div class="bg-gray-700 p-4 rounded-lg shadow-md flex flex-col items-center justify-center relative w-full">
+            <h2 class="text-xl font-semibold text-blue-300 mb-4" id="current-image-title">Select a Subfolder</h2>
+            <div id="image-container" class="relative w-full h-[600px] bg-gray-900 rounded-lg flex items-center justify-center overflow-hidden cursor-grab">
+                <img id="main-image" src="" alt="Selected Image" class="w-full h-full object-contain rounded-lg transition-transform duration-75 ease-out">
+                <p id="image-placeholder" class="text-gray-500 text-lg absolute" style="display: block;">No image selected.</p>
+
+                <!-- Navigation Arrows -->
+                <button id="prev-image-btn" class="btn-nav absolute left-2 top-1/2 -translate-y-1/2 opacity-75 hover:opacity-100 disabled:opacity-30 disabled:cursor-not-allowed">
+                    <i data-lucide="chevron-left" class="w-6 h-6"></i>
+                </button>
+                <button id="next-image-btn" class="btn-nav absolute right-2 top-1/2 -translate-y-1/2 opacity-75 hover:opacity-100 disabled:opacity-30 disabled:cursor-not-allowed">
+                    <i data-lucide="chevron-right" class="w-6 h-6"></i>
+                </button>
+            </div>
+            <div class="text-gray-400 text-sm mt-2" id="image-counter"></div>
+        </div>
+
+        <!-- Status Bar -->
+        <div id="status_bar" class="bg-gray-900 text-white text-sm p-2 rounded-md mt-6 text-center w-full">Ready</div>
+    </div>
+
+    <!-- Global Message/Alert Modal -->
+    <div id="messageModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="messageModalTitle">Alert</h2>
+                <span class="modal-close" onclick="closeMessageModal()">&times;</span>
+            </div>
+            <div class="modal-body" id="messageModalBody"></div>
+            <div class="modal-footer">
+                <button onclick="closeMessageModal()" class="btn-primary">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize Lucide icons
+        lucide.createIcons();
+
+        let currentCategory = null;
+        let currentSubfolder = null;
+        let currentImages = [];
+        let currentImageIndex = 0;
+        let allSubfolders = []; // Store all subfolders for filtering
+
+        const categoryListDiv = document.getElementById('category-list');
+        const subfolderListDiv = document.getElementById('subfolder-list');
+        const subfolderSearchBox = document.getElementById('subfolder-search-box');
+        const imageContainer = document.getElementById('image-container'); // Get the image container
+        const mainImage = document.getElementById('main-image');
+        const imagePlaceholder = document.getElementById('image-placeholder');
+        const prevImageBtn = document.getElementById('prev-image-btn');
+        const nextImageBtn = document.getElementById('next-image-btn');
+        const imageCounterDiv = document.getElementById('image-counter');
+        const currentImageTitle = document.getElementById('current-image-title');
+        const statusBar = document.getElementById('status_bar');
+
+        // Zoom and Pan variables
+        let zoomLevel = 1;
+        const zoomStep = 0.1;
+        const maxZoom = 5;
+        const minZoom = 1;
+        let isDragging = false;
+        let startX, startY;
+        let currentX = 0, currentY = 0; // Current translation values
+
+        // --- Helper for showing custom modals ---
+        function showMessageModal(title, message, isHtml = false) {
+            document.getElementById('messageModalTitle').innerText = title;
+            const messageBody = document.getElementById('messageModalBody');
+            if (isHtml) {
+                messageBody.innerHTML = message;
+            } else {
+                messageBody.innerText = message;
+            }
+            document.getElementById('messageModal').style.display = 'flex';
+        }
+
+        function closeMessageModal() {
+            document.getElementById('messageModal').style.display = 'none';
+        }
+
+        // Function to update status bar
+        function showStatus(message, color = 'white') {
+            statusBar.textContent = message;
+            statusBar.style.color = color;
+        }
+
+        async function fetchCategories() {
+            showStatus('Loading categories...', 'blue');
+            try {
+                const response = await fetch('/categories');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const categories = await response.json();
+                categoryListDiv.innerHTML = ''; // Clear previous content
+                if (categories.length === 0) {
+                    categoryListDiv.innerHTML = '<p class="text-gray-400">No categories found.</p>';
+                    showStatus('No categories found.', 'orange');
+                    return;
+                }
+                categories.forEach(category => {
+                    const button = document.createElement('button');
+                    button.className = 'w-full text-left p-2 rounded-md bg-gray-600 hover:bg-blue-500 transition-colors duration-200';
+                    button.textContent = category;
+                    button.onclick = (event) => selectCategory(category, event); // Pass event
+                    categoryListDiv.appendChild(button);
+                });
+                showStatus('Categories loaded.', 'green');
+            } catch (error) {
+                console.error('Error fetching categories:', error);
+                showMessageModal('Error', `Failed to load categories: ${error.message}`);
+                categoryListDiv.innerHTML = '<p class="text-red-400">Failed to load categories.</p>';
+                showStatus('Error loading categories.', 'red');
+            }
+        }
+
+        async function selectCategory(categoryName, event) {
+            currentCategory = categoryName;
+            currentSubfolder = null; // Reset subfolder selection
+            currentImages = []; // Clear images
+            currentImageIndex = 0; // Reset image index
+            resetZoomAndPan(); // Reset zoom and pan when category changes
+            updateImageDisplay(); // Clear image display
+            subfolderSearchBox.value = ''; // Clear search box when category changes
+            allSubfolders = []; // Clear allSubfolders when category changes
+
+            // Highlight selected category
+            document.querySelectorAll('#category-list button').forEach(btn => {
+                btn.classList.remove('bg-blue-500');
+                btn.classList.add('bg-gray-600');
+            });
+            if (event && event.target) { // Check if event and event.target exist
+                event.target.classList.remove('bg-gray-600');
+                event.target.classList.add('bg-blue-500');
+            }
+
+            await fetchSubfolders(categoryName);
+        }
+
+        async function fetchSubfolders(categoryName) {
+            showStatus(`Loading subfolders for ${categoryName}...`, 'blue');
+            subfolderListDiv.innerHTML = ''; // Clear previous content
+            try {
+                const response = await fetch(`/subfolders/${categoryName}`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const subfolders = await response.json();
+                allSubfolders = subfolders; // Store all fetched subfolders
+                displaySubfolders(allSubfolders); // Display all subfolders initially
+
+                if (allSubfolders.length === 0) {
+                    showStatus(`No subfolders found in ${categoryName}.`, 'orange');
+                } else {
+                    showStatus(`Subfolders loaded for ${categoryName}.`, 'green');
+                }
+            } catch (error) {
+                console.error(`Error fetching subfolders for ${categoryName}:`, error);
+                showMessageModal('Error', `Failed to load subfolders for ${categoryName}: ${error.message}`);
+                subfolderListDiv.innerHTML = '<p class="text-red-400">Failed to load subfolders.</p>';
+                showStatus('Error loading subfolders.', 'red');
+            }
+        }
+
+        function displaySubfolders(subfoldersToDisplay) {
+            subfolderListDiv.innerHTML = ''; // Clear current display
+            if (subfoldersToDisplay.length === 0) {
+                subfolderListDiv.innerHTML = '<p class="text-gray-400">No matching subfolders found.</p>';
+                return;
+            }
+            subfoldersToDisplay.forEach(subfolder => {
+                const button = document.createElement('button');
+                button.className = 'w-full text-left p-2 rounded-md bg-gray-600 hover:bg-blue-500 transition-colors duration-200';
+                button.textContent = subfolder;
+                button.onclick = (event) => selectSubfolder(subfolder, event); // Pass event
+                subfolderListDiv.appendChild(button);
+            });
+        }
+
+        // Function to filter subfolders based on search input
+        function filterSubfolders() {
+            const searchTerm = subfolderSearchBox.value.toLowerCase().trim();
+            if (!searchTerm) {
+                displaySubfolders(allSubfolders); // Show all if search box is empty
+                return;
+            }
+
+            // Split search term by spaces and filter out empty strings
+            const searchWords = searchTerm.split(' ').filter(word => word.length > 0);
+
+            const filtered = allSubfolders.filter(subfolder => {
+                const lowerCaseSubfolder = subfolder.toLowerCase();
+                // Check if ALL search words are present in the subfolder name
+                return searchWords.every(word => lowerCaseSubfolder.includes(word));
+            });
+            displaySubfolders(filtered);
+        }
+
+        async function selectSubfolder(subfolderName, event) {
+            currentSubfolder = subfolderName;
+            currentImages = []; // Clear previous images
+            currentImageIndex = 0; // Reset index
+            resetZoomAndPan(); // Reset zoom and pan when subfolder changes
+
+            // Highlight selected subfolder
+            document.querySelectorAll('#subfolder-list button').forEach(btn => {
+                btn.classList.remove('bg-blue-500');
+                btn.classList.add('bg-gray-600');
+            });
+            if (event && event.target) { // Check if event and event.target exist
+                event.target.classList.remove('bg-gray-600');
+                event.target.classList.add('bg-blue-500');
+            }
+
+            await fetchImages(currentCategory, subfolderName);
+        }
+
+        async function fetchImages(categoryName, subfolderName) {
+            showStatus(`Loading images for ${subfolderName}...`, 'blue');
+            try {
+                const response = await fetch(`/images/${categoryName}/${subfolderName}`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const images = await response.json();
+                currentImages = images;
+                currentImageIndex = 0; // Start with the first image
+
+                if (currentImages.length === 0) {
+                    showStatus(`No images found in ${subfolderName}.`, 'orange');
+                    showMessageModal('No Images', `No .webp or .png images found in ${subfolderName}.`);
+                } else {
+                    showStatus(`Images loaded for ${subfolderName}.`, 'green');
+                }
+                updateImageDisplay();
+            } catch (error) {
+                console.error(`Error fetching images for ${subfolderName}:`, error);
+                showMessageModal('Error', `Failed to load images for ${subfolderName}: ${error.message}`);
+                showStatus('Error loading images.', 'red');
+                currentImages = [];
+                currentImageIndex = 0;
+                updateImageDisplay();
+            }
+        }
+
+        function updateImageDisplay() {
+            if (currentImages.length > 0) {
+                const imageUrl = `/image_display/${currentImages[currentImageIndex]}`;
+                mainImage.src = imageUrl;
+                mainImage.style.display = 'block';
+                imagePlaceholder.style.display = 'none';
+                imageCounterDiv.textContent = `Image ${currentImageIndex + 1} of ${currentImages.length}`;
+                currentImageTitle.textContent = currentSubfolder;
+                resetZoomAndPan(); // Reset zoom and pan when a new image is displayed
+            } else {
+                mainImage.src = '';
+                mainImage.style.display = 'none';
+                imagePlaceholder.style.display = 'block';
+                imageCounterDiv.textContent = '';
+                currentImageTitle.textContent = currentSubfolder ? `No Images in ${currentSubfolder}` : 'Select a Subfolder';
+                resetZoomAndPan(); // Reset zoom and pan when no image is displayed
+            }
+            updateNavigationButtons();
+        }
+
+        function updateNavigationButtons() {
+            prevImageBtn.disabled = currentImageIndex === 0;
+            nextImageBtn.disabled = currentImageIndex === currentImages.length - 1;
+        }
+
+        function nextImage() {
+            if (currentImages.length > 0 && currentImageIndex < currentImages.length - 1) {
+                currentImageIndex++;
+                updateImageDisplay();
+            }
+        }
+
+        function prevImage() {
+            if (currentImages.length > 0 && currentImageIndex > 0) {
+                currentImageIndex--;
+                updateImageDisplay();
+            }
+        }
+
+        // --- Zoom and Pan Functions ---
+        function applyTransform() {
+            mainImage.style.transform = `scale(${zoomLevel}) translate(${currentX}px, ${currentY}px)`;
+            mainImage.style.cursor = zoomLevel > 1 ? 'grab' : 'default'; // Change cursor when zoomed
+        }
+
+        function resetZoomAndPan() {
+            zoomLevel = 1;
+            currentX = 0;
+            currentY = 0;
+            applyTransform();
+        }
+
+        imageContainer.addEventListener('wheel', (event) => {
+            event.preventDefault(); // Prevent page scrolling
+            if (currentImages.length === 0) return; // No image to zoom
+
+            const oldZoomLevel = zoomLevel;
+
+            if (event.deltaY < 0) { // Zoom in
+                zoomLevel = Math.min(maxZoom, zoomLevel + zoomStep);
+            } else { // Zoom out
+                zoomLevel = Math.max(minZoom, zoomLevel - zoomStep);
+            }
+
+            // Adjust pan to zoom towards the mouse cursor
+            const rect = imageContainer.getBoundingClientRect();
+            const mouseX = event.clientX - rect.left;
+            const mouseY = event.clientY - rect.top;
+
+            // Calculate current image center relative to container
+            const imgCenterX = mainImage.offsetWidth / 2 + currentX;
+            const imgCenterY = mainImage.offsetHeight / 2 + currentY;
+
+            // Calculate new translation to keep mouse point fixed
+            const newX = currentX + (mouseX - imgCenterX) * (1 - zoomLevel / oldZoomLevel);
+            const newY = currentY + (mouseY - imgCenterY) * (1 - zoomLevel / oldZoomLevel);
+
+            // Clamp pan values to prevent image from going completely off-screen
+            const maxPanX = (mainImage.offsetWidth * zoomLevel - imageContainer.offsetWidth) / (2 * zoomLevel);
+            const maxPanY = (mainImage.offsetHeight * zoomLevel - imageContainer.offsetHeight) / (2 * zoomLevel);
+
+            currentX = Math.max(-maxPanX, Math.min(maxPanX, newX));
+            currentY = Math.max(-maxPanY, Math.min(maxPanY, newY));
+
+            if (zoomLevel === 1) { // If zoomed out completely, reset pan
+                currentX = 0;
+                currentY = 0;
+            }
+
+            applyTransform();
+        });
+
+        imageContainer.addEventListener('mousedown', (event) => {
+            if (zoomLevel > 1 && event.button === 0) { // Only pan if zoomed in and left mouse button
+                isDragging = true;
+                startX = event.clientX - currentX;
+                startY = event.clientY - currentY;
+                imageContainer.style.cursor = 'grabbing';
+            }
+        });
+
+        imageContainer.addEventListener('mousemove', (event) => {
+            if (!isDragging) return;
+            event.preventDefault(); // Prevent selection while dragging
+
+            const dx = event.clientX - startX;
+            const dy = event.clientY - startY;
+
+            // Clamp pan values to prevent image from going completely off-screen
+            const maxPanX = (mainImage.offsetWidth * zoomLevel - imageContainer.offsetWidth) / (2 * zoomLevel);
+            const maxPanY = (mainImage.offsetHeight * zoomLevel - imageContainer.offsetHeight) / (2 * zoomLevel);
+
+            currentX = Math.max(-maxPanX, Math.min(maxPanX, dx));
+            currentY = Math.max(-maxPanY, Math.min(maxPanY, dy));
+
+            applyTransform();
+        });
+
+        imageContainer.addEventListener('mouseup', () => {
+            isDragging = false;
+            imageContainer.style.cursor = zoomLevel > 1 ? 'grab' : 'default';
+        });
+
+        imageContainer.addEventListener('mouseleave', () => {
+            isDragging = false; // Stop dragging if mouse leaves container
+            imageContainer.style.cursor = zoomLevel > 1 ? 'grab' : 'default';
+        });
+
+        // Event Listeners for navigation buttons
+        prevImageBtn.addEventListener('click', prevImage);
+        nextImageBtn.addEventListener('click', nextImage);
+
+        // Add keyboard navigation
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'ArrowRight') {
+                nextImage();
+            } else if (event.key === 'ArrowLeft') {
+                prevImage();
+            }
+        });
+
+        // Event listener for subfolder search box
+        subfolderSearchBox.addEventListener('input', filterSubfolders);
+
+        // Initial load
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchCategories();
+            updateImageDisplay(); // Set initial state of image display
+        });
+    </script>
+</body>
+</html>
