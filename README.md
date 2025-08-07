@@ -8,7 +8,8 @@
 ```
 apt update
 apt install php
-apt install python
+apt install python3
+apt install python3-pip
 pip install flask
 git clone https://github.com/Khedr0x00/Space-Web
 cd Space-Web
