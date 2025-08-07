@@ -6,10 +6,22 @@
 # INSTALLATION
 
 ```
+apt update
+apt install php
+apt install python
 pip install flask
 git clone https://github.com/Khedr0x00/Space-Web
 cd Space-Web
 php -S localhost:8000
 ```
 
+## oneliner
+
+```
+pip install flask && git clone https://github.com/Khedr0x00/Space-Web && cd Space-Web && php -S localhost:8000
+```
+
+
 Then visit : http://localhost:8080
+
+
