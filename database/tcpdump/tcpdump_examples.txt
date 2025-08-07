@@ -1,0 +1,280 @@
+[
+    {
+        "name": "Capture all traffic on eth0",
+        "description": "Captures and displays all packets on the 'eth0' network interface.",
+        "options": {
+            "interface_entry": "eth0"
+        },
+        "example_output": "tcpdump: verbose output suppressed, use -v[v] or -X options for full protocol decode\nlistening on eth0, link-type EN10MB (Ethernet), capture size 262144 bytes\n10:00:00.123456 IP 192.168.1.10.54321 > 192.168.1.1.80: Flags [S], seq 12345, win 29200, options [mss 1460,sackOK,TS val 12345678 ecr 0], length 0\n10:00:00.123500 IP 192.168.1.1.80 > 192.168.1.10.54321: Flags [S.], seq 98765, ack 12346, win 28960, options [mss 1460,sackOK,TS val 87654321 ecr 12345678], length 0\n10:00:00.123600 ARP, Request who-has 192.168.1.1 tell 192.168.1.10, length 28\n^C\n3 packets captured\n3 packets received by filter\n0 packets dropped by kernel"
+    },
+    {
+        "name": "Capture HTTP (port 80) traffic",
+        "description": "Captures TCP traffic specifically on port 80 (HTTP).",
+        "options": {
+            "protocol_select": "tcp",
+            "port_value_entry": "80"
+        },
+        "example_output": "tcpdump: verbose output suppressed, use -v[v] or -X options for full protocol decode\nlistening on eth0, link-type EN10MB (Ethernet), capture size 262144 bytes\n10:00:01.100000 IP 192.168.1.100.50000 > 172.217.160.142.80: Flags [S], seq 1, win 65535, options [mss 1460,nop,wscale 6,sackOK,TS val 12345 ecr 0], length 0\n10:00:01.100100 IP 172.217.160.142.80 > 192.168.1.100.50000: Flags [S.], seq 123, ack 2, win 65535, options [mss 1460,nop,wscale 6,sackOK,TS val 67890 ecr 12345], length 0\n^C\n2 packets captured\n2 packets received by filter\n0 packets dropped by kernel"
+    },
+    {
+        "name": "Capture packets from a specific host",
+        "description": "Captures all traffic originating from or destined to a specific IP address.",
+        "options": {
+            "host_value_entry": "192.168.1.1"
+        },
+        "example_output": "tcpdump: verbose output suppressed, use -v[v] or -X options for full protocol decode\nlistening on eth0, link-type EN10MB (Ethernet), capture size 262144 bytes\n10:00:02.500000 IP 192.168.1.1.53 > 192.168.1.10.45000: UDP, length 70\n10:00:02.500100 IP 192.168.1.10.45000 > 192.168.1.1.53: UDP, length 50\n^C\n2 packets captured\n2 packets received by filter\n0 packets dropped by kernel"
+    },
+    {
+        "name": "Save captured packets to a file",
+        "description": "Captures packets and saves them to a .pcap file for later analysis.",
+        "options": {
+            "write_file_entry": "capture.pcap",
+            "packet_count_entry": "10"
+        },
+        "example_output": "tcpdump: listening on eth0, link-type EN10MB (Ethernet), capture size 262144 bytes\n^C10 packets captured\n10 packets received by filter\n0 packets dropped by kernel"
+    },
+    {
+        "name": "Read packets from a saved file",
+        "description": "Reads and displays packets from an existing .pcap file.",
+        "options": {
+            "read_file_entry": "capture.pcap"
+        },
+        "example_output": "reading from file capture.pcap, link-type EN10MB (Ethernet)\n10:00:00.123456 IP 192.168.1.10.54321 > 192.168.1.1.80: Flags [S], seq 12345, win 29200, options [mss 1460,sackOK,TS val 12345678 ecr 0], length 0\n10:00:00.123500 IP 192.168.1.1.80 > 192.168.1.10.54321: Flags [S.], seq 98765, ack 12346, win 28960, options [mss 1460,sackOK,TS val 87654321 ecr 12345678], length 0\n..."
+    },
+    {
+        "name": "Capture and show ASCII payload",
+        "description": "Captures packets and displays their ASCII payload content.",
+        "options": {
+            "ascii_dump_var": true,
+            "packet_count_entry": "5"
+        },
+        "example_output": "tcpdump: verbose output suppressed, use -v[v] or -X options for full protocol decode\nlistening on eth0, link-type EN10MB (Ethernet), capture size 262144 bytes\n10:00:03.100000 IP 192.168.1.10.50000 > 172.217.160.142.80: Flags [P.], seq 1:101, ack 1, win 29200, length 100\n\tGET / HTTP/1.1\n\tHost: www.example.com\n\tUser-Agent: Mozilla/5.0\n\t...\n^C\n1 packet captured\n1 packet received by filter\n0 packets dropped by kernel"
+    },
+    {
+        "name": "Capture only SYN packets",
+        "description": "Filters for TCP SYN packets (start of a TCP handshake).",
+        "options": {
+            "expression_entry": "tcp[tcpflags] & tcp-syn != 0"
+        },
+        "example_output": "tcpdump: verbose output suppressed, use -v[v] or -X options for full protocol decode\nlistening on eth0, link-type EN10MB (Ethernet), capture size 262144 bytes\n10:00:04.000000 IP 192.168.1.100.54321 > 1.2.3.4.80: Flags [S], seq 12345, win 29200, options [mss 1460], length 0\n^C\n1 packet captured\n1 packet received by filter\n0 packets dropped by kernel"
+    },
+    {
+        "name": "Capture traffic from/to a specific network",
+        "description": "Captures all traffic within a specified IP network range.",
+        "options": {
+            "net_value_entry": "192.168.1.0/24"
+        },
+        "example_output": "tcpdump: verbose output suppressed, use -v[v] or -X options for full protocol decode\nlistening on eth0, link-type EN10MB (Ethernet), capture size 262144 bytes\n10:00:05.000000 IP 192.168.1.1.53 > 192.168.1.10.50000: UDP, length 70\n10:00:05.000100 IP 192.168.1.10.50000 > 192.168.1.1.53: UDP, length 50\n^C\n2 packets captured\n2 packets received by filter\n0 packets dropped by kernel"
+    },
+    {
+        "name": "Capture ICMP (ping) traffic",
+        "description": "Captures only ICMP packets, commonly used for ping and traceroute.",
+        "options": {
+            "protocol_select": "icmp"
+        },
+        "example_output": "tcpdump: verbose output suppressed, use -v[v] or -X options for full protocol decode\nlistening on eth0, link-type EN10MB (Ethernet), capture size 262144 bytes\n10:00:06.000000 IP 192.168.1.10 > 8.8.8.8: ICMP echo request, id 1, seq 1, length 64\n10:00:06.000100 IP 8.8.8.8 > 192.168.1.10: ICMP echo reply, id 1, seq 1, length 64\n^C\n2 packets captured\n2 packets received by filter\n0 packets dropped by kernel"
+    },
+    {
+        "name": "Capture UDP DNS traffic (port 53)",
+        "description": "Captures UDP packets on port 53, typically used for DNS queries.",
+        "options": {
+            "protocol_select": "udp",
+            "port_value_entry": "53"
+        },
+        "example_output": "tcpdump: verbose output suppressed, use -v[v] or -X options for full protocol decode\nlistening on eth0, link-type EN10MB (Ethernet), capture size 262144 bytes\n10:00:07.000000 IP 192.168.1.10.50000 > 8.8.8.8.53: UDP, length 50\n10:00:07.000100 IP 8.8.8.8.53 > 192.168.1.10.50000: UDP, length 70\n^C\n2 packets captured\n2 packets received by filter\n0 packets dropped by kernel"
+    },
+    {
+        "name": "Capture IPv6 traffic",
+        "description": "Captures only IPv6 packets.",
+        "options": {
+            "protocol_select": "ip6"
+        },
+        "example_output": "tcpdump: verbose output suppressed, use -v[v] or -X options for full protocol decode\nlistening on eth0, link-type EN10MB (Ethernet), capture size 262144 bytes\n10:00:08.000000 IP6 fe80::1:2:3:4.50000 > fe80::5:6:7:8.80: Flags [S], seq 123, win 29200, length 0\n^C\n1 packet captured\n1 packet received by filter\n0 packets dropped by kernel"
+    },
+    {
+        "name": "Capture with no name/port resolution (-nn)",
+        "description": "Captures traffic without resolving hostnames or port names, showing raw IPs and port numbers.",
+        "options": {
+            "no_name_resolution_var": true,
+            "no_port_name_resolution_var": true
+        },
+        "example_output": "tcpdump: verbose output suppressed, use -v[v] or -X options for full protocol decode\nlistening on eth0, link-type EN10MB (Ethernet), capture size 262144 bytes\n10:00:09.000000 IP 192.168.1.10.54321 > 192.168.1.1.80: Flags [S], seq 12345, win 29200, options [mss 1460,sackOK,TS val 12345678 ecr 0], length 0\n^C\n1 packet captured\n1 packet received by filter\n0 packets dropped by kernel"
+    },
+    {
+        "name": "Capture with verbose output (-v)",
+        "description": "Provides more detailed output for each captured packet.",
+        "options": {
+            "verbose_var": true
+        },
+        "example_output": "tcpdump: listening on eth0, link-type EN10MB (Ethernet), capture size 262144 bytes\n10:00:10.000000 IP (tos 0x0, ttl 64, id 0, offset 0, flags [DF], proto TCP (6), length 60) 192.168.1.10.54321 > 1.2.3.4.80: Flags [S], cksum 0xabcd (correct), seq 12345, win 29200, options [mss 1460,sackOK,TS val 12345678 ecr 0], length 0\n^C\n1 packet captured\n1 packet received by filter\n0 packets dropped by kernel"
+    },
+    {
+        "name": "Capture and rotate files by size (10MB)",
+        "description": "Captures packets and saves them to multiple files, rotating to a new file every 10MB.",
+        "options": {
+            "write_file_entry": "capture.pcap",
+            "file_size_rotate_entry": "10"
+        },
+        "example_output": "tcpdump: listening on eth0, link-type EN10MB (Ethernet), capture size 262144 bytes\n^C\n(Output will be saved to capture.pcap, capture1.pcap, etc., each max 10MB)"
+    },
+    {
+        "name": "Capture with specific snaplen (64 bytes)",
+        "description": "Captures only the first 64 bytes of each packet, reducing file size.",
+        "options": {
+            "snaplen_entry": "64"
+        },
+        "example_output": "tcpdump: verbose output suppressed, use -v[v] or -X options for full protocol decode\nlistening on eth0, link-type EN10MB (Ethernet), capture size 64 bytes\n10:00:11.000000 IP 192.168.1.10.54321 > 1.2.3.4.80: Flags [S], seq 12345, win 29200, options [mss 1460], length 0\n^C\n1 packet captured\n1 packet received by filter\n0 packets dropped by kernel"
+    },
+    {
+        "name": "Capture with timestamp precision (nano)",
+        "description": "Captures packets and displays timestamps with nanosecond precision.",
+        "options": {
+            "timestamp_precision_var": true,
+            "timestamp_precision_entry": "nano"
+        },
+        "example_output": "tcpdump: verbose output suppressed, use -v[v] or -X options for full protocol decode\nlistening on eth0, link-type EN10MB (Ethernet), capture size 262144 bytes\n10:00:12.123456789 IP 192.168.1.10.54321 > 1.2.3.4.80: Flags [S], seq 12345, win 29200, length 0\n^C\n1 packet captured\n1 packet received by filter\n0 packets dropped by kernel"
+    },
+    {
+        "name": "Capture specific source host and destination port",
+        "description": "Filters traffic from a specific source IP to a specific destination port.",
+        "options": {
+            "host_type_select": "src",
+            "host_value_entry": "192.168.1.10",
+            "port_type_select": "dst",
+            "port_value_entry": "443"
+        },
+        "example_output": "tcpdump: verbose output suppressed, use -v[v] or -X options for full protocol decode\nlistening on eth0, link-type EN10MB (Ethernet), capture size 262144 bytes\n10:00:13.000000 IP 192.168.1.10.50000 > 1.2.3.4.443: Flags [S], seq 1, win 65535, length 0\n^C\n1 packet captured\n1 packet received by filter\n0 packets dropped by kernel"
+    },
+    {
+        "name": "Capture broadcast packets",
+        "description": "Captures only broadcast packets on the network.",
+        "options": {
+            "broadcast_var": true
+        },
+        "example_output": "tcpdump: verbose output suppressed, use -v[v] or -X options for full protocol decode\nlistening on eth0, link-type EN10MB (Ethernet), capture size 262144 bytes\n10:00:14.000000 ARP, Request who-has 192.168.1.1 tell 192.168.1.10, length 28\n^C\n1 packet captured\n1 packet received by filter\n0 packets dropped by kernel"
+    },
+    {
+        "name": "Capture multicast packets",
+        "description": "Captures only multicast packets on the network.",
+        "options": {
+            "multicast_var": true
+        },
+        "example_output": "tcpdump: verbose output suppressed, use -v[v] or -X options for full protocol decode\nlistening on eth0, link-type EN10MB (Ethernet), capture size 262144 bytes\n10:00:15.000000 IP 192.168.1.10.123 > 224.0.0.1.123: UDP, length 48\n^C\n1 packet captured\n1 packet received by filter\n0 packets dropped by kernel"
+    },
+    {
+        "name": "Capture packets with Ethernet header (-e)",
+        "description": "Displays the Ethernet header for each captured packet.",
+        "options": {
+            "ethernet_header_var": true
+        },
+        "example_output": "tcpdump: verbose output suppressed, use -v[v] or -X options for full protocol decode\nlistening on eth0, link-type EN10MB (Ethernet), capture size 262144 bytes\n10:00:16.000000 00:11:22:33:44:55 > AA:BB:CC:DD:EE:FF, ethertype IPv4 (0x0800), length 74: IP 192.168.1.10.54321 > 1.2.3.4.80: Flags [S], seq 12345, win 29200, length 0\n^C\n1 packet captured\n1 packet received by filter\n0 packets dropped by kernel"
+    },
+    {
+        "name": "Capture with hex dump (-x)",
+        "description": "Displays packet data in hexadecimal format.",
+        "options": {
+            "hex_dump_var": true
+        },
+        "example_output": "tcpdump: verbose output suppressed, use -v[v] or -X options for full protocol decode\nlistening on eth0, link-type EN10MB (Ethernet), capture size 262144 bytes\n10:00:17.000000 IP 192.168.1.10.54321 > 1.2.3.4.80: Flags [S], seq 12345, win 29200, length 0\n\t0x0000:  4500 003c 0000 4000 4006 7c7c c0a8 010a  E..<..@.@.|...h.\n\t0x0010:  0104 0050 d431 0000 0000 0000 0000 5002  ...P.1........P.\n\t0x0020:  7210 0000 0000 0000 0000 0000 0000 0000  r...............\n^C\n1 packet captured\n1 packet received by filter\n0 packets dropped by kernel"
+    },
+    {
+        "name": "Capture with hex and ASCII dump (-X)",
+        "description": "Displays packet data in both hexadecimal and ASCII formats.",
+        "options": {
+            "hex_ascii_dump_var": true
+        },
+        "example_output": "tcpdump: verbose output suppressed, use -v[v] or -X options for full protocol decode\nlistening on eth0, link-type EN10MB (Ethernet), capture size 262144 bytes\n10:00:18.000000 IP 192.168.1.10.54321 > 1.2.3.4.80: Flags [S], seq 12345, win 29200, length 0\n\t0x0000:  4500 003c 0000 4000 4006 7c7c c0a8 010a  E..<..@.@.|...h.\n\t0x0010:  0104 0050 d431 0000 0000 0000 0000 5002  ...P.1........P.\n\t0x0020:  7210 0000 0000 0000 0000 0000 0000 0000  r...............\n\tE..<. .@.@.|...h...P.1.........P.r.............\n^C\n1 packet captured\n1 packet received by filter\n0 packets dropped by kernel"
+    },
+    {
+        "name": "Capture with quick output (-q)",
+        "description": "Provides a more concise output, reducing verbosity.",
+        "options": {
+            "quick_output_var": true
+        },
+        "example_output": "tcpdump: verbose output suppressed, use -v[v] or -X options for full protocol decode\nlistening on eth0, link-type EN10MB (Ethernet), capture size 262144 bytes\n10:00:19.000000 IP 192.168.1.10.54321 > 1.2.3.4.80: S 12345:12345(0) win 29200 <mss 1460,sackOK>\n^C\n1 packet captured\n1 packet received by filter\n0 packets dropped by kernel"
+    },
+    {
+        "name": "Capture with no timestamp (-t)",
+        "description": "Removes the timestamp from each captured line.",
+        "options": {
+            "no_timestamp_var": true
+        },
+        "example_output": "tcpdump: verbose output suppressed, use -v[v] or -X options for full protocol decode\nlistening on eth0, link-type EN10MB (Ethernet), capture size 262144 bytes\nIP 192.168.1.10.54321 > 1.2.3.4.80: Flags [S], seq 12345, win 29200, length 0\n^C\n1 packet captured\n1 packet received by filter\n0 packets dropped by kernel"
+    },
+    {
+        "name": "Capture with microsecond timestamp (-tt)",
+        "description": "Displays timestamps in microsecond precision relative to the Unix epoch.",
+        "options": {
+            "micro_timestamp_var": true
+        },
+        "example_output": "tcpdump: verbose output suppressed, use -v[v] or -X options for full protocol decode\nlistening on eth0, link-type EN10MB (Ethernet), capture size 262144 bytes\n1700000000.123456 IP 192.168.1.10.54321 > 1.2.3.4.80: Flags [S], seq 12345, win 29200, length 0\n^C\n1 packet captured\n1 packet received by filter\n0 packets dropped by kernel"
+    },
+    {
+        "name": "Capture with delta timestamp (-ttt)",
+        "description": "Displays timestamps as the time difference from the previous packet.",
+        "options": {
+            "delta_timestamp_var": true
+        },
+        "example_output": "tcpdump: verbose output suppressed, use -v[v] or -X options for full protocol decode\nlistening on eth0, link-type EN10MB (Ethernet), capture size 262144 bytes\n0.000000 IP 192.168.1.10.54321 > 1.2.3.4.80: Flags [S], seq 12345, win 29200, length 0\n0.000050 IP 1.2.3.4.80 > 192.168.1.10.54321: Flags [S.], seq 98765, ack 12346, win 28960, length 0\n^C\n2 packets captured\n2 packets received by filter\n0 packets dropped by kernel"
+    },
+    {
+        "name": "Capture with date timestamp (-tttt)",
+        "description": "Displays timestamps including the date.",
+        "options": {
+            "date_timestamp_var": true
+        },
+        "example_output": "tcpdump: verbose output suppressed, use -v[v] or -X options for full protocol decode\nlistening on eth0, link-type EN10MB (Ethernet), capture size 262144 bytes\n2023-11-15 10:00:22.123456 IP 192.168.1.10.54321 > 1.2.3.4.80: Flags [S], seq 12345, win 29200, length 0\n^C\n1 packet captured\n1 packet received by filter\n0 packets dropped by kernel"
+    },
+    {
+        "name": "Capture with boot timestamp (-ttttt)",
+        "description": "Displays timestamps as the time difference from the first packet captured.",
+        "options": {
+            "boot_timestamp_var": true
+        },
+        "example_output": "tcpdump: verbose output suppressed, use -v[v] or -X options for full protocol decode\nlistening on eth0, link-type EN10MB (Ethernet), capture size 262144 bytes\n0.000000 IP 192.168.1.10.54321 > 1.2.3.4.80: Flags [S], seq 12345, win 29200, length 0\n0.000050 IP 1.2.3.4.80 > 192.168.1.10.54321: Flags [S.], seq 98765, ack 12346, win 28960, length 0\n^C\n2 packets captured\n2 packets received by filter\n0 packets dropped by kernel"
+    },
+    {
+        "name": "Capture only 5 packets (-c 5)",
+        "description": "Exits after capturing a specified number of packets.",
+        "options": {
+            "packet_count_entry": "5"
+        },
+        "example_output": "tcpdump: verbose output suppressed, use -v[v] or -X options for full protocol decode\nlistening on eth0, link-type EN10MB (Ethernet), capture size 262144 bytes\n10:00:24.000000 IP 192.168.1.10.54321 > 1.2.3.4.80: Flags [S], seq 12345, win 29200, length 0\n10:00:24.000050 IP 1.2.3.4.80 > 192.168.1.10.54321: Flags [S.], seq 98765, ack 12346, win 28960, length 0\n10:00:24.000100 IP 192.168.1.10.54321 > 1.2.3.4.80: Flags [.], ack 98766, win 29200, length 0\n10:00:24.000150 IP 1.2.3.4.80 > 192.168.1.10.54321: Flags [P.], seq 98766:98800, ack 12346, win 28960, length 34\n10:00:24.000200 IP 192.168.1.10.54321 > 1.2.3.4.80: Flags [F.], seq 12346, ack 98800, win 29200, length 0\n5 packets captured\n5 packets received by filter\n0 packets dropped by kernel"
+    },
+    {
+        "name": "List available interfaces (-D)",
+        "description": "Lists all network interfaces tcpdump can listen on.",
+        "options": {
+            "list_interfaces_var": true
+        },
+        "example_output": "1.eth0 (Ethernet)\n2.any (Pseudo-device that captures on all interfaces)\n3.lo (Loopback)\n4.wlan0 (802.11 wireless)"
+    },
+    {
+        "name": "Capture with line-buffered output (-l)",
+        "description": "Makes the output line-buffered, useful for piping to other commands.",
+        "options": {
+            "line_buffered_var": true,
+            "packet_count_entry": "3"
+        },
+        "example_output": "tcpdump: verbose output suppressed, use -v[v] or -X options for full protocol decode\nlistening on eth0, link-type EN10MB (Ethernet), capture size 262144 bytes\n10:00:25.000000 IP 192.168.1.10.54321 > 1.2.3.4.80: Flags [S], seq 12345, win 29200, length 0\n10:00:25.000050 IP 1.2.3.4.80 > 192.168.1.10.54321: Flags [S.], seq 98765, ack 12346, win 28960, length 0\n10:00:25.000100 IP 192.168.1.10.54321 > 1.2.3.4.80: Flags [.], ack 98766, win 29200, length 0\n3 packets captured\n3 packets received by filter\n0 packets dropped by kernel"
+    },
+    {
+        "name": "Capture without promiscuous mode (-p)",
+        "description": "Ensures the interface is not put into promiscuous mode, capturing only traffic to/from the host.",
+        "options": {
+            "no_promiscuous_var": true,
+            "packet_count_entry": "2"
+        },
+        "example_output": "tcpdump: verbose output suppressed, use -v[v] or -X options for full protocol decode\nlistening on eth0, link-type EN10MB (Ethernet), capture size 262144 bytes\n10:00:26.000000 IP 192.168.1.10.54321 > 1.2.3.4.80: Flags [S], seq 12345, win 29200, length 0\n10:00:26.000050 IP 1.2.3.4.80 > 192.168.1.10.54321: Flags [S.], seq 98765, ack 12346, win 28960, length 0\n2 packets captured\n2 packets received by filter\n0 packets dropped by kernel"
+    },
+    {
+        "name": "Capture and rotate files by time (60 seconds)",
+        "description": "Captures packets and saves them to new files every 60 seconds.",
+        "options": {
+            "write_file_entry": "time_capture.pcap",
+            "rotate_time_var": true,
+            "rotate_time_entry": "60"
+        },
+        "example_output": "tcpdump: listening on eth0, link-type EN10MB (Ethernet), capture size 262144 bytes\n^C\n(Output will be saved to time_capture.pcap, then time_capture_YYYYMMDDHHMMSS.pcap, etc., every 60 seconds)"
+    }
+]

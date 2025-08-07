@@ -1,0 +1,96 @@
+[
+    {
+        "name": "Basic Scan",
+        "description": "Performs a basic scan on a target URL.",
+        "options": {
+            "target_url_entry": "http://testphp.vulnweb.com/",
+            "output_directory_entry": "basic_scan_output"
+        },
+        "example_output": "Starting Skipfish scan on http://testphp.vulnweb.com/\n[+] Scan started at 2025-07-29 10:00:00\n[+] Found 123 URLs, 45 forms, 67 parameters.\n[+] Identified 5 high severity issues, 10 medium, 15 low.\n[+] Scan completed in 120 seconds. Results saved to basic_scan_output/."
+    },
+    {
+        "name": "Scan with Basic Authentication",
+        "description": "Scans a target requiring Basic HTTP Authentication.",
+        "options": {
+            "target_url_entry": "http://example.com/admin/",
+            "auth_type_select": "basic",
+            "basic_auth_user_entry": "admin",
+            "basic_auth_pass_entry": "password",
+            "output_directory_entry": "basic_auth_scan"
+        },
+        "example_output": "Starting Skipfish scan on http://example.com/admin/ with Basic Auth...\n[+] Authenticated successfully.\n[+] Found 50 URLs, 10 forms.\n[+] Identified 2 high severity issues.\n[+] Scan completed. Results saved to basic_auth_scan/."
+    },
+    {
+        "name": "Scan with Form Authentication",
+        "description": "Scans a target by authenticating through a login form.",
+        "options": {
+            "target_url_entry": "http://example.com/login.php",
+            "auth_type_select": "form",
+            "form_auth_url_entry": "http://example.com/login.php",
+            "form_auth_data_entry": "username=test&password=testpass&submit=Login",
+            "output_directory_entry": "form_auth_scan"
+        },
+        "example_output": "Starting Skipfish scan on http://example.com/login.php with Form Auth...\n[+] Form login successful.\n[+] Crawling protected areas.\n[+] Found 75 URLs, 20 forms.\n[+] Scan completed. Results saved to form_auth_scan/."
+    },
+    {
+        "name": "Aggressive Fuzzing",
+        "description": "Performs an aggressive fuzzing scan.",
+        "options": {
+            "target_url_entry": "http://testphp.vulnweb.com/search.php?test=query",
+            "fuzzing_mode_select": "3",
+            "output_directory_entry": "aggressive_fuzz_scan"
+        },
+        "example_output": "Starting Skipfish scan on http://testphp.vulnweb.com/search.php with Aggressive Fuzzing...\n[+] Sending numerous fuzzing payloads.\n[+] Detected potential SQL Injection on 'test' parameter.\n[+] Detected potential XSS on 'query' parameter.\n[+] Scan completed. Results saved to aggressive_fuzz_scan/."
+    },
+    {
+        "name": "Generate HTML and XML Reports",
+        "description": "Scans and generates both HTML and XML reports.",
+        "options": {
+            "target_url_entry": "http://testphp.vulnweb.com/",
+            "output_directory_entry": "reports_output",
+            "report_html_var": true,
+            "report_xml_var": true
+        },
+        "example_output": "Starting Skipfish scan on http://testphp.vulnweb.com/\n[+] Scan completed. Generating reports...\n[+] HTML report saved to reports_output/index.html\n[+] XML report saved to reports_output/results.xml\n[+] Scan finished."
+    },
+    {
+        "name": "Scan with Custom User-Agent",
+        "description": "Scans using a specified custom User-Agent string.",
+        "options": {
+            "target_url_entry": "http://example.com/",
+            "user_agent_entry": "Mozilla/5.0 (SkipfishCustomAgent)",
+            "output_directory_entry": "custom_ua_scan"
+        },
+        "example_output": "Starting Skipfish scan on http://example.com/ with User-Agent: Mozilla/5.0 (SkipfishCustomAgent)...\n[+] Scan completed. Results saved to custom_ua_scan/."
+    },
+    {
+        "name": "Scan with Specific Test Types (XSS & SQL)",
+        "description": "Focuses the scan on XSS and SQL Injection vulnerabilities.",
+        "options": {
+            "target_url_entry": "http://testphp.vulnweb.com/",
+            "test_types_entry": "xss,sql",
+            "output_directory_entry": "xss_sql_scan"
+        },
+        "example_output": "Starting Skipfish scan on http://testphp.vulnweb.com/ for XSS, SQL...\n[+] Running XSS tests.\n[+] Running SQL Injection tests.\n[+] Found 1 XSS issue, 1 SQLi issue.\n[+] Scan completed. Results saved to xss_sql_scan/."
+    },
+    {
+        "name": "Scan with Max Crawl Depth",
+        "description": "Limits the crawling depth to prevent excessively long scans.",
+        "options": {
+            "target_url_entry": "http://example.com/",
+            "max_crawl_depth_entry": "3",
+            "output_directory_entry": "limited_depth_scan"
+        },
+        "example_output": "Starting Skipfish scan on http://example.com/ with max depth 3...\n[+] Crawling up to depth 3.\n[+] Scan completed. Results saved to limited_depth_scan/."
+    },
+    {
+        "name": "Scan through Proxy",
+        "description": "Routes all traffic through a specified HTTP/SOCKS proxy.",
+        "options": {
+            "target_url_entry": "http://example.com/",
+            "proxy_entry": "http://127.0.0.1:8080",
+            "output_directory_entry": "proxy_scan"
+        },
+        "example_output": "Starting Skipfish scan on http://example.com/ via proxy http://127.0.0.1:8080...\n[+] Proxy connection established.\n[+] Scan completed. Results saved to proxy_scan/."
+    }
+]

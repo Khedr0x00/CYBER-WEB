@@ -1,0 +1,177 @@
+[
+    {
+        "name": "Basic Scan",
+        "description": "Performs a basic scan for common vulnerabilities and server misconfigurations. Equivalent to `nikto.pl -h <target>`",
+        "options": {
+            "target_entry": "http://testphp.vulnweb.com",
+            "verbose_var": true
+        },
+        "example_output": "\n- Nikto v2.1.6\n---------------------------------------------------------------------------\n+ Target IP:          192.168.1.100\n+ Target Hostname:    testphp.vulnweb.com\n+ Target Port:        80\n+ Start Time:         2023-10-27 10:00:00 (GMT+2)\n---------------------------------------------------------------------------\n+ Server: Apache/2.4.7 (Ubuntu)\n+ The anti-clickjacking X-Frame-Options header is not present.\n+ The X-XSS-Protection header is not defined.\n+ OSVDB-ID: 3092: /manual/: Apache manual found.\n+ OSVDB-ID: 3233: /icons/: Directory indexing found.\n+ OSVDB-ID: 3268: /phpinfo.php: PHP information file found.\n+ OSVDB-ID: 6868: /test.php: Test file found.\n+ OSVDB-ID: 0: HTTP method 'PUT' is allowed.\n+ OSVDB-ID: 0: HTTP method 'DELETE' is allowed.\n+ Scan complete in 12.34 seconds\n+ 10 items checked - 6 potential vulnerabilities found\n"
+    },
+    {
+        "name": "Full Scan with SSL",
+        "description": "Performs a comprehensive scan over SSL/TLS, including all default checks. Equivalent to `nikto.pl -h <target> -ssl -v`",
+        "options": {
+            "target_entry": "https://example.com",
+            "ssl_var": true,
+            "verbose_var": true
+        },
+        "example_output": "\n- Nikto v2.1.6\n---------------------------------------------------------------------------\n+ Target IP:          93.184.216.34\n+ Target Hostname:    example.com\n+ Target Port:        443\n+ Start Time:         2023-10-27 10:05:00 (GMT+2)\n---------------------------------------------------------------------------\n+ Server: ECS (example.com)\n+ The anti-clickjacking X-Frame-Options header is not present.\n+ The X-XSS-Protection header is not defined.\n+ The site uses HTTP Strict Transport Security (HSTS).\n+ OSVDB-ID: 0: The 'Content-Type' header is not defined.\n+ Scan complete in 18.76 seconds\n+ 15 items checked - 3 potential vulnerabilities found\n"
+    },
+    {
+        "name": "Scan with Tuning (CGI)",
+        "description": "Focuses the scan on CGI-related vulnerabilities. Equivalent to `nikto.pl -h <target> -T c -v`",
+        "options": {
+            "target_entry": "http://testphp.vulnweb.com",
+            "tuning_select": "c",
+            "verbose_var": true
+        },
+        "example_output": "\n- Nikto v2.1.6\n---------------------------------------------------------------------------\n+ Target IP:          192.168.1.100\n+ Target Hostname:    testphp.vulnweb.com\n+ Target Port:        80\n+ Start Time:         2023-10-27 10:10:00 (GMT+2)\n---------------------------------------------------------------------------\n+ Server: Apache/2.4.7 (Ubuntu)\n+ OSVDB-ID: 3092: /manual/: Apache manual found.\n+ OSVDB-ID: 3233: /icons/: Directory indexing found.\n+ Scan complete in 8.12 seconds\n+ 5 items checked - 2 potential vulnerabilities found\n"
+    },
+    {
+        "name": "Scan with Evasion (Random URI Encoding)",
+        "description": "Attempts to evade IDS/IPS by using random URI encoding. Equivalent to `nikto.pl -h <target> -E 0 -v`",
+        "options": {
+            "target_entry": "http://testphp.vulnweb.com",
+            "evade_select": "0",
+            "verbose_var": true
+        },
+        "example_output": "\n- Nikto v2.1.6\n---------------------------------------------------------------------------\n+ Target IP:          192.168.1.100\n+ Target Hostname:    testphp.vulnweb.com\n+ Target Port:        80\n+ Start Time:         2023-10-27 10:15:00 (GMT+2)\n---------------------------------------------------------------------------\n+ Server: Apache/2.4.7 (Ubuntu)\n+ The anti-clickjacking X-Frame-Options header is not present.\n+ OSVDB-ID: 3268: /phpinfo.php: PHP information file found.\n+ Scan complete in 15.67 seconds\n+ 10 items checked - 2 potential vulnerabilities found\n"
+    },
+    {
+        "name": "Scan with Authentication",
+        "description": "Scans a target requiring HTTP Basic Authentication. Equivalent to `nikto.pl -h <target> -id username:password -v`",
+        "options": {
+            "target_entry": "http://testphp.vulnweb.com/admin",
+            "auth_entry": "admin:password",
+            "verbose_var": true
+        },
+        "example_output": "\n- Nikto v2.1.6\n---------------------------------------------------------------------------\n+ Target IP:          192.168.1.100\n+ Target Hostname:    testphp.vulnweb.com\n+ Target Port:        80\n+ Start Time:         2023-10-27 10:20:00 (GMT+2)\n---------------------------------------------------------------------------\n+ Server: Apache/2.4.7 (Ubuntu)\n+ OSVDB-ID: 0: Basic authentication was successful for 'admin:password'.\n+ OSVDB-ID: 0: Directory listing found for /admin/.\n+ Scan complete in 10.05 seconds\n+ 5 items checked - 1 potential vulnerability found\n"
+    },
+    {
+        "name": "Scan with Proxy",
+        "description": "Routes the scan through a specified HTTP proxy. Equivalent to `nikto.pl -h <target> -useproxy 127.0.0.1:8080 -v`",
+        "options": {
+            "target_entry": "http://testphp.vulnweb.com",
+            "useproxy_entry": "127.0.0.1:8080",
+            "verbose_var": true
+        },
+        "example_output": "\n- Nikto v2.1.6\n---------------------------------------------------------------------------\n+ Target IP:          192.168.1.100\n+ Target Hostname:    testphp.vulnweb.com\n+ Target Port:        80\n+ Start Time:         2023-10-27 10:25:00 (GMT+2)\n---------------------------------------------------------------------------\n+ Server: Apache/2.4.7 (Ubuntu)\n+ Using proxy: 127.0.0.1:8080\n+ The anti-clickjacking X-Frame-Options header is not present.\n+ Scan complete in 13.45 seconds\n+ 10 items checked - 1 potential vulnerability found\n"
+    },
+    {
+        "name": "Scan with Custom User Agent",
+        "description": "Sets a custom User-Agent header for the scan requests. Equivalent to `nikto.pl -h <target> -useragent 'MyCustomScanner 1.0' -v`",
+        "options": {
+            "target_entry": "http://testphp.vulnweb.com",
+            "useragent_entry": "MyCustomScanner 1.0",
+            "verbose_var": true
+        },
+        "example_output": "\n- Nikto v2.1.6\n---------------------------------------------------------------------------\n+ Target IP:          192.168.1.100\n+ Target Hostname:    testphp.vulnweb.com\n+ Target Port:        80\n+ Start Time:         2023-10-27 10:30:00 (GMT+2)\n---------------------------------------------------------------------------\n+ Server: Apache/2.4.7 (Ubuntu)\n+ User-Agent: MyCustomScanner 1.0\n+ The anti-clickjacking X-Frame-Options header is not present.\n+ Scan complete in 11.22 seconds\n+ 10 items checked - 1 potential vulnerability found\n"
+    },
+    {
+        "name": "Scan with Specific Plugins",
+        "description": "Runs only a comma-separated list of specified plugins. Equivalent to `nikto.pl -h <target> -Plugins 'apache_expect_xss,shellshock' -v`",
+        "options": {
+            "target_entry": "http://testphp.vulnweb.com",
+            "plugins_entry": "apache_expect_xss,shellshock",
+            "verbose_var": true
+        },
+        "example_output": "\n- Nikto v2.1.6\n---------------------------------------------------------------------------\n+ Target IP:          192.168.1.100\n+ Target Hostname:    testphp.vulnweb.com\n+ Target Port:        80\n+ Start Time:         2023-10-27 10:35:00 (GMT+2)\n---------------------------------------------------------------------------\n+ Server: Apache/2.4.7 (Ubuntu)\n+ Executing plugins: apache_expect_xss,shellshock\n+ OSVDB-ID: 0: The 'Expect' header is not defined.\n+ OSVDB-ID: 0: Shellshock (Bash) vulnerability not detected.\n+ Scan complete in 9.87 seconds\n+ 2 items checked - 1 potential vulnerability found\n"
+    },
+    {
+        "name": "Output to HTML File",
+        "description": "Saves the scan results to an HTML file. Equivalent to `nikto.pl -h <target> -o output.html -Format htm`",
+        "options": {
+            "target_entry": "http://testphp.vulnweb.com",
+            "output_file_entry": "nikto_report.html",
+            "format_select": "htm"
+        },
+        "example_output": "\n- Nikto v2.1.6\n---------------------------------------------------------------------------\n+ Target IP:          192.168.1.100\n+ Target Hostname:    testphp.vulnweb.com\n+ Target Port:        80\n+ Start Time:         2023-10-27 10:40:00 (GMT+2)\n---------------------------------------------------------------------------\n+ Server: Apache/2.4.7 (Ubuntu)\n+ The anti-clickjacking X-Frame-Options header is not present.\n+ Scan complete in 12.00 seconds\n+ 10 items checked - 1 potential vulnerability found\n+ Output saved to nikto_report.html\n"
+    },
+    {
+        "name": "Disable 404 Checks",
+        "description": "Disables the 404 (file not found) checking, which can speed up scans on some sites. Equivalent to `nikto.pl -h <target> -no404 -v`",
+        "options": {
+            "target_entry": "http://testphp.vulnweb.com",
+            "no404_var": true,
+            "verbose_var": true
+        },
+        "example_output": "\n- Nikto v2.1.6\n---------------------------------------------------------------------------\n+ Target IP:          192.168.1.100\n+ Target Hostname:    testphp.vulnweb.com\n+ Target Port:        80\n+ Start Time:         2023-10-27 10:45:00 (GMT+2)\n---------------------------------------------------------------------------\n+ Server: Apache/2.4.7 (Ubuntu)\n+ 404 checking disabled.\n+ The anti-clickjacking X-Frame-Options header is not present.\n+ Scan complete in 9.50 seconds\n+ 10 items checked - 1 potential vulnerability found\n"
+    },
+    {
+        "name": "Update Nikto Database",
+        "description": "Updates the Nikto plugins and databases from cirt.net. Equivalent to `nikto.pl -update` (Note: This is a standalone command and won't scan a target).",
+        "options": {
+            "update_var": true
+        },
+        "example_output": "\n- Nikto v2.1.6\n---------------------------------------------------------------------------\n+ Nikto has been updated.\n+ Latest plugin database: 20231027\n+ Latest version: 2.1.6\n---------------------------------------------------------------------------\n"
+    },
+    {
+        "name": "Scan with Vhost",
+        "description": "Specifies a virtual host for the Host header, useful for scanning multiple sites on one IP. Equivalent to `nikto.pl -h <ip> -vhost <hostname>`",
+        "options": {
+            "target_entry": "http://192.168.1.101",
+            "vhost_entry": "www.example-vhost.com",
+            "verbose_var": true
+        },
+        "example_output": "\n- Nikto v2.1.6\n---------------------------------------------------------------------------\n+ Target IP:          192.168.1.101\n+ Target Hostname:    www.example-vhost.com\n+ Target Port:        80\n+ Start Time:         2023-10-27 10:50:00 (GMT+2)\n---------------------------------------------------------------------------\n+ Server: Apache/2.4.7 (Ubuntu)\n+ Host header set to www.example-vhost.com\n+ OSVDB-ID: 3092: /manual/: Apache manual found.\n+ Scan complete in 11.00 seconds\n+ 10 items checked - 1 potential vulnerability found\n"
+    },
+    {
+        "name": "Scan with Debug Level 3",
+        "description": "Enables maximum debug output for detailed request/response information. Equivalent to `nikto.pl -h <target> -D 3`",
+        "options": {
+            "target_entry": "http://testphp.vulnweb.com",
+            "debug_entry": "3"
+        },
+        "example_output": "\n- Nikto v2.1.6\n---------------------------------------------------------------------------\n+ Target IP:          192.168.1.100\n+ Target Hostname:    testphp.vulnweb.com\n+ Target Port:        80\n+ Start Time:         2023-10-27 10:55:00 (GMT+2)\n---------------------------------------------------------------------------\n+ Debug: HTTP request: GET / HTTP/1.1\\r\\nHost: testphp.vulnweb.com\\r\\nUser-Agent: Nikto/2.1.6 (http://cirt.net/nikto/)\\r\\n\\r\\n\n+ Debug: HTTP response: HTTP/1.1 200 OK\\r\\nServer: Apache/2.4.7 (Ubuntu)\\r\\n...\n+ Scan complete in 15.00 seconds\n+ 10 items checked - 1 potential vulnerability found\n"
+    },
+    {
+        "name": "Scan with Max Redirects",
+        "description": "Sets the maximum number of HTTP redirects Nikto will follow. Equivalent to `nikto.pl -h <target> -maxredirects 10`",
+        "options": {
+            "target_entry": "http://redirect.example.com",
+            "maxredirects_entry": "10",
+            "verbose_var": true
+        },
+        "example_output": "\n- Nikto v2.1.6\n---------------------------------------------------------------------------\n+ Target IP:          192.168.1.102\n+ Target Hostname:    redirect.example.com\n+ Target Port:        80\n+ Start Time:         2023-10-27 11:00:00 (GMT+2)\n---------------------------------------------------------------------------\n+ Server: Apache/2.4.7 (Ubuntu)\n+ Following redirect to: http://final.example.com/ (1 of 10)\n+ Scan complete in 7.00 seconds\n+ 5 items checked - 0 potential vulnerabilities found\n"
+    },
+    {
+        "name": "Scan with Custom Timeout",
+        "description": "Adjusts the timeout for each request in seconds. Useful for slow targets. Equivalent to `nikto.pl -h <target> -timeout 30`",
+        "options": {
+            "target_entry": "http://slowserver.example.com",
+            "timeout_entry": "30",
+            "verbose_var": true
+        },
+        "example_output": "\n- Nikto v2.1.6\n---------------------------------------------------------------------------\n+ Target IP:          192.168.1.103\n+ Target Hostname:    slowserver.example.com\n+ Target Port:        80\n+ Start Time:         2023-10-27 11:05:00 (GMT+2)\n---------------------------------------------------------------------------\n+ Server: Apache/2.4.7 (Ubuntu)\n+ Timeout set to 30 seconds.\n+ The anti-clickjacking X-Frame-Options header is not present.\n+ Scan complete in 25.00 seconds\n+ 10 items checked - 1 potential vulnerability found\n"
+    },
+    {
+        "name": "Scan with Specific CGI Directories",
+        "description": "Only scans the specified CGI directories. Equivalent to `nikto.pl -h <target> -Cgidirs '/cgi-bin/,/scripts/' -v`",
+        "options": {
+            "target_entry": "http://testphp.vulnweb.com",
+            "cgidirs_entry": "/cgi-bin/,/scripts/",
+            "verbose_var": true
+        },
+        "example_output": "\n- Nikto v2.1.6\n---------------------------------------------------------------------------\n+ Target IP:          192.168.1.100\n+ Target Hostname:    testphp.vulnweb.com\n+ Target Port:        80\n+ Start Time:         2023-10-27 11:10:00 (GMT+2)\n---------------------------------------------------------------------------\n+ Server: Apache/2.4.7 (Ubuntu)\n+ Scanning CGI directories: /cgi-bin/, /scripts/\n+ OSVDB-ID: 3233: /icons/: Directory indexing found.\n+ Scan complete in 6.50 seconds\n+ 5 items checked - 1 potential vulnerability found\n"
+    },
+    {
+        "name": "Scan with Root Directory",
+        "description": "Prepends a root directory to all requests, useful for applications in subdirectories. Equivalent to `nikto.pl -h <target> -root /blog`",
+        "options": {
+            "target_entry": "http://testphp.vulnweb.com",
+            "root_entry": "/blog",
+            "verbose_var": true
+        },
+        "example_output": "\n- Nikto v2.1.6\n---------------------------------------------------------------------------\n+ Target IP:          192.168.1.100\n+ Target Hostname:    testphp.vulnweb.com\n+ Target Port:        80\n+ Start Time:         2023-10-27 11:15:00 (GMT+2)\n---------------------------------------------------------------------------\n+ Server: Apache/2.4.7 (Ubuntu)\n+ Root directory set to /blog\n+ OSVDB-ID: 0: /blog/wp-admin/: WordPress admin interface found.\n+ Scan complete in 14.00 seconds\n+ 10 items checked - 1 potential vulnerability found\n"
+    },
+    {
+        "name": "Scan with Display Errors",
+        "description": "Displays all errors encountered during the scan. Equivalent to `nikto.pl -h <target> -Display E`",
+        "options": {
+            "target_entry": "http://error.example.com",
+            "display_select": "E"
+        },
+        "example_output": "\n- Nikto v2.1.6\n---------------------------------------------------------------------------\n+ Target IP:          192.168.1.104\n+ Target Hostname:    error.example.com\n+ Target Port:        80\n+ Start Time:         2023-10-27 11:20:00 (GMT+2)\n---------------------------------------------------------------------------\n+ Server: Apache/2.4.7 (Ubuntu)\n+ ERROR: Could not connect to target host.\n+ ERROR: Failed to retrieve /nonexistent.php\n+ Scan complete in 5.00 seconds\n+ 0 items checked - 0 potential vulnerabilities found\n"
+    }
+]
