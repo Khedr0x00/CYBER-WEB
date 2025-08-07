@@ -1,0 +1,91 @@
+[
+    {
+        "name": "Basic WAF Detection",
+        "description": "Scans a URL to detect if a Web Application Firewall (WAF) is present.",
+        "options": {
+            "target_url_entry": "http://www.example.com"
+        },
+        "example_output": "\n_ .-. - _______ \n( |__| ()'''; |==|_______)\n.) |__| / (' /|\\ ( |__| ( / ) / | \\ .\n|__| \\(_)_)) / | \\ |__|\n~ WAFW00F : v2.3.1 ~\n~ Sniffing Web Application Firewalls since 2014 ~\n\n[+] Checking http://www.example.com\n[+] The site http://www.example.com is behind Cloudflare (Cloudflare Inc.)\n[+] Number of requests: 6\n"
+    },
+    {
+        "name": "Verbose WAF Scan",
+        "description": "Scans with increased verbosity to see more details about the detection process.",
+        "options": {
+            "target_url_entry": "http://www.example.com",
+            "verbose_var": true
+        },
+        "example_output": "\n_ .-. - _______ \n( |__| ()'''; |==|_______)\n.) |__| / (' /|\\ ( |__| ( / ) / | \\ .\n|__| \\(_)_)) / | \\ |__|\n~ WAFW00F : v2.3.1 ~\n~ Sniffing Web Application Firewalls since 2014 ~\n\n[+] Checking http://www.example.com\n[+] The site http://www.example.com is behind Cloudflare (Cloudflare Inc.)\n[+] Number of requests: 6\n[+] Found WAF: Cloudflare\n[+] Detected WAF: Cloudflare (Cloudflare Inc.)\n"
+    },
+    {
+        "name": "Find All WAFs",
+        "description": "Continues scanning and attempts to find all matching WAF signatures, even after the first one is detected.",
+        "options": {
+            "target_url_entry": "http://www.example.com",
+            "findall_waf_var": true
+        },
+        "example_output": "\n_ .-. - _______ \n( |__| ()'''; |==|_______)\n.) |__| / (' /|\\ ( |__| ( / ) / | \\ .\n|__| \\(_)_)) / | \\ |__|\n~ WAFW00F : v2.3.1 ~\n~ Sniffing Web Application Firewalls since 2014 ~\n\n[+] Checking http://www.example.com\n[+] The site http://www.example.com is behind Cloudflare (Cloudflare Inc.)\n[+] Number of requests: 6\n[+] Also detected: Sucuri CloudProxy (Sucuri Inc.)\n"
+    },
+    {
+        "name": "Scan with Proxy",
+        "description": "Routes the Wafw00f scan through a specified HTTP or SOCKS proxy.",
+        "options": {
+            "target_url_entry": "http://www.example.com",
+            "proxy_entry": "http://127.0.0.1:8080"
+        },
+        "example_output": "\n_ .-. - _______ \n( |__| ()'''; |==|_______)\n.) |__| / (' /|\\ ( |__| ( / ) / | \\ .\n|__| \\(_)_)) / | \\ |__|\n~ WAFW00F : v2.3.1 ~\n~ Sniffing Web Application Firewalls since 2014 ~\n\n[+] Checking http://www.example.com (via proxy http://127.0.0.1:8080)\n[+] The site http://www.example.com is behind Cloudflare (Cloudflare Inc.)\n[+] Number of requests: 6\n"
+    },
+    {
+        "name": "Test Specific WAF",
+        "description": "Instructs Wafw00f to only test for the presence of a specific WAF product.",
+        "options": {
+            "target_url_entry": "http://www.example.com",
+            "test_waf_entry": "Cloudflare"
+        },
+        "example_output": "\n_ .-. - _______ \n( |__| ()'''; |==|_______)\n.) |__| / (' /|\\ ( |__| ( / ) / | \\ .\n|__| \\(_)_)) / | \\ |__|\n~ WAFW00F : v2.3.1 ~\n~ Sniffing Web Application Firewalls since 2014 ~\n\n[+] Checking http://www.example.com\n[+] The site http://www.example.com is behind Cloudflare (Cloudflare Inc.)\n[+] Number of requests: 6\n"
+    },
+    {
+        "name": "Output to JSON File",
+        "description": "Performs a WAF scan and saves the output in JSON format to a specified file.",
+        "options": {
+            "target_url_entry": "http://www.example.com",
+            "output_format_select": "json",
+            "output_file_entry": "example_output"
+        },
+        "example_output": "\n_ .-. - _______ \n( |__| ()'''; |==|_______)\n.) |__| / (' /|\\ ( |__| ( / ) / | \\ .\n|__| \\(_)_)) / | \\ |__|\n~ WAFW00F : v2.3.1 ~\n~ Sniffing Web Application Firewalls since 2014 ~\n\n[+] Checking http://www.example.com\n[+] The site http://www.example.com is behind Cloudflare (Cloudflare Inc.)\n[+] Number of requests: 6\nOutput saved to example_output.json.\n"
+    },
+    {
+        "name": "Scan from Input File",
+        "description": "Reads a list of target URLs from a file and scans each one.",
+        "options": {
+            "input_file_entry": "urls.txt",
+            "verbose_var": true
+        },
+        "example_output": "\n_ .-. - _______ \n( |__| ()'''; |==|_______)\n.) |__| / (' /|\\ ( |__| ( / ) / | \\ .\n|__| \\(_)_)) / | \\ |__|\n~ WAFW00F : v2.3.1 ~\n~ Sniffing Web Application Firewalls since 2014 ~\n\n[+] Checking http://www.target1.com\n[+] The site http://www.target1.com is behind Sucuri CloudProxy (Sucuri Inc.)\n[+] Number of requests: 7\n\n[+] Checking http://www.target2.org\n[+] The site http://www.target2.org is behind Akamai Kona Site Defender (Akamai Technologies)\n[+] Number of requests: 8\n"
+    },
+    {
+        "name": "No WAF Detected Example",
+        "description": "An example output for when no WAF is detected on the target URL.",
+        "options": {
+            "target_url_entry": "http://www.nonwafsite.com"
+        },
+        "example_output": "\n_ .-. - _______ \n( |__| ()'''; |==|_______)\n.) |__| / (' /|\\ ( |__| ( / ) / | \\ .\n|__| \\(_)_)) / | \\ |__|\n~ WAFW00F : v2.3.1 ~\n~ Sniffing Web Application Firewalls since 2014 ~\n\n[+] Checking http://www.nonwafsite.com\n[-] No WAF detected.\n[+] Number of requests: 5\n"
+    },
+    {
+        "name": "Scan with Custom Timeout",
+        "description": "Sets a custom timeout for HTTP requests during the scan.",
+        "options": {
+            "target_url_entry": "http://www.slowsite.com",
+            "timeout_entry": "30"
+        },
+        "example_output": "\n_ .-. - _______ \n( |__| ()'''; |==|_______)\n.) |__| / (' /|\\ ( |__| ( / ) / | \\ .\n|__| \\(_)_)) / | \\ |__|\n~ WAFW00F : v2.3.1 ~\n~ Sniffing Web Application Firewalls since 2014 ~\n\n[+] Checking http://www.slowsite.com (Timeout: 30s)\n[+] The site http://www.slowsite.com is behind AWS WAF (Amazon Web Services)\n[+] Number of requests: 6\n"
+    },
+    {
+        "name": "Debug Mode Scan",
+        "description": "Enables debug mode for more detailed internal information about Wafw00f's operations.",
+        "options": {
+            "target_url_entry": "http://www.example.com",
+            "debug_var": true
+        },
+        "example_output": "\n_ .-. - _______ \n( |__| ()'''; |==|_______)\n.) |__| / (' /|\\ ( |__| ( / ) / | \\ .\n|__| \\(_)_)) / | \\ |__|\n~ WAFW00F : v2.3.1 ~\n~ Sniffing Web Application Firewalls since 2014 ~\n\n[DEBUG] Starting WAFW00F scan for http://www.example.com\n[DEBUG] Sending initial request...\n[+] Checking http://www.example.com\n[DEBUG] Analyzing response headers...\n[+] The site http://www.example.com is behind Cloudflare (Cloudflare Inc.)\n[+] Number of requests: 6\n[DEBUG] Scan finished.\n"
+    }
+]

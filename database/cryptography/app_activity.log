@@ -1,0 +1,79 @@
+2025-07-30 16:24:48,859 - INFO - Flask application started and logger initialized.
+2025-07-30 16:24:48,864 - INFO - Starting Flask app on port 5000...
+2025-07-30 16:24:54,489 - INFO - Serving index.html
+2025-07-30 16:24:54,918 - INFO - Client connected to log stream.
+2025-07-30 16:25:08,201 - INFO - Processing request: Option='Base64 Encode', Input length=5
+2025-07-30 16:25:08,202 - INFO - Processing complete. Output length=8
+2025-07-30 16:25:14,705 - INFO - Processing request: Option='URL Decode', Input length=5
+2025-07-30 16:25:14,706 - INFO - Processing complete. Output length=5
+2025-07-30 16:25:19,753 - INFO - Processing request: Option='URL Encode', Input length=5
+2025-07-30 16:25:19,753 - INFO - Processing complete. Output length=5
+2025-07-30 16:25:22,409 - INFO - Processing request: Option='MD5 Hash', Input length=5
+2025-07-30 16:25:22,410 - INFO - Processing complete. Output length=32
+2025-07-30 16:25:24,729 - INFO - Processing request: Option='SHA256 Hash', Input length=5
+2025-07-30 16:25:24,729 - INFO - Processing complete. Output length=64
+2025-07-30 16:25:27,681 - INFO - Processing request: Option='JSON Minify', Input length=5
+2025-07-30 16:25:27,682 - ERROR - Error processing line 'hello' with option 'JSON Minify': Expecting value: line 1 column 1 (char 0)
+2025-07-30 16:25:27,683 - INFO - Processing complete. Output length=48
+2025-07-30 16:25:31,489 - INFO - Processing request: Option='JSON Beautify', Input length=5
+2025-07-30 16:25:31,489 - ERROR - Error processing line 'hello' with option 'JSON Beautify': Expecting value: line 1 column 1 (char 0)
+2025-07-30 16:25:31,491 - INFO - Processing complete. Output length=48
+2025-07-30 16:25:37,385 - INFO - Processing request: Option='Hex Encode', Input length=5
+2025-07-30 16:25:37,386 - INFO - Processing complete. Output length=10
+2025-07-30 16:27:46,094 - INFO - Flask application started and logger initialized.
+2025-07-30 16:27:46,100 - INFO - Starting Flask app on port 5000...
+2025-07-30 16:27:48,860 - INFO - Serving index.html
+2025-07-30 16:27:49,187 - INFO - Client connected to log stream.
+2025-07-30 16:27:55,256 - INFO - Processing request: Option='ROT13 Encrypt/Decrypt', Input length=4, Key present=False
+2025-07-30 16:27:55,257 - INFO - Processing complete. Output length=4
+2025-07-30 16:27:59,496 - INFO - Processing request: Option='ROT13 Encrypt/Decrypt', Input length=7, Key present=False
+2025-07-30 16:27:59,497 - INFO - Processing complete. Output length=7
+2025-07-30 16:28:03,192 - INFO - Processing request: Option='ROT13 Encrypt/Decrypt', Input length=4, Key present=False
+2025-07-30 16:28:03,193 - INFO - Processing complete. Output length=4
+2025-07-30 16:28:17,136 - INFO - Processing request: Option='Vigenere Encrypt', Input length=4, Key present=True
+2025-07-30 16:28:17,137 - INFO - Processing complete. Output length=4
+2025-07-30 16:28:20,465 - INFO - Processing request: Option='Vigenere Encrypt', Input length=4, Key present=True
+2025-07-30 16:28:20,466 - INFO - Processing complete. Output length=4
+2025-07-30 16:28:22,624 - INFO - Processing request: Option='Vigenere Encrypt', Input length=4, Key present=True
+2025-07-30 16:28:22,625 - INFO - Processing complete. Output length=4
+2025-07-30 16:28:25,224 - INFO - Processing request: Option='Vigenere Encrypt', Input length=10, Key present=True
+2025-07-30 16:28:25,224 - INFO - Processing complete. Output length=10
+2025-07-30 16:28:26,968 - INFO - Processing request: Option='Vigenere Encrypt', Input length=17, Key present=True
+2025-07-30 16:28:26,969 - INFO - Processing complete. Output length=17
+2025-07-30 16:28:39,320 - INFO - Processing request: Option='ROT13 Encrypt/Decrypt', Input length=17, Key present=False
+2025-07-30 16:28:39,320 - INFO - Processing complete. Output length=17
+2025-07-30 16:28:41,784 - INFO - Processing request: Option='ROT13 Encrypt/Decrypt', Input length=17, Key present=False
+2025-07-30 16:28:41,785 - INFO - Processing complete. Output length=17
+2025-07-30 16:28:42,088 - INFO - Processing request: Option='ROT13 Encrypt/Decrypt', Input length=17, Key present=False
+2025-07-30 16:28:42,088 - INFO - Processing complete. Output length=17
+2025-07-30 16:28:42,272 - INFO - Processing request: Option='ROT13 Encrypt/Decrypt', Input length=17, Key present=False
+2025-07-30 16:28:42,272 - INFO - Processing complete. Output length=17
+2025-07-30 16:28:42,456 - INFO - Processing request: Option='ROT13 Encrypt/Decrypt', Input length=17, Key present=False
+2025-07-30 16:28:42,457 - INFO - Processing complete. Output length=17
+2025-07-30 16:28:51,688 - INFO - Processing request: Option='Vigenere Decrypt', Input length=17, Key present=False
+2025-07-30 16:28:51,688 - ERROR - Error processing line 'ugnuvouvouuvwwewu' with option 'Vigenere Decrypt': Vigenere cipher requires a key.
+2025-07-30 16:28:51,690 - INFO - Processing complete. Output length=38
+2025-07-30 16:28:53,768 - INFO - Processing request: Option='Vigenere Decrypt', Input length=17, Key present=True
+2025-07-30 16:28:53,769 - INFO - Processing complete. Output length=17
+2025-07-30 16:28:55,592 - INFO - Processing request: Option='Vigenere Decrypt', Input length=17, Key present=True
+2025-07-30 16:28:55,592 - INFO - Processing complete. Output length=17
+2025-07-30 16:28:56,959 - INFO - Processing request: Option='Vigenere Decrypt', Input length=17, Key present=True
+2025-07-30 16:28:56,960 - INFO - Processing complete. Output length=17
+2025-07-30 16:28:58,191 - INFO - Processing request: Option='Vigenere Decrypt', Input length=17, Key present=True
+2025-07-30 16:28:58,192 - INFO - Processing complete. Output length=17
+2025-07-30 16:29:14,119 - INFO - Processing request: Option='XOR Encrypt/Decrypt', Input length=4, Key present=True
+2025-07-30 16:29:14,120 - INFO - Processing complete. Output length=4
+2025-07-30 16:29:15,895 - INFO - Processing request: Option='XOR Encrypt/Decrypt', Input length=4, Key present=True
+2025-07-30 16:29:15,896 - INFO - Processing complete. Output length=4
+2025-07-30 16:29:18,624 - INFO - Processing request: Option='XOR Encrypt/Decrypt', Input length=4, Key present=True
+2025-07-30 16:29:18,624 - INFO - Processing complete. Output length=4
+2025-07-30 16:29:20,827 - INFO - Serving index.html
+2025-07-30 16:29:20,977 - INFO - Client connected to log stream.
+2025-07-30 16:29:34,128 - INFO - Processing request: Option='Reverse String', Input length=7, Key present=False
+2025-07-30 16:29:34,128 - INFO - Processing complete. Output length=7
+2025-08-01 00:44:08,839 - INFO - Flask application started and logger initialized.
+2025-08-01 00:44:08,844 - INFO - Starting Flask app on port 5000...
+2025-08-01 00:44:13,628 - INFO - Flask application started and logger initialized.
+2025-08-01 00:44:13,633 - INFO - Starting Flask app on port 5000...
+2025-08-01 00:44:21,040 - INFO - Serving index.html
+2025-08-01 00:44:21,401 - INFO - Client connected to log stream.

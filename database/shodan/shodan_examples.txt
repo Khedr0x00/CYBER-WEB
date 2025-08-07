@@ -1,0 +1,386 @@
+[
+    {
+        "name": "Basic Web Server Search",
+        "description": "Finds web servers (port 80) in Germany.",
+        "options": {
+            "search_query_entry": "port:80 country:DE",
+            "search_limit_entry": "10",
+            "search_fields_entry": "ip_str,port,org,os",
+            "command_type": "search"
+        },
+        "example_output": "1.1.1.1:80 - Organization: Example Corp, OS: Linux\n2.2.2.2:80 - Organization: Another Org, OS: Ubuntu\n..."
+    },
+    {
+        "name": "Vulnerable FTP Servers",
+        "description": "Searches for FTP servers with known vulnerabilities (CVE-2017-XXXX).",
+        "options": {
+            "search_query_entry": "port:21 \"220 FTP Server\" vuln:CVE-2017",
+            "search_limit_entry": "5",
+            "search_fields_entry": "ip_str,port,vulns",
+            "command_type": "search"
+        },
+        "example_output": "192.168.1.10:21 - Vulns: CVE-2017-XXXX\n192.168.1.11:21 - Vulns: CVE-2017-YYYY\n..."
+    },
+    {
+        "name": "MongoDB Instances without Authentication",
+        "description": "Finds MongoDB databases exposed to the internet without authentication.",
+        "options": {
+            "search_query_entry": "mongodb port:27017 -authentication",
+            "search_limit_entry": "15",
+            "search_fields_entry": "ip_str,port,country,asn",
+            "command_type": "search"
+        },
+        "example_output": "5.5.5.5:27017 - Country: US, ASN: AS12345\n6.6.6.6:27017 - Country: FR, ASN: AS67890\n..."
+    },
+    {
+        "name": "RDP Servers in Specific Country",
+        "description": "Lists RDP (Remote Desktop Protocol) servers in Brazil.",
+        "options": {
+            "search_query_entry": "port:3389 country:BR",
+            "search_limit_entry": "20",
+            "search_fields_entry": "ip_str,port,os,city",
+            "command_type": "search"
+        },
+        "example_output": "10.0.0.1:3389 - OS: Windows, City: Sao Paulo\n10.0.0.2:3389 - OS: Windows, City: Rio de Janeiro\n..."
+    },
+    {
+        "name": "Cameras with Default Passwords",
+        "description": "Identifies network cameras with common default credentials.",
+        "options": {
+            "search_query_entry": "webcam default password",
+            "search_limit_entry": "10",
+            "search_fields_entry": "ip_str,port,product,http.title",
+            "command_type": "search"
+        },
+        "example_output": "11.11.11.11:80 - Product: IP Camera, Title: Login\n12.12.12.12:8080 - Product: CCTV, Title: Admin Panel\n..."
+    },
+    {
+        "name": "Host Information by IP",
+        "description": "Retrieves detailed information about a specific IP address.",
+        "options": {
+            "host_ip_entry": "1.1.1.1",
+            "host_history_var": true,
+            "command_type": "host"
+        },
+        "example_output": "IP: 1.1.1.1\nOrganization: Example ISP\nCountry: US\nPorts: 22, 80, 443\nLast Update: 2023-01-01\n..."
+    },
+    {
+        "name": "Search for specific CVE",
+        "description": "Searches for systems vulnerable to a specific CVE (e.g., Heartbleed).",
+        "options": {
+            "search_query_entry": "vuln:CVE-2014-0160",
+            "search_limit_entry": "10",
+            "search_fields_entry": "ip_str,port,hostnames,vulns",
+            "command_type": "search"
+        },
+        "example_output": "1.2.3.4:443 - Hostname: vulnerable.example.com, Vulns: CVE-2014-0160\n..."
+    },
+    {
+        "name": "Search for Industrial Control Systems (ICS)",
+        "description": "Finds exposed industrial control systems using common ICS ports.",
+        "options": {
+            "search_query_entry": "port:502,102,20000 product:Siemens,Schneider",
+            "search_limit_entry": "5",
+            "search_fields_entry": "ip_str,port,product,country",
+            "command_type": "search"
+        },
+        "example_output": "192.168.10.1:502 - Product: Siemens S7, Country: DE\n..."
+    },
+    {
+        "name": "Search for Open Databases",
+        "description": "Identifies publicly accessible database services (e.g., MySQL, PostgreSQL).",
+        "options": {
+            "search_query_entry": "port:3306,5432,27017,6379,9200",
+            "search_limit_entry": "10",
+            "search_fields_entry": "ip_str,port,product,version,country",
+            "command_type": "search"
+        },
+        "example_output": "203.0.113.1:3306 - Product: MySQL, Version: 5.7, Country: US\n..."
+    },
+    {
+        "name": "Search for SSH Servers",
+        "description": "Finds SSH servers.",
+        "options": {
+            "search_query_entry": "port:22",
+            "search_limit_entry": "10",
+            "search_fields_entry": "ip_str,port,os,version",
+            "command_type": "search"
+        },
+        "example_output": "1.1.1.1:22 - OS: Linux, Version: OpenSSH 8.2\n..."
+    },
+    {
+        "name": "Search for Apache Servers",
+        "description": "Finds Apache HTTP servers.",
+        "options": {
+            "search_query_entry": "apache",
+            "search_limit_entry": "10",
+            "search_fields_entry": "ip_str,port,http.server,os",
+            "command_type": "search"
+        },
+        "example_output": "1.1.1.1:80 - Server: Apache/2.4.41, OS: Ubuntu\n..."
+    },
+    {
+        "name": "Search for Nginx Servers",
+        "description": "Finds Nginx HTTP servers.",
+        "options": {
+            "search_query_entry": "nginx",
+            "search_limit_entry": "10",
+            "search_fields_entry": "ip_str,port,http.server,os",
+            "command_type": "search"
+        },
+        "example_output": "1.1.1.1:80 - Server: nginx/1.18.0, OS: Debian\n..."
+    },
+    {
+        "name": "Search for IIS Servers",
+        "description": "Finds Microsoft IIS web servers.",
+        "options": {
+            "search_query_entry": "iis",
+            "search_limit_entry": "10",
+            "search_fields_entry": "ip_str,port,http.server,os",
+            "command_type": "search"
+        },
+        "example_output": "1.1.1.1:80 - Server: Microsoft-IIS/10.0, OS: Windows\n..."
+    },
+    {
+        "name": "Search for SCADA Systems",
+        "description": "Finds SCADA systems (Supervisory Control and Data Acquisition).",
+        "options": {
+            "search_query_entry": "scada",
+            "search_limit_entry": "5",
+            "search_fields_entry": "ip_str,port,product,country",
+            "command_type": "search"
+        },
+        "example_output": "1.1.1.1:502 - Product: Modbus/TCP, Country: US\n..."
+    },
+    {
+        "name": "Search for Telnet Servers",
+        "description": "Finds Telnet servers (port 23).",
+        "options": {
+            "search_query_entry": "port:23",
+            "search_limit_entry": "10",
+            "search_fields_entry": "ip_str,port,os",
+            "command_type": "search"
+        },
+        "example_output": "1.1.1.1:23 - OS: Linux\n..."
+    },
+    {
+        "name": "Search for SNMP Devices",
+        "description": "Finds devices with SNMP (Simple Network Management Protocol) enabled.",
+        "options": {
+            "search_query_entry": "port:161",
+            "search_limit_entry": "10",
+            "search_fields_entry": "ip_str,port,product,os",
+            "command_type": "search"
+        },
+        "example_output": "1.1.1.1:161 - Product: Cisco IOS, OS: Cisco IOS\n..."
+    },
+    {
+        "name": "Search for Vulnerable WordPress Sites",
+        "description": "Finds WordPress sites with known vulnerabilities.",
+        "options": {
+            "search_query_entry": "wordpress vuln:CVE",
+            "search_limit_entry": "10",
+            "search_fields_entry": "ip_str,port,http.title,vulns",
+            "command_type": "search"
+        },
+        "example_output": "1.1.1.1:80 - Title: My WordPress Blog, Vulns: CVE-202X-XXXX\n..."
+    },
+    {
+        "name": "Search for IoT Devices",
+        "description": "Finds various Internet of Things (IoT) devices.",
+        "options": {
+            "search_query_entry": "iot",
+            "search_limit_entry": "10",
+            "search_fields_entry": "ip_str,port,product,country",
+            "command_type": "search"
+        },
+        "example_output": "1.1.1.1:80 - Product: Smart Home Hub, Country: US\n..."
+    },
+    {
+        "name": "Search for OpenSSH Servers with Specific Version",
+        "description": "Finds OpenSSH servers running a specific version (e.g., 7.4).",
+        "options": {
+            "search_query_entry": "openssh 7.4",
+            "search_limit_entry": "10",
+            "search_fields_entry": "ip_str,port,version,os",
+            "command_type": "search"
+        },
+        "example_output": "1.1.1.1:22 - Version: OpenSSH 7.4, OS: Debian\n..."
+    },
+    {
+        "name": "Search for Databases in Specific City",
+        "description": "Finds databases exposed in a particular city.",
+        "options": {
+            "search_query_entry": "port:3306 city:London",
+            "search_limit_entry": "5",
+            "search_fields_entry": "ip_str,port,product,country,city",
+            "command_type": "search"
+        },
+        "example_output": "1.1.1.1:3306 - Product: MySQL, Country: GB, City: London\n..."
+    },
+    {
+        "name": "Search for Devices by Organization",
+        "description": "Finds devices belonging to a specific organization.",
+        "options": {
+            "search_query_entry": "org:\"Google LLC\"",
+            "search_limit_entry": "10",
+            "search_fields_entry": "ip_str,port,org,country",
+            "command_type": "search"
+        },
+        "example_output": "1.1.1.1:443 - Org: Google LLC, Country: US\n..."
+    },
+    {
+        "name": "Search for Devices by ASN",
+        "description": "Finds devices within a specific Autonomous System Number (ASN).",
+        "options": {
+            "search_query_entry": "asn:AS15169",
+            "search_limit_entry": "10",
+            "search_fields_entry": "ip_str,port,asn,country",
+            "command_type": "search"
+        },
+        "example_output": "1.1.1.1:80 - ASN: AS15169, Country: US\n..."
+    },
+    {
+        "name": "Search for Devices with Specific HTTP Title",
+        "description": "Finds web servers with a particular title in their HTTP response.",
+        "options": {
+            "search_query_entry": "http.title:\"Welcome to my server\"",
+            "search_limit_entry": "5",
+            "search_fields_entry": "ip_str,port,http.title",
+            "command_type": "search"
+        },
+        "example_output": "1.1.1.1:80 - Title: Welcome to my server\n..."
+    },
+    {
+        "name": "Search for Devices with Specific HTTP Body Content",
+        "description": "Finds web servers containing specific text in their HTTP body.",
+        "options": {
+            "search_query_entry": "http.html:\"Powered by WordPress\"",
+            "search_limit_entry": "5",
+            "search_fields_entry": "ip_str,port,http.title",
+            "command_type": "search"
+        },
+        "example_output": "1.1.1.1:80 - Title: My Blog\n..."
+    },
+    {
+        "name": "Search for Devices by OS",
+        "description": "Finds devices running a specific operating system.",
+        "options": {
+            "search_query_entry": "os:\"Windows Server 2012\"",
+            "search_limit_entry": "10",
+            "search_fields_entry": "ip_str,port,os,country",
+            "command_type": "search"
+        },
+        "example_output": "1.1.1.1:3389 - OS: Windows Server 2012, Country: US\n..."
+    },
+    {
+        "name": "Search for Devices by Product",
+        "description": "Finds devices running a specific product (e.g., Apache, Nginx, OpenSSH).",
+        "options": {
+            "search_query_entry": "product:\"OpenSSH\"",
+            "search_limit_entry": "10",
+            "search_fields_entry": "ip_str,port,product,version",
+            "command_type": "search"
+        },
+        "example_output": "1.1.1.1:22 - Product: OpenSSH, Version: 8.2\n..."
+    },
+    {
+        "name": "Search for Devices by Version",
+        "description": "Finds devices running a specific version of a product.",
+        "options": {
+            "search_query_entry": "nginx version:1.18.0",
+            "search_limit_entry": "5",
+            "search_fields_entry": "ip_str,port,product,version",
+            "command_type": "search"
+        },
+        "example_output": "1.1.1.1:80 - Product: nginx, Version: 1.18.0\n..."
+    },
+    {
+        "name": "Search for Devices by Port Range",
+        "description": "Finds devices with open ports within a specified range.",
+        "options": {
+            "search_query_entry": "port:8000-9000",
+            "search_limit_entry": "10",
+            "search_fields_entry": "ip_str,port,product",
+            "command_type": "search"
+        },
+        "example_output": "1.1.1.1:8080 - Product: Apache Tomcat\n..."
+    },
+    {
+        "name": "Search for Devices with SSL Certificate Issuer",
+        "description": "Finds devices with SSL certificates issued by a specific entity.",
+        "options": {
+            "search_query_entry": "ssl.cert.issuer.cn:\"Let's Encrypt\"",
+            "search_limit_entry": "5",
+            "search_fields_entry": "ip_str,port,ssl.cert.issuer.cn",
+            "command_type": "search"
+        },
+        "example_output": "1.1.1.1:443 - Issuer: Let's Encrypt\n..."
+    },
+    {
+        "name": "Search for Devices with HTTP Status Code",
+        "description": "Finds web servers returning a specific HTTP status code.",
+        "options": {
+            "search_query_entry": "http.status:403",
+            "search_limit_entry": "5",
+            "search_fields_entry": "ip_str,port,http.status,http.title",
+            "command_type": "search"
+        },
+        "example_output": "1.1.1.1:80 - Status: 403, Title: Forbidden\n..."
+    },
+    {
+        "name": "Search for Devices with Anonymous FTP Login",
+        "description": "Finds FTP servers allowing anonymous login.",
+        "options": {
+            "search_query_entry": "ftp.anon:true",
+            "search_limit_entry": "5",
+            "search_fields_entry": "ip_str,port,ftp.features",
+            "command_type": "search"
+        },
+        "example_output": "1.1.1.1:21 - Features: anonymous login allowed\n..."
+    },
+    {
+        "name": "Exploit Search for WordPress",
+        "description": "Searches for exploits related to WordPress.",
+        "options": {
+            "exploit_query_entry": "wordpress",
+            "exploit_platform_entry": "php",
+            "command_type": "exploit_search"
+        },
+        "example_output": "Title: WordPress File Upload Vulnerability\nAuthor: example\nPlatform: php\nType: remote\nDescription: Allows unauthenticated file upload.\n"
+    },
+    {
+        "name": "DNS Lookup for google.com",
+        "description": "Performs a DNS lookup for google.com.",
+        "options": {
+            "dns_lookup_hostname_entry": "google.com",
+            "command_type": "dns_lookup"
+        },
+        "example_output": "google.com. 299 IN A 142.250.187.14\ngoogle.com. 299 IN AAAA 2a00:1450:4001:820::200e\n"
+    },
+    {
+        "name": "DNS Reverse Lookup for 8.8.8.8",
+        "description": "Performs a reverse DNS lookup for 8.8.8.8.",
+        "options": {
+            "dns_reverse_ip_entry": "8.8.8.8",
+            "command_type": "dns_reverse"
+        },
+        "example_output": "8.8.8.8.in-addr.arpa. 299 IN PTR dns.google.\n"
+    },
+    {
+        "name": "My IP Address",
+        "description": "Displays your external IP address as seen by Shodan.",
+        "options": {
+            "command_type": "myip"
+        },
+        "example_output": "Your IP address is: 203.0.113.42\n"
+    },
+    {
+        "name": "Account Profile",
+        "description": "Displays information about your Shodan account.",
+        "options": {
+            "command_type": "account_profile"
+        },
+        "example_output": "API Key: <YOUR_API_KEY>\nCredits: 1000\nScan Credits: 500\nMember since: 2023-01-01\n"
+    }
+]

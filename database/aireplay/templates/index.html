@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aireplay-ng Web GUI</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            padding: 2rem;
+        }
+        .container {
+            background-color: #ffffff;
+            border-radius: 1rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            padding: 2.5rem;
+            width: 100%;
+            max-width: 1000px;
+        }
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            margin-bottom: 1rem;
+        }
+        .input-group label {
+            font-weight: 500;
+            color: #4a5568;
+            margin-bottom: 0.5rem;
+        }
+        .input-group input[type="text"],
+        .input-group input[type="number"],
+        .input-group textarea,
+        .input-group select {
+            padding: 0.75rem 1rem;
+            border: 1px solid #cbd5e0;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            color: #4a5568;
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
+            transition: border-color 0.2s ease-in-out, box-shadow 0 0 0 3px rgba(99, 102, 241, 0.2);
+        }
+        .input-group input:focus,
+        .input-group textarea:focus,
+        .input-group select:focus {
+            outline: none;
+            border-color: #6366f1;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+        }
+        .input-group textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        .checkbox-group input[type="checkbox"] {
+            margin-right: 0.5rem;
+            height: 1.25rem;
+            width: 1.25rem;
+            border-radius: 0.25rem;
+            border: 1px solid #cbd5e0;
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+        }
+        .checkbox-group input[type="checkbox"]:checked {
+            background-color: #3b82f6;
+            border-color: #3b82f6;
+            background-image: url("data:image/svg+xml,%3csvg viewBox='0 0 16 16' fill='white' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M12.207 4.793a1 1 0 00-1.414 0L7 8.586 4.207 5.793a1 1 0 00-1.414 1.414l3.5 3.5a1 1 0 001.414 0l5-5a1 1 0 000-1.414z'/%3e%3c/svg%3e");
+            background-size: 100% 100%;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+        .checkbox-group label {
+            cursor: pointer;
+            color: #4a5568;
+        }
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .btn-primary {
+            background-color: #3b82f6;
+            color: white;
+            border: none;
+        }
+        .btn-primary:hover {
+            background-color: #2563eb;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+        }
+        .btn-success {
+            background-color: #28a745;
+            color: white;
+            border: none;
+        }
+        .btn-success:hover {
+            background-color: #218838;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+        }
+        .btn-danger {
+            background-color: #f44336;
+            color: white;
+            border: none;
+        }
+        .btn-danger:hover {
+            background-color: #da190b;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+        }
+        .btn-secondary {
+            background-color: #6c757d;
+            color: white;
+            border: none;
+        }
+        .btn-secondary:hover {
+            background-color: #5a6268;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+        }
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+        .message-box {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: #4CAF50;
+            color: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out;
+            transform: translateY(-20px);
+        }
+        .message-box.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .message-box.error {
+            background-color: #f44336;
+        }
+        .tab-content {
+            display: none;
+            padding: 1rem 0;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .tab-button {
+            padding: 0.75rem 1.25rem;
+            border-radius: 0.5rem 0.5rem 0 0;
+            background-color: #e2e8f0;
+            color: #4a5568;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s ease-in-out;
+            border: none;
+            margin-right: 0.25rem;
+        }
+        .tab-button.active {
+            background-color: #ffffff;
+            color: #3b82f6;
+            box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.05);
+        }
+        .log-box {
+            background-color: #1a202c; /* Dark background for terminal feel */
+            color: #a0aec0; /* Light gray text */
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 0.9rem;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            min-height: 300px;
+            max-height: 500px;
+            overflow-y: auto;
+            white-space: pre-wrap; /* Preserve whitespace and wrap text */
+            word-wrap: break-word; /* Break long words */
+        }
+        .search-highlight {
+            background-color: yellow;
+            color: black;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-4xl font-bold text-center text-gray-800 mb-8">Aireplay-ng Web GUI</h1>
+
+        <!-- Tab Navigation -->
+        <div class="flex border-b border-gray-200 mb-6">
+            <button class="tab-button active" data-tab="target">Target/Interface</button>
+            <button class="tab-button" data-tab="attack-types">Attack Types</button>
+            <button class="tab-button" data-tab="injection">Packet Injection</button>
+            <button class="tab-button" data-tab="filtering">Filtering</button>
+            <button class="tab-button" data-tab="output-options">Output</button>
+            <button class="tab-button" data-tab="advanced">Advanced</button>
+        </div>
+
+        <!-- Tab Contents -->
+        <form id="aireplayForm" class="grid grid-cols-1 md:grid-cols-2 gap-x-8">
+            <!-- Target/Interface Tab -->
+            <div id="target" class="tab-content active col-span-full">
+                <h2 class="text-2xl font-semibold text-gray-700 mb-4">Target and Interface Settings</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8">
+                    <div class="input-group">
+                        <label for="interface_entry">Interface (required):</label>
+                        <input type="text" id="interface_entry" name="interface_entry" placeholder="e.g., wlan0mon">
+                        <span class="text-sm text-gray-500 mt-1">Wireless interface to use (e.g., wlan0mon).</span>
+                    </div>
+                    <div class="input-group">
+                        <label for="bssid_entry">Target BSSID (-b):</label>
+                        <input type="text" id="bssid_entry" name="bssid_entry" placeholder="e.g., 00:11:22:33:44:55">
+                        <span class="text-sm text-gray-500 mt-1">MAC address of the Access Point (AP).</span>
+                    </div>
+                    <div class="input-group">
+                        <label for="client_mac_entry">Target Client MAC (-c):</label>
+                        <input type="text" id="client_mac_entry" name="client_mac_entry" placeholder="e.g., AA:BB:CC:DD:EE:FF">
+                        <span class="text-sm text-gray-500 mt-1">MAC address of the client (station).</span>
+                    </div>
+                    <div class="input-group">
+                        <label for="essid_entry">Target ESSID (-e):</label>
+                        <input type="text" id="essid_entry" name="essid_entry" placeholder="e.g., 'MyHomeWiFi'">
+                        <span class="text-sm text-gray-500 mt-1">ESSID (network name) of the AP.</span>
+                    </div>
+                    <div class="input-group">
+                        <label for="channel_entry">Target Channel (--channel):</label>
+                        <input type="number" id="channel_entry" name="channel_entry" placeholder="e.g., 6">
+                        <span class="text-sm text-gray-500 mt-1">Set the channel of the interface.</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Attack Types Tab -->
+            <div id="attack-types" class="tab-content col-span-full">
+                <h2 class="text-2xl font-semibold text-gray-700 mb-4">Attack Modes (Mutually Exclusive)</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8">
+                    <div class="input-group">
+                        <label for="deauth_count_entry">Deauthentication (-0):</label>
+                        <input type="number" id="deauth_count_entry" name="deauth_count_entry" placeholder="e.g., 5 (0 for continuous)">
+                        <span class="text-sm text-gray-500 mt-1">Send deauthentication packets. Specify count. Use '0' for continuous.</span>
+                    </div>
+                    <div class="input-group">
+                        <label for="fake_auth_delay_entry">Fake Authentication (-1):</label>
+                        <input type="number" id="fake_auth_delay_entry" name="fake_auth_delay_entry" placeholder="e.g., 10">
+                        <span class="text-sm text-gray-500 mt-1">Fake authentication with AP. Specify delay in seconds.</span>
+                    </div>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="arp_replay_var" name="arp_replay_var">
+                        <label for="arp_replay_var">ARP Replay (-3)</label>
+                        <span class="text-sm text-gray-500 ml-2">Standard ARP request replay attack.</span>
+                    </div>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="chopchop_var" name="chopchop_var">
+                        <label for="chopchop_var">Chopchop Attack (-4)</label>
+                        <span class="text-sm text-gray-500 ml-2">Chopchop attack to decrypt WEP packets.</span>
+                    </div>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="fragmentation_var" name="fragmentation_var">
+                        <label for="fragmentation_var">Fragmentation Attack (-5)</label>
+                        <span class="text-sm text-gray-500 ml-2">Fragmentation attack to obtain PRGA.</span>
+                    </div>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="caffe_latte_var" name="caffe_latte_var">
+                        <label for="caffe_latte_var">Caffe-Latte Attack (-6)</label>
+                        <span class="text-sm text-gray-500 ml-2">Caffe-Latte attack to obtain WEP key from client.</span>
+                    </div>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="p0841_var" name="p0841_var">
+                        <label for="p0841_var">P0841 Attack (-7)</label>
+                        <span class="text-sm text-gray-500 ml-2">P0841 attack for WEP.</span>
+                    </div>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="hirte_var" name="hirte_var">
+                        <label for="hirte_var">Hirte Attack (-8)</label>
+                        <span class="text-sm text-gray-500 ml-2">Hirte attack for WEP.</span>
+                    </div>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="handshake_capture_var" name="handshake_capture_var">
+                        <label for="handshake_capture_var">WPA/WPA2 Handshake Capture (-9)</label>
+                        <span class="text-sm text-gray-500 ml-2">Capture WPA/WPA2 4-way handshake.</span>
+                    </div>
+                    <div class="input-group">
+                        <label for="arp_request_replay_entry">ARP Request Replay (-k):</label>
+                        <input type="text" id="arp_request_replay_entry" name="arp_request_replay_entry" placeholder="e.g., /path/to/file.cap">
+                        <span class="text-sm text-gray-500 mt-1">Replay ARP requests from a file.</span>
+                    </div>
+                    <div class="input-group">
+                        <label for="replay_file_entry">Replay File (-r):</label>
+                        <input type="text" id="replay_file_entry" name="replay_file_entry" placeholder="e.g., /path/to/replay.cap">
+                        <span class="text-sm text-gray-500 mt-1">Replay packets from a pcap file.</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Packet Injection Tab -->
+            <div id="injection" class="tab-content col-span-full">
+                <h2 class="text-2xl font-semibold text-gray-700 mb-4">Packet Injection Settings</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8">
+                    <div class="input-group">
+                        <label for="packet_count_entry">Packet Count (-n):</label>
+                        <input type="number" id="packet_count_entry" name="packet_count_entry" placeholder="e.g., 100 (0 for continuous)">
+                        <span class="text-sm text-gray-500 mt-1">Number of packets to inject. Use '0' for continuous.</span>
+                    </div>
+                    <div class="input-group">
+                        <label for="injection_rate_entry">Injection Rate (-x):</label>
+                        <input type="number" id="injection_rate_entry" name="injection_rate_entry" placeholder="e.g., 500">
+                        <span class="text-sm text-gray-500 mt-1">Set packet injection rate (packets per second).</span>
+                    </div>
+                    <div class="input-group">
+                        <label for="interval_entry">Interval (-i):</label>
+                        <input type="number" id="interval_entry" name="interval_entry" placeholder="e.g., 100">
+                        <span class="text-sm text-gray-500 mt-1">Set interval between packets in microseconds.</span>
+                    </div>
+                    <div class="input-group">
+                        <label for="packet_size_entry">Packet Size (-s):</label>
+                        <input type="number" id="packet_size_entry" name="packet_size_entry" placeholder="e.g., 64">
+                        <span class="text-sm text-gray-500 mt-1">Set packet size for injection.</span>
+                    </div>
+                    <div class="input-group">
+                        <label for="source_mac_entry">Source MAC (-h):</label>
+                        <input type="text" id="source_mac_entry" name="source_mac_entry" placeholder="e.g., 00:DE:AD:BE:EF:00">
+                        <span class="text-sm text-gray-500 mt-1">Set source MAC address for injected packets.</span>
+                    </div>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="no_ack_var" name="no_ack_var">
+                        <label for="no_ack_var">No ACK (-D)</label>
+                        <span class="text-sm text-gray-500 ml-2">Disable ACK injection (for some attacks).</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filtering Tab -->
+            <div id="filtering" class="tab-content col-span-full">
+                <h2 class="text-2xl font-semibold text-gray-700 mb-4">Filtering Options</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8">
+                    <div class="input-group">
+                        <label for="filter_bssid_entry">Filter by BSSID (-a):</label>
+                        <input type="text" id="filter_bssid_entry" name="filter_bssid_entry" placeholder="e.g., 00:11:22:33:44:55">
+                        <span class="text-sm text-gray-500 mt-1">Filter packets by BSSID.</span>
+                    </div>
+                    <div class="input-group">
+                        <label for="filter_client_mac_entry">Filter by Client MAC (-c):</label>
+                        <input type="text" id="filter_client_mac_entry" name="filter_client_mac_entry" placeholder="e.g., AA:BB:CC:DD:EE:FF">
+                        <span class="text-sm text-gray-500 mt-1">Filter packets by client MAC address.</span>
+                    </div>
+                    <div class="input-group">
+                        <label for="filter_essid_entry">Filter by ESSID (-e):</label>
+                        <input type="text" id="filter_essid_entry" name="filter_essid_entry" placeholder="e.g., 'MyHomeWiFi'">
+                        <span class="text-sm text-gray-500 mt-1">Filter packets by ESSID.</span>
+                    </div>
+                    <div class="input-group">
+                        <label for="filter_channel_entry">Filter by Channel (--channel):</label>
+                        <input type="number" id="filter_channel_entry" name="filter_channel_entry" placeholder="e.g., 6">
+                        <span class="text-sm text-gray-500 mt-1">Filter packets by channel.</span>
+                    </div>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="ignore_deauth_var" name="ignore_deauth_var">
+                        <label for="ignore_deauth_var">Ignore Deauth (--ignore-deauth)</label>
+                        <span class="text-sm text-gray-500 ml-2">Ignore deauthentication packets during attack.</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Output Tab -->
+            <div id="output-options" class="tab-content col-span-full">
+                <h2 class="text-2xl font-semibold text-gray-700 mb-4">Output Options</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8">
+                    <div class="input-group">
+                        <label for="output_file_entry">Output File (-w):</label>
+                        <input type="text" id="output_file_entry" name="output_file_entry" placeholder="e.g., /path/to/capture.cap">
+                        <span class="text-sm text-gray-500 mt-1">Write captured packets to a pcap file.</span>
+                    </div>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="verbose_var" name="verbose_var">
+                        <label for="verbose_var">Verbose (-v)</label>
+                        <span class="text-sm text-gray-500 ml-2">Show verbose output.</span>
+                    </div>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="quiet_var" name="quiet_var">
+                        <label for="quiet_var">Quiet (-q)</label>
+                        <span class="text-sm text-gray-500 ml-2">Suppress non-essential output.</span>
+                    </div>
+                    <div class="checkbox-group">
+                        <input type="checkbox" id="no_color_var" name="no_color_var">
+                        <label for="no_color_var">No Color (--no-color)</label>
+                        <span class="text-sm text-gray-500 ml-2">Disable colored output.</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Advanced Tab -->
+            <div id="advanced" class="tab-content col-span-full">
+                <h2 class="text-2xl font-semibold text-gray-700 mb-4">Advanced Settings</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8">
+                    <div class="input-group">
+                        <label for="auth_timeout_entry">Authentication Timeout (--auth-timeout):</label>
+                        <input type="number" id="auth_timeout_entry" name="auth_timeout_entry" placeholder="e.g., 10">
+                        <span class="text-sm text-gray-500 mt-1">Timeout for fake authentication (seconds).</span>
+                    </div>
+                    <div class="input-group">
+                        <label for="deauth_timeout_entry">Deauth Timeout (--deauth-timeout):</label>
+                        <input type="number" id="deauth_timeout_entry" name="deauth_timeout_entry" placeholder="e.g., 10">
+                        <span class="text-sm text-gray-500 mt-1">Timeout for deauthentication (seconds).</span>
+                    </div>
+                    <div class="input-group">
+                        <label for="packet_burst_entry">Packet Burst (--burst):</label>
+                        <input type="number" id="packet_burst_entry" name="packet_burst_entry" placeholder="e.g., 10">
+                        <span class="text-sm text-gray-500 mt-1">Number of packets to send in a burst.</span>
+                    </div>
+                    <div class="input-group">
+                        <label for="bssid_timeout_entry">BSSID Timeout (--bssid-timeout):</label>
+                        <input type="number" id="bssid_timeout_entry" name="bssid_timeout_entry" placeholder="e.g., 10">
+                        <span class="text-sm text-gray-500 mt-1">Timeout for BSSID discovery (seconds).</span>
+                    </div>
+                    <div class="input-group col-span-full">
+                        <label for="additional_args_entry">Additional Arguments:</label>
+                        <textarea id="additional_args_entry" name="additional_args_entry" placeholder="e.g., --random-mac"></textarea>
+                        <span class="text-sm text-gray-500 mt-1">Any other Aireplay-ng arguments not covered by the GUI.</span>
+                    </div>
+                </div>
+            </div>
+        </form>
+
+        <!-- Command and Action Buttons -->
+        <div class="mt-8 p-6 bg-gray-50 rounded-lg shadow-inner">
+            <h2 class="text-2xl font-semibold text-gray-700 mb-4">Generated Aireplay-ng Command</h2>
+            <textarea id="generatedCommand" class="w-full p-3 border rounded-md bg-gray-100 font-mono text-sm text-gray-800" rows="4" readonly></textarea>
+            <div class="flex flex-wrap gap-4 mt-4 justify-center">
+                <button id="generateCmdBtn" class="btn btn-primary">Generate Command</button>
+                <button id="copyCmdBtn" class="btn btn-secondary">Copy Command</button>
+                <button id="saveCmdBtn" class="btn btn-success">Save Command to File</button>
+                <button id="runAireplayBtn" class="btn btn-danger">Run Aireplay-ng</button>
+            </div>
+        </div>
+
+        <!-- Real-time Output Log -->
+        <div class="mt-8 p-6 bg-gray-50 rounded-lg shadow-inner">
+            <h2 class="text-2xl font-semibold text-gray-700 mb-4">Aireplay-ng Output (Terminal)</h2>
+            <div class="flex mb-4">
+                <input type="text" id="searchTerm" placeholder="Search output..." class="flex-grow p-2 border rounded-l-md">
+                <button id="searchBtn" class="btn btn-primary rounded-none">Search</button>
+                <button id="clearSearchBtn" class="btn btn-secondary rounded-r-md">Clear Search</button>
+            </div>
+            <div id="outputLog" class="log-box">
+                Waiting for Aireplay-ng output...
+            </div>
+            <div class="flex justify-center mt-4">
+                <button id="saveOutputBtn" class="btn btn-success">Save Output to File</button>
+            </div>
+        </div>
+
+        <!-- Message Box for notifications -->
+        <div id="messageBox" class="message-box"></div>
+    </div>
+
+    <script>
+        const aireplayForm = document.getElementById('aireplayForm');
+        const generatedCommandTextarea = document.getElementById('generatedCommand');
+        const generateCmdBtn = document.getElementById('generateCmdBtn');
+        const copyCmdBtn = document.getElementById('copyCmdBtn');
+        const saveCmdBtn = document.getElementById('saveCmdBtn');
+        const runAireplayBtn = document.getElementById('runAireplayBtn');
+        const outputLog = document.getElementById('outputLog');
+        const saveOutputBtn = document.getElementById('saveOutputBtn');
+        const messageBox = document.getElementById('messageBox');
+        const searchTermInput = document.getElementById('searchTerm');
+        const searchBtn = document.getElementById('searchBtn');
+        const clearSearchBtn = document.getElementById('clearSearchBtn');
+
+        let currentSearchIndex = 0; // For incremental search in the log
+
+        // --- Utility Functions ---
+        function showMessage(message, type = 'success') {
+            messageBox.textContent = message;
+            messageBox.className = 'message-box show';
+            if (type === 'error') {
+                messageBox.classList.add('error');
+            } else {
+                messageBox.classList.remove('error');
+            }
+            setTimeout(() => {
+                messageBox.classList.remove('show');
+            }, 3000);
+        }
+
+        function getFormData() {
+            const formData = {};
+            aireplayForm.querySelectorAll('input, textarea, select').forEach(element => {
+                if (element.type === 'checkbox') {
+                    formData[element.name] = element.checked;
+                } else {
+                    formData[element.name] = element.value;
+                }
+            });
+            return formData;
+        }
+
+        // --- Tab Functionality ---
+        document.querySelectorAll('.tab-button').forEach(button => {
+            button.addEventListener('click', () => {
+                document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+
+                button.classList.add('active');
+                document.getElementById(button.dataset.tab).classList.add('active');
+            });
+        });
+
+        // --- Command Generation ---
+        async function generateCommand() {
+            const formData = getFormData();
+            try {
+                const response = await fetch('/generate_command', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formData)
+                });
+                const result = await response.json();
+                if (response.ok) {
+                    generatedCommandTextarea.value = result.command;
+                    showMessage("Command generated successfully.");
+                } else {
+                    generatedCommandTextarea.value = result.message;
+                    showMessage(result.message, 'error');
+                }
+            } catch (error) {
+                console.error('Error generating command:', error);
+                showMessage('An error occurred while generating the command.', 'error');
+                generatedCommandTextarea.value = 'Error generating command.';
+            }
+        }
+
+        // --- Copy Command ---
+        function copyCommand() {
+            generatedCommandTextarea.select();
+            document.execCommand('copy');
+            showMessage('Command copied to clipboard!');
+        }
+
+        // --- Save Command ---
+        async function saveCommandToFile() {
+            const command = generatedCommandTextarea.value;
+            if (!command) {
+                showMessage('No command to save.', 'error');
+                return;
+            }
+            try {
+                const response = await fetch('/save_command', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ command: command })
+                });
+                const result = await response.json();
+                if (response.ok) {
+                    showMessage(result.message);
+                } else {
+                    showMessage(result.message, 'error');
+                }
+            } catch (error) {
+                console.error('Error saving command:', error);
+                showMessage('An error occurred while saving the command.', 'error');
+            }
+        }
+
+        // --- Run Aireplay-ng ---
+        async function runAireplay() {
+            const command = generatedCommandTextarea.value;
+            if (!command || command.startsWith('Error:')) {
+                showMessage('Please generate a valid command first.', 'error');
+                return;
+            }
+
+            // Check if aireplay-ng is already running
+            const runningCheck = await fetch('/is_running');
+            const runningStatus = await runningCheck.json();
+            if (runningStatus.running) {
+                showMessage('Aireplay-ng is already running.', 'info');
+                return;
+            }
+
+            outputLog.textContent = 'Starting Aireplay-ng...\n';
+            runAireplayBtn.disabled = true; // Disable run button while process starts
+            generateCmdBtn.disabled = true; // Disable command generation while running
+            saveCmdBtn.disabled = true; // Disable save command while running
+
+            try {
+                const response = await fetch('/run_aireplay', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ command: command })
+                });
+                const result = await response.json();
+                if (response.ok) {
+                    showMessage(result.message);
+                    // Start streaming output immediately
+                    startStreamingOutput();
+                } else {
+                    showMessage(result.message, 'error');
+                    runAireplayBtn.disabled = false; // Re-enable on error
+                    generateCmdBtn.disabled = false;
+                    saveCmdBtn.disabled = false;
+                }
+            } catch (error) {
+                console.error('Error running aireplay-ng:', error);
+                showMessage('An error occurred while trying to run aireplay-ng.', 'error');
+                runAireplayBtn.disabled = false; // Re-enable on error
+                generateCmdBtn.disabled = false;
+                saveCmdBtn.disabled = false;
+            }
+        }
+
+        // --- Real-time Output Streaming (SSE) ---
+        let eventSource = null;
+
+        function startStreamingOutput() {
+            if (eventSource) {
+                eventSource.close();
+            }
+            eventSource = new EventSource('/stream_output');
+
+            eventSource.onmessage = function(event) {
+                outputLog.textContent += event.data;
+                outputLog.scrollTop = outputLog.scrollHeight; // Auto-scroll to bottom
+            };
+
+            eventSource.onerror = function(err) {
+                console.error('EventSource failed:', err);
+                eventSource.close();
+                showMessage('Output stream disconnected.', 'error');
+                runAireplayBtn.disabled = false; // Re-enable buttons
+                generateCmdBtn.disabled = false;
+                saveCmdBtn.disabled = false;
+            };
+
+            eventSource.addEventListener('end', function(event) {
+                outputLog.textContent += event.data;
+                outputLog.scrollTop = outputLog.scrollHeight;
+                eventSource.close();
+                showMessage('Aireplay-ng session finished.');
+                runAireplayBtn.disabled = false; // Re-enable buttons
+                generateCmdBtn.disabled = false;
+                saveCmdBtn.disabled = false;
+            });
+        }
+
+        // --- Save Output ---
+        async function saveOutputToFile() {
+            try {
+                const response = await fetch('/save_output', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({}) // No specific data needed for this endpoint
+                });
+                const result = await response.json();
+                if (response.ok) {
+                    showMessage(result.message);
+                } else {
+                    showMessage(result.message, 'error');
+                }
+            } catch (error) {
+                console.error('Error saving output:', error);
+                showMessage('An error occurred while saving the output.', 'error');
+            }
+        }
+
+        // --- Search Functionality for Log Box ---
+        function clearSearchHighlight() {
+            const spans = outputLog.querySelectorAll('span.search-highlight');
+            spans.forEach(span => {
+                const parent = span.parentNode;
+                parent.replaceChild(document.createTextNode(span.textContent), span);
+            });
+            outputLog.normalize(); // Merge adjacent text nodes
+            currentSearchIndex = 0;
+        }
+
+        function searchOutput() {
+            clearSearchHighlight(); // Clear previous highlights first
+            const searchTerm = searchTermInput.value.toLowerCase();
+            if (!searchTerm) {
+                return;
+            }
+
+            const text = outputLog.textContent;
+            let match;
+            let startIndex = 0;
+            const regex = new RegExp(searchTerm, 'gi'); // Case-insensitive global search
+
+            let foundCount = 0;
+            while ((match = regex.exec(text)) !== null) {
+                const originalText = match[0];
+                const startIndex = match.index;
+                const endIndex = match.index + originalText.length;
+
+                // Create a temporary div to manipulate the text content
+                const tempDiv = document.createElement('div');
+                tempDiv.textContent = text; // Put the full text into the temp div
+
+                // This approach requires careful manipulation of text nodes,
+                // which is complex with direct textContent.
+                // A simpler approach for highlighting in a non-editable textarea/div
+                // is to replace text with spans, but this needs to be done carefully
+                // to avoid re-rendering the entire content and losing scroll position.
+
+                // For simplicity, let's re-implement highlighting by replacing text nodes
+                // with text nodes + span elements. This will re-render the content.
+                // A more advanced solution would involve a virtual DOM or similar.
+
+                // Let's re-fetch the content and apply highlights.
+                // This means the `outputLog.textContent += event.data;`
+                // will need to be re-parsed. This is not ideal for large logs.
+
+                // For a real-time log, it's better to manage lines as an array
+                // and re-render/highlight only when search changes.
+                // Given the current setup, we'll do a simpler full-text search and replace.
+
+                // Simpler approach: find all occurrences and wrap them in spans.
+                // This will re-write the innerHTML of outputLog.
+                const originalContent = outputLog.innerHTML;
+                const highlightedContent = originalContent.replace(
+                    new RegExp(`(${searchTerm})`, 'gi'),
+                    `<span class="search-highlight">$1</span>`
+                );
+                outputLog.innerHTML = highlightedContent;
+                foundCount++;
+            }
+
+            if (foundCount === 0) {
+                showMessage(`No occurrences of '${searchTerm}' found.`, 'info');
+            } else {
+                showMessage(`Found ${foundCount} occurrences of '${searchTerm}'.`, 'success');
+            }
+        }
+
+        // --- Event Listeners ---
+        generateCmdBtn.addEventListener('click', generateCommand);
+        copyCmdBtn.addEventListener('click', copyCommand);
+        saveCmdBtn.addEventListener('click', saveCommandToFile);
+        runAireplayBtn.addEventListener('click', runAireplay);
+        saveOutputBtn.addEventListener('click', saveOutputToFile);
+        searchBtn.addEventListener('click', searchOutput);
+        clearSearchBtn.addEventListener('click', clearSearchHighlight);
+        searchTermInput.addEventListener('keyup', (event) => {
+            if (event.key === 'Enter') {
+                searchOutput();
+            }
+        });
+
+        // Add event listeners to all form inputs to regenerate command on change
+        aireplayForm.querySelectorAll('input, textarea, select').forEach(element => {
+            if (element.type === 'checkbox') {
+                element.addEventListener('change', generateCommand);
+            } else {
+                element.addEventListener('input', generateCommand);
+            }
+        });
+
+        // Initial command generation on page load
+        document.addEventListener('DOMContentLoaded', generateCommand);
+    </script>
+</body>
+</html>

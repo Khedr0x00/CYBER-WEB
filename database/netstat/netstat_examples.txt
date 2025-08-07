@@ -1,0 +1,196 @@
+[
+    {
+        "name": "Display All Connections and Listening Ports",
+        "description": "Shows all active TCP connections and UDP ports on which the computer is listening.",
+        "options": {
+            "all_connections_var": true
+        },
+        "example_output": "Active Connections\n  Proto  Local Address          Foreign Address        State\n  TCP    0.0.0.0:135            0.0.0.0:0              LISTENING\n  TCP    0.0.0.0:445            0.0.0.0:0              LISTENING\n  TCP    127.0.0.1:5000         127.0.0.1:54321        ESTABLISHED\n  UDP    0.0.0.0:137            *:*"
+    },
+    {
+        "name": "Display Active TCP Connections",
+        "description": "Lists only active TCP connections.",
+        "options": {
+            "tcp_connections_var": true
+        },
+        "example_output": "Active Connections\n  Proto  Local Address          Foreign Address        State\n  TCP    127.0.0.1:5000         127.0.0.1:54321        ESTABLISHED\n  TCP    192.168.1.10:49152     93.184.216.34:80       ESTABLISHED"
+    },
+    {
+        "name": "Display Active UDP Connections",
+        "description": "Lists only active UDP connections.",
+        "options": {
+            "udp_connections_var": true
+        },
+        "example_output": "Active Connections\n  Proto  Local Address          Foreign Address        State\n  UDP    0.0.0.0:137            *:*\n  UDP    0.0.0.0:138            *:*"
+    },
+    {
+        "name": "Display Numeric Addresses and Port Numbers",
+        "description": "Shows numerical addresses and port numbers instead of resolving hostnames and service names.",
+        "options": {
+            "numeric_var": true,
+            "all_connections_var": true
+        },
+        "example_output": "Active Connections\n  Proto  Local Address          Foreign Address        State\n  TCP    0.0.0.0:135            0.0.0.0:0              LISTENING\n  TCP    0.0.0.0:445            0.0.0.0:0              LISTENING\n  TCP    127.0.0.1:5000         127.0.0.1:54321        ESTABLISHED\n  UDP    0.0.0.0:137            0.0.0.0:0"
+    },
+    {
+        "name": "Show Process ID (PID) and Program Name",
+        "description": "Displays the Process ID (PID) and the name of the executable involved in each connection. (Requires administrator privileges on Windows/Linux).",
+        "options": {
+            "program_name_pid_var": true,
+            "all_connections_var": true
+        },
+        "example_output": "Active Connections\n  Proto  Local Address          Foreign Address        State          PID    Program Name\n  TCP    0.0.0.0:135            0.0.0.0:0              LISTENING      980    svchost.exe\n  TCP    127.0.0.1:5000         127.0.0.1:54321        ESTABLISHED    1234   python.exe\n  UDP    0.0.0.0:137            *:* -              456    System"
+    },
+    {
+        "name": "Display Routing Table",
+        "description": "Shows the IP routing table of the system.",
+        "options": {
+            "routing_table_var": true
+        },
+        "example_output": "Kernel IP routing table\nDestination     Gateway         Genmask         Flags Metric Ref    Use Iface\n0.0.0.0         192.168.1.1     0.0.0.0         UG    100    0        0 eth0\n192.168.1.0     0.0.0.0         255.255.255.0   U     100    0        0 eth0"
+    },
+    {
+        "name": "Display Statistics by Protocol",
+        "description": "Shows statistics for each protocol (TCP, UDP, ICMP, IP).",
+        "options": {
+            "statistics_var": true
+        },
+        "example_output": "IP: \n    Total packets received           12345\n    ... \nTCP:\n    Active Opens                     123\n    ... \nUDP:\n    Total Datagrams                  678\n    ..."
+    },
+    {
+        "name": "Display Listening Sockets",
+        "description": "Shows only listening sockets (ports open for incoming connections).",
+        "options": {
+            "listening_sockets_var": true
+        },
+        "example_output": "Active Internet connections (only servers)\nProto Recv-Q Send-Q Local Address           Foreign Address         State      \ntcp        0      0 0.0.0.0:22              0.0.0.0:* LISTEN     \ntcp        0      0 0.0.0.0:80              0.0.0.0:* LISTEN     \ntcp6       0      0 :::80                   :::* LISTEN"
+    },
+    {
+        "name": "Continuous Display (Linux/Termux)",
+        "description": "Continuously displays network statistics, updating every specified interval (e.g., every 1 second). Press Ctrl+C to stop.",
+        "options": {
+            "continuous_display_var": true,
+            "interval_entry": "1"
+        },
+        "example_output": "Active Internet connections (every 1.0s)\nProto Recv-Q Send-Q Local Address           Foreign Address         State      \ntcp        0      0 192.168.1.10:54321      192.168.1.1:80          ESTABLISHED\ntcp        0      0 192.168.1.10:22         192.168.1.100:4321      ESTABLISHED\n^C"
+    },
+    {
+        "name": "Filter by Protocol (TCP)",
+        "description": "Shows only TCP connections and listening ports.",
+        "options": {
+            "protocol_filter_entry": "tcp",
+            "all_connections_var": true
+        },
+        "example_output": "Active Connections\n  Proto  Local Address          Foreign Address        State\n  TCP    0.0.0.0:135            0.0.0.0:0              LISTENING\n  TCP    127.0.0.1:5000         127.0.0.1:54321        ESTABLISHED"
+    },
+    {
+        "name": "Filter by State (ESTABLISHED)",
+        "description": "Shows only connections in the 'ESTABLISHED' state.",
+        "options": {
+            "state_filter_entry": "ESTABLISHED",
+            "all_connections_var": true
+        },
+        "example_output": "Active Connections\n  Proto  Local Address          Foreign Address        State\n  TCP    127.0.0.1:5000         127.0.0.1:54321        ESTABLISHED\n  TCP    192.168.1.10:49152     93.184.216.34:80       ESTABLISHED"
+    },
+    {
+        "name": "Filter by Port (80)",
+        "description": "Shows connections or listening ports related to port 80.",
+        "options": {
+            "port_filter_entry": "80",
+            "all_connections_var": true
+        },
+        "example_output": "Active Connections\n  Proto  Local Address          Foreign Address        State\n  TCP    0.0.0.0:80             0.0.0.0:0              LISTENING\n  TCP    192.168.1.10:49152     93.184.216.34:80       ESTABLISHED"
+    },
+    {
+        "name": "Show Ethernet Statistics (Windows Only)",
+        "description": "Displays Ethernet statistics. This option is specific to Windows.",
+        "options": {
+            "ethernet_statistics_var": true
+        },
+        "example_output": "Interface Statistics\n\n                           Received                   Sent\nBytes                      123456789                  987654321\nUnicast packets            123456                     987654\nNon-unicast packets        1234                       5678\nDiscards                   0                          0\nErrors                     0                          0\nUnknown protocols          0"
+    },
+    {
+        "name": "Verbose Output",
+        "description": "Provides more detailed output for connections.",
+        "options": {
+            "verbose_var": true,
+            "all_connections_var": true
+        },
+        "example_output": "Active Connections\n  Proto  Local Address          Foreign Address        State          PID    Program Name\n  TCP    0.0.0.0:135            0.0.0.0:0              LISTENING      980    svchost.exe [Reason: Listening on all interfaces]\n  TCP    127.0.0.1:5000         127.0.0.1:54321        ESTABLISHED    1234   python.exe [Reason: Connection established]"
+    },
+    {
+        "name": "Display Numeric Ports Only",
+        "description": "Shows port numbers numerically, but resolves hostnames.",
+        "options": {
+            "numeric_ports_var": true,
+            "all_connections_var": true
+        },
+        "example_output": "Active Connections\n  Proto  Local Address          Foreign Address        State\n  TCP    0.0.0.0:135            0.0.0.0:0              LISTENING\n  TCP    localhost:5000         localhost:54321        ESTABLISHED"
+    },
+    {
+        "name": "Display Numeric Hosts Only",
+        "description": "Shows host addresses numerically, but resolves port names.",
+        "options": {
+            "numeric_hosts_var": true,
+            "all_connections_var": true
+        },
+        "example_output": "Active Connections\n  Proto  Local Address          Foreign Address        State\n  TCP    0.0.0.0:epmap          0.0.0.0:0              LISTENING\n  TCP    127.0.0.1:5000         127.0.0.1:54321        ESTABLISHED"
+    },
+    {
+        "name": "Show Timers (Linux/Termux)",
+        "description": "Displays network timers for active connections.",
+        "options": {
+            "timers_var": true,
+            "all_connections_var": true
+        },
+        "example_output": "Active Internet connections\nProto Recv-Q Send-Q Local Address           Foreign Address         State       Timer\ntcp        0      0 192.168.1.10:54321      192.168.1.1:80          ESTABLISHED keepalive (119min)"
+    },
+    {
+        "name": "Extended Output (Linux/Termux)",
+        "description": "Displays more information, including the user ID and inode number.",
+        "options": {
+            "extended_output_var": true,
+            "all_connections_var": true
+        },
+        "example_output": "Active Internet connections\nProto Recv-Q Send-Q Local Address           Foreign Address         State       User       Inode      \ntcp        0      0 192.168.1.10:54321      192.168.1.1:80          ESTABLISHED 1000       123456"
+    },
+    {
+        "name": "Don't Truncate IP Addresses (Linux/Termux)",
+        "description": "Prevents truncation of IP addresses in the output.",
+        "options": {
+            "wide_output_var": true,
+            "all_connections_var": true
+        },
+        "example_output": "Active Internet connections\nProto Recv-Q Send-Q Local Address                                 Foreign Address                               State      \ntcp        0      0 192.168.1.100.12345                           172.217.160.142.80                            ESTABLISHED"
+    },
+    {
+        "name": "Show Entries on Single Line (Linux/Termux)",
+        "description": "Displays each connection entry on a single line.",
+        "options": {
+            "single_line_var": true,
+            "all_connections_var": true
+        },
+        "example_output": "tcp 0 0 192.168.1.10:54321 192.168.1.1:80 ESTABLISHED"
+    },
+    {
+        "name": "Display All TCP Listening Ports with PID",
+        "description": "Combines options to show all TCP listening ports with their associated Process IDs and program names.",
+        "options": {
+            "all_connections_var": true,
+            "tcp_connections_var": true,
+            "listening_sockets_var": true,
+            "program_name_pid_var": true
+        },
+        "example_output": "Active Internet connections (only servers)\nProto Recv-Q Send-Q Local Address           Foreign Address         State       PID/Program name\ntcp        0      0 0.0.0.0:22              0.0.0.0:* LISTEN      123/sshd\ntcp        0      0 0.0.0.0:80              0.0.0.0:* LISTEN      456/apache2"
+    },
+    {
+        "name": "Display UDP Statistics Numerically",
+        "description": "Shows UDP protocol statistics with numeric addresses and port numbers.",
+        "options": {
+            "statistics_var": true,
+            "udp_connections_var": true,
+            "numeric_var": true
+        },
+        "example_output": "UDP:\n    RcvbufErrors: 0\n    SndbufErrors: 0\n    InDatagrams: 1234\n    OutDatagrams: 5678\n    NoPorts: 0\n    ... (numeric output for addresses if any were shown)"
+    }
+]

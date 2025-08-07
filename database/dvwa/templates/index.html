@@ -1,0 +1,340 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DVWA Installer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8;
+            color: #334155;
+        }
+        .container {
+            max-width: 900px;
+            margin: 4rem auto;
+            padding: 2rem;
+            background-color: #ffffff;
+            border-radius: 1rem;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+        }
+        .btn {
+            background-image: linear-gradient(to right, #6366f1 0%, #8b5cf6 100%);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.75rem;
+            font-weight: 600;
+            transition: all 0.2s ease-in-out;
+            box-shadow: 0 4px 10px rgba(99, 102, 241, 0.3);
+            cursor: pointer;
+            border: none;
+            outline: none;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(99, 102, 241, 0.4);
+        }
+        .btn:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 5px rgba(99, 102, 241, 0.2);
+        }
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+        .output-box {
+            background-color: #1e293b;
+            color: #e2e8f0;
+            padding: 1.5rem;
+            border-radius: 0.75rem;
+            font-family: 'monospace';
+            white-space: pre-wrap;
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid #334155;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        .status-message {
+            padding: 0.75rem 1.25rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            margin-top: 1rem;
+            text-align: center;
+        }
+        .status-running {
+            background-color: #bfdbfe;
+            color: #1e40af;
+        }
+        .status-completed {
+            background-color: #d1fae5;
+            color: #065f46;
+        }
+        .status-failed {
+            background-color: #fee2e2;
+            color: #991b1b;
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body class="antialiased">
+    <div class="container">
+        <h1 class="text-4xl font-bold text-center mb-8 text-gray-800">DVWA Installer</h1>
+
+        <div class="flex justify-center space-x-4 mb-8">
+            <button id="installLinuxButton" class="btn" data-os-type="Linux">
+                <span id="buttonTextLinux">Install DVWA (Linux)</span>
+            </button>
+            <button id="installWindowsButton" class="btn" data-os-type="Windows">
+                <span id="buttonTextWindows">Install DVWA (Windows)</span>
+            </button>
+            <button id="installTermuxButton" class="btn" data-os-type="Termux">
+                <span id="buttonTextTermux">Install DVWA (Termux)</span>
+            </button>
+            <button id="installDockerButton" class="btn" data-os-type="Docker">
+                <span id="buttonTextDocker">Install DVWA (Docker)</span>
+            </button>
+        </div>
+
+        <div id="statusMessage" class="status-message hidden"></div>
+
+        <div class="mt-8">
+            <h2 class="text-2xl font-semibold mb-4 text-gray-700">Installation Output:</h2>
+            <div id="output" class="output-box">
+                Waiting for installation to start...
+            </div>
+        </div>
+
+        <div id="dvwaUrlContainer" class="mt-8 hidden">
+            <h2 class="text-2xl font-semibold mb-4 text-gray-700">DVWA URL:</h2>
+            <p id="dvwaUrl" class="text-lg text-blue-600 font-medium break-words"></p>
+            <p class="text-sm text-gray-500 mt-2">
+                Default credentials: <span class="font-bold">admin</span> / <span class="font-bold">password</span>.
+                Please navigate to the URL and click 'Create/Reset Database' to finalize setup.
+                Remember to change the default password after logging in.
+            </p>
+        </div>
+    </div>
+
+    <script>
+        const installLinuxButton = document.getElementById('installLinuxButton');
+        const installWindowsButton = document.getElementById('installWindowsButton');
+        const installTermuxButton = document.getElementById('installTermuxButton');
+        const installDockerButton = document.getElementById('installDockerButton'); // New Docker button
+        const outputDiv = document.getElementById('output');
+        const statusMessageDiv = document.getElementById('statusMessage');
+        const dvwaUrlContainer = document.getElementById('dvwaUrlContainer');
+        const dvwaUrlP = document.getElementById('dvwaUrl');
+
+        let eventSource = null;
+        let isInstalling = false;
+        let currentOS = 'Unknown'; // To store the detected server OS
+
+        function updateButtonStates(status, lastAttemptedOsType = '') {
+            const buttons = [
+                { btn: installLinuxButton, os: 'Linux' },
+                { btn: installWindowsButton, os: 'Windows' },
+                { btn: installTermuxButton, os: 'Termux' },
+                { btn: installDockerButton, os: 'Docker' }
+            ];
+
+            buttons.forEach(({ btn, os }) => {
+                const buttonTextSpan = btn.querySelector('span');
+                if (status === 'starting' || status === 'running') {
+                    btn.disabled = true;
+                    if (buttonTextSpan) buttonTextSpan.textContent = 'Installing...';
+                } else {
+                    // Enable/disable based on detected OS and specific installation type
+                    if (os === 'Linux') {
+                        btn.disabled = (currentOS !== 'Linux');
+                    } else if (os === 'Windows') {
+                        btn.disabled = (currentOS !== 'Windows');
+                    } else if (os === 'Termux') {
+                        btn.disabled = (currentOS !== 'Termux');
+                    } else if (os === 'Docker') { // Docker button logic
+                        btn.disabled = (currentOS !== 'Linux' && currentOS !== 'Windows'); // Docker is primarily for Linux/Windows
+                    } else {
+                        btn.disabled = true; // Unknown OS
+                    }
+
+                    if (buttonTextSpan) buttonTextSpan.textContent = `Install DVWA (${os})`;
+                }
+            });
+
+            // If installation is completed or failed, specifically re-enable the button that was clicked
+            if (status === 'completed' || status === 'failed') {
+                const targetButton = buttons.find(b => b.os === lastAttemptedOsType)?.btn;
+                if (targetButton) {
+                    targetButton.disabled = false;
+                    const buttonTextSpan = targetButton.querySelector('span');
+                    if (buttonTextSpan) {
+                        buttonTextSpan.textContent = (status === 'completed' ? `Install DVWA (${lastAttemptedOsType}) Again` : `Retry Installation (${lastAttemptedOsType})`);
+                    }
+                }
+            }
+        }
+
+
+        function updateStatusDisplay(status, url = '', lastAttemptedOsType = '') {
+            statusMessageDiv.classList.remove('hidden', 'status-running', 'status-completed', 'status-failed');
+            dvwaUrlContainer.classList.add('hidden');
+            dvwaUrlP.textContent = '';
+
+            updateButtonStates(status, lastAttemptedOsType); // Update button states based on installation status
+
+            if (status === 'starting' || status === 'running') {
+                statusMessageDiv.textContent = 'Installation in progress... This may take a few minutes.';
+                statusMessageDiv.classList.add('status-running');
+            } else if (status === 'completed') {
+                statusMessageDiv.textContent = 'Installation completed successfully!';
+                statusMessageDiv.classList.add('status-completed');
+                if (url) {
+                    dvwaUrlContainer.classList.remove('hidden');
+                    dvwaUrlP.innerHTML = `<a href="${url}" target="_blank" class="text-blue-600 hover:underline">${url}</a>`;
+                }
+            } else if (status === 'failed') {
+                statusMessageDiv.textContent = 'Installation failed. Check output for details.';
+                statusMessageDiv.classList.add('status-failed');
+            } else { // idle
+                statusMessageDiv.classList.add('hidden');
+            }
+        }
+
+        function startInstallation(osTypeToInstall) {
+            if (isInstalling) return;
+
+            isInstalling = true;
+            outputDiv.textContent = 'Initiating installation...';
+            updateStatusDisplay('starting', osTypeToInstall); // Pass osTypeToInstall here
+
+            // Clear previous output
+            outputDiv.innerHTML = '';
+
+            fetch('/install_dvwa', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ os_type: osTypeToInstall }) // Pass the selected OS type
+            })
+                .then(response => {
+                    if (response.status === 202) {
+                        console.log('Installation request accepted.');
+                        // Start streaming output
+                        if (eventSource) {
+                            eventSource.close();
+                        }
+                        eventSource = new EventSource('/stream_output');
+                        eventSource.onmessage = function(event) {
+                            if (event.data.startsWith('INSTALLATION_STATUS:')) {
+                                const status = event.data.split(':')[1];
+                                updateStatusDisplay(status, osTypeToInstall); // Pass osTypeToInstall here
+                                if (status !== 'running' && status !== 'starting') {
+                                    eventSource.close();
+                                    isInstalling = false;
+                                }
+                            } else if (event.data.startsWith('DVWA_URL:')) {
+                                const url = event.data.split(':')[1];
+                                updateStatusDisplay('completed', url, osTypeToInstall); // Pass osTypeToInstall here
+                            } else {
+                                const p = document.createElement('p');
+                                p.textContent = event.data;
+                                outputDiv.appendChild(p);
+                                outputDiv.scrollTop = outputDiv.scrollHeight; // Scroll to bottom
+                            }
+                        };
+                        eventSource.onerror = function(err) {
+                            console.error('EventSource failed:', err);
+                            outputDiv.innerHTML += '<p class="text-red-400">Error streaming output. Check console.</p>';
+                            updateStatusDisplay('failed', osTypeToInstall); // Pass osTypeToInstall here
+                            if (eventSource) eventSource.close();
+                            isInstalling = false;
+                        };
+                    } else if (response.status === 409) {
+                        outputDiv.textContent = 'Installation is already in progress.';
+                        updateStatusDisplay('running', osTypeToInstall); // Pass osTypeToInstall here
+                        isInstalling = true; // Ensure flag is set if already running
+                    } else {
+                        response.text().then(text => {
+                            outputDiv.textContent = `Error: ${response.status} - ${text}`;
+                            updateStatusDisplay('failed', osTypeToInstall); // Pass osTypeToInstall here
+                            isInstalling = false;
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Fetch error:', error);
+                    outputDiv.textContent = `Failed to start installation: ${error}`;
+                    updateStatusDisplay('failed', osTypeToInstall); // Pass osTypeToInstall here
+                    isInstalling = false;
+                });
+        }
+
+        // Add event listeners for the buttons, passing their data-os-type
+        installLinuxButton.addEventListener('click', () => startInstallation(installLinuxButton.dataset.osType));
+        installWindowsButton.addEventListener('click', () => startInstallation(installWindowsButton.dataset.osType));
+        installTermuxButton.addEventListener('click', () => startInstallation(installTermuxButton.dataset.osType));
+        installDockerButton.addEventListener('click', () => startInstallation(installDockerButton.dataset.osType)); // New event listener
+
+        // Function to detect server OS and show appropriate button
+        async function initializeInstaller() {
+            try {
+                const osResponse = await fetch('/get_server_os');
+                const osData = await osResponse.json();
+                currentOS = osData.os_type;
+                console.log('Server OS detected:', currentOS);
+
+                // No longer hiding buttons, just updating their states
+                // updateButtonStates('idle'); // This will be called after fetching status
+
+                // Then, check installation status
+                const statusResponse = await fetch('/get_status');
+                const statusData = await statusResponse.json();
+                updateStatusDisplay(statusData.status, statusData.url, statusData.last_attempted_os_type); // Pass last_attempted_os_type
+
+                if (statusData.status === 'running' || statusData.status === 'starting') {
+                    isInstalling = true;
+                    // Re-attach event source to continue streaming
+                    if (eventSource) {
+                        eventSource.close();
+                    }
+                    eventSource = new EventSource('/stream_output');
+                    eventSource.onmessage = function(event) {
+                        if (event.data.startsWith('INSTALLATION_STATUS:')) {
+                            const status = event.data.split(':')[1];
+                            updateStatusDisplay(status, statusData.url, statusData.last_attempted_os_type); // Pass last_attempted_os_type
+                            if (status !== 'running' && status !== 'starting') {
+                                eventSource.close();
+                                isInstalling = false;
+                            }
+                        } else if (event.data.startsWith('DVWA_URL:')) {
+                            const url = event.data.split(':')[1];
+                            updateStatusDisplay('completed', url, statusData.last_attempted_os_type); // Pass last_attempted_os_type
+                        } else {
+                            const p = document.createElement('p');
+                            p.textContent = event.data;
+                            outputDiv.appendChild(p);
+                            outputDiv.scrollTop = outputDiv.scrollHeight;
+                        }
+                    };
+                    eventSource.onerror = function(err) {
+                        console.error('EventSource failed during re-attachment:', err);
+                        outputDiv.innerHTML += '<p class="text-red-400">Error streaming output. Check console.</p>';
+                        updateStatusDisplay('failed', statusData.url, statusData.last_attempted_os_type); // Pass last_attempted_os_type
+                        if (eventSource) eventSource.close();
+                        isInstalling = false;
+                    };
+                }
+            } catch (error) {
+                console.error('Failed to initialize installer:', error);
+                outputDiv.textContent = 'Failed to load initial status or detect server OS.';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', initializeInstaller);
+    </script>
+</body>
+</html>

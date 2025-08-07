@@ -1,0 +1,110 @@
+[
+    {
+        "name": "Basic Signature Scan",
+        "description": "Performs a quick scan for common file signatures within the target file. Useful for initial analysis.",
+        "options": {
+            "target_entry": "firmware.bin",
+            "signature_scan_var": true
+        },
+        "example_command": "binwalk -B firmware.bin",
+        "example_output": "DECIMAL       HEXADECIMAL     DESCRIPTION\n--------------------------------------------------------------------------------\n0             0x0             Microsoft executable, portable (PE) \n4096          0x1000          LZMA compressed data, properties: 0x5D, dictionary size: 33554432 bytes, uncompressed size: 67108864 bytes"
+    },
+    {
+        "name": "Extract All Files",
+        "description": "Extracts all recognized file types and file systems from the target file into a new directory.",
+        "options": {
+            "target_entry": "router_firmware.bin",
+            "extract_files_var": true
+        },
+        "example_command": "binwalk -e router_firmware.bin",
+        "example_output": "DECIMAL       HEXADECIMAL     DESCRIPTION\n--------------------------------------------------------------------------------\n0             0x0             Squashfs filesystem, little endian, version 4.0, 6788229 bytes, 1024 inodes, blocksize: 131072 bytes, created: Fri Jan 1 00:00:00 2020\n\nNOTE: The extracted files will be in a directory named '_router_firmware.bin.extracted' in the same location as the firmware file."
+    },
+    {
+        "name": "Entropy Analysis",
+        "description": "Performs an entropy analysis on the target file, useful for identifying compressed, encrypted, or packed data.",
+        "options": {
+            "target_entry": "packed_malware.exe",
+            "entropy_analysis_var": true
+        },
+        "example_command": "binwalk -E packed_malware.exe",
+        "example_output": "DECIMAL       HEXADECIMAL     DESCRIPTION\n--------------------------------------------------------------------------------\n0             0x0             Entropy plot: \n\n(A graphical plot will be generated, typically 'packed_malware.exe.entropy.png')"
+    },
+    {
+        "name": "Recursive Extraction",
+        "description": "Recursively extracts embedded files and file systems, useful for deeply nested structures.",
+        "options": {
+            "target_entry": "nested_archive.zip",
+            "extract_files_var": true,
+            "recursive_scan_var": true
+        },
+        "example_command": "binwalk -er nested_archive.zip",
+        "example_output": "DECIMAL       HEXADECIMAL     DESCRIPTION\n--------------------------------------------------------------------------------\n0             0x0             Zip archive data, at least v2.0 to extract, compressed size 12345, uncompressed size 67890, name: inner.tar\n... (further extraction from inner.tar)"
+    },
+    {
+        "name": "Scan with Custom Signatures",
+        "description": "Uses a user-defined signature file to identify specific patterns or file types.",
+        "options": {
+            "target_entry": "custom_firmware.bin",
+            "custom_signatures_file_entry": "my_signatures.binwalk",
+            "signature_scan_var": true
+        },
+        "example_command": "binwalk -B --custom=\"my_signatures.binwalk\" custom_firmware.bin",
+        "example_output": "DECIMAL       HEXADECIMAL     DESCRIPTION\n--------------------------------------------------------------------------------\n100           0x64            Custom signature: My_Custom_Header"
+    },
+    {
+        "name": "Raw Search for String",
+        "description": "Searches for a specific raw string within the target file.",
+        "options": {
+            "target_entry": "document.pdf",
+            "raw_search_entry": "flag{secret_data}",
+            "no_header_var": true
+        },
+        "example_command": "binwalk -N -R \"flag{secret_data}\" document.pdf",
+        "example_output": "DECIMAL       HEXADECIMAL     DESCRIPTION\n--------------------------------------------------------------------------------\n12345         0x3039          Raw data: flag{secret_data}"
+    },
+    {
+        "name": "Disassemble Executable Code (ARM)",
+        "description": "Identifies and disassembles executable code sections, specifically for ARM architecture.",
+        "options": {
+            "target_entry": "embedded_app.elf",
+            "executable_code_scan_var": true,
+            "disassembler_dropdown": "arm"
+        },
+        "example_command": "binwalk -A --disasm=arm embedded_app.elf",
+        "example_output": "DECIMAL       HEXADECIMAL     DESCRIPTION\n--------------------------------------------------------------------------------\n500           0x1F4           ARM executable code\n\nDisassembly output (truncated):\n0x1F4:  mov r0, #0\n0x1F8:  ldr r1, [sp, #4]"
+    },
+    {
+        "name": "Scan with Offset and Length",
+        "description": "Scans only a specific portion of the file, starting at an offset and scanning for a defined length.",
+        "options": {
+            "target_entry": "large_log.dump",
+            "offset_entry": 1048576,
+            "length_entry": 4096,
+            "signature_scan_var": true
+        },
+        "example_command": "binwalk -B -o 1048576 -l 4096 large_log.dump",
+        "example_output": "DECIMAL       HEXADECIMAL     DESCRIPTION\n--------------------------------------------------------------------------------\n1048576       0x100000        JPEG image data, JFIF standard 1.01"
+    },
+    {
+        "name": "Generate MD5 Checksum",
+        "description": "Calculates the MD5 checksum of identified file sections.",
+        "options": {
+            "target_entry": "image.iso",
+            "md5_checksum_var": true,
+            "signature_scan_var": true
+        },
+        "example_command": "binwalk -B -L image.iso",
+        "example_output": "DECIMAL       HEXADECIMAL     DESCRIPTION                                     MD5 SUM\n------------------------------------------------------------------------------------------------------------------------------------------------\n0             0x0             ISO 9660 CD-ROM filesystem data                   d41d8cd98f00b204e9800998ecf8427e"
+    },
+    {
+        "name": "Verbose and All File Types Scan",
+        "description": "Provides verbose output and attempts to identify all known file types, including less common ones.",
+        "options": {
+            "target_entry": "unknown_file.dat",
+            "verbose_output_var": true,
+            "all_file_types_var": true
+        },
+        "example_command": "binwalk -v -f unknown_file.dat",
+        "example_output": "Scan Time: 2023-10-27 15:30:00\nTarget File: unknown_file.dat\n\nDECIMAL       HEXADECIMAL     DESCRIPTION\n--------------------------------------------------------------------------------\n0             0x0             Microsoft Word document\n1234          0x4D2           PNG image data, 16 x 16, 8-bit/color RGBA, non-interlaced"
+    }
+]

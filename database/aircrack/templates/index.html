@@ -1,0 +1,1025 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aircrack-ng Web GUI</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Inter font from Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Socket.IO Client Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.0/socket.io.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            padding: 2rem;
+            color: #333;
+        }
+        .container {
+            background-color: #ffffff;
+            border-radius: 1rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            padding: 2.5rem;
+            width: 100%;
+            max-width: 1000px; /* Increased max-width */
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+        .tab-content {
+            display: none;
+            padding-top: 1rem;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .tab-button {
+            padding: 0.75rem 1.25rem;
+            border-radius: 0.5rem 0.5rem 0 0;
+            font-weight: 600;
+            background-color: #e2e8f0;
+            color: #4a5568;
+            cursor: pointer;
+            transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
+        }
+        .tab-button.active {
+            background-color: #6366f1;
+            color: white;
+        }
+        .tab-button:hover:not(.active) {
+            background-color: #cbd5e0;
+        }
+        .form-label {
+            font-weight: 500;
+            color: #4a5568;
+            margin-bottom: 0.25rem;
+        }
+        .form-input, .form-textarea, .form-select {
+            width: 100%;
+            padding: 0.6rem 0.9rem;
+            border: 1px solid #cbd5e0;
+            border-radius: 0.5rem;
+            font-size: 0.9rem;
+            color: #4a5568;
+            box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05);
+            transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        }
+        .form-input:focus, .form-textarea:focus, .form-select:focus {
+            outline: none;
+            border-color: #6366f1;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+        }
+        .form-checkbox {
+            height: 1.25rem;
+            width: 1.25rem;
+            border-radius: 0.25rem;
+            border: 1px solid #cbd5e0;
+            accent-color: #6366f1; /* Changes checkbox color */
+        }
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .btn-primary {
+            background-color: #6366f1;
+            color: white;
+            border: none;
+        }
+        .btn-primary:hover {
+            background-color: #4f46e5;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+        }
+        .btn-secondary {
+            background-color: #cbd5e0;
+            color: #4a5568;
+            border: none;
+        }
+        .btn-secondary:hover {
+            background-color: #a0aec0;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+        }
+        .btn-danger {
+            background-color: #ef4444;
+            color: white;
+            border: none;
+        }
+        .btn-danger:hover {
+            background-color: #dc2626;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+        }
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+        .message-box {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: #4CAF50;
+            color: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out;
+            transform: translateY(-20px);
+        }
+        .message-box.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .message-box.error {
+            background-color: #f44336;
+        }
+        .message-box.warning {
+            background-color: #ffc107;
+            color: #333;
+        }
+        .status-bar {
+            background-color: #e2e8f0;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.75rem;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: #4a5568;
+            text-align: center;
+        }
+        .output-textarea {
+            background-color: #1a202c; /* Dark background for terminal feel */
+            color: #e2e8f0; /* Light text color */
+            font-family: 'Consolas', 'Monaco', 'Lucida Console', monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            height: 400px; /* Fixed height for log area */
+            overflow-y: auto; /* Scrollable */
+            white-space: pre-wrap; /* Preserve whitespace and wrap text */
+            word-wrap: break-word; /* Break long words */
+            resize: vertical; /* Allow vertical resizing */
+        }
+        .highlight {
+            background-color: yellow;
+            color: black;
+        }
+        .help-popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: white;
+            border-radius: 1rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            padding: 1.5rem;
+            z-index: 1001;
+            width: 90%;
+            max-width: 500px;
+            max-height: 80vh;
+            overflow-y: auto;
+            display: none; /* Hidden by default */
+        }
+        .help-popup.active {
+            display: block;
+        }
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            display: none; /* Hidden by default */
+        }
+        .overlay.active {
+            display: block;
+        }
+    </style>
+</head>
+<body class="flex flex-col items-center justify-start min-h-screen p-8">
+    <div class="container">
+        <h1 class="text-3xl font-bold text-center text-gray-800 mb-6">Aircrack-ng Web GUI</h1>
+
+        <!-- Tabs Navigation -->
+        <div class="flex flex-wrap justify-center gap-2 mb-4">
+            <button class="tab-button active" data-tab="input-target">Input/Target</button>
+            <button class="tab-button" data-tab="attack-options">Attack Options</button>
+            <button class="tab-button" data-tab="filtering">Filtering</button>
+            <button class="tab-button" data-tab="performance">Performance</button>
+            <button class="tab-button" data-tab="output-options">Output</button>
+            <button class="tab-button" data-tab="advanced">Advanced</button>
+        </div>
+
+        <!-- Tab Contents -->
+        <div id="input-target" class="tab-content active">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="col-span-full">
+                    <label for="capture_file_entry" class="form-label">Input Capture File(s) (required):</label>
+                    <div class="flex items-center gap-2">
+                        <input type="text" id="capture_file_entry" name="capture_file_entry" class="form-input flex-grow" placeholder="e.g., capture.cap or 'capture1.cap capture2.cap'">
+                        <button class="btn btn-secondary text-sm px-3 py-2" onclick="showHelp('Path to one or more .cap files. These are essential for Aircrack-ng to analyze captured network traffic. Example: \'capture.cap\' or \'capture1.cap capture2.cap\'')">?</button>
+                    </div>
+                </div>
+                <div>
+                    <label for="bssid_entry" class="form-label">Target BSSID (-b):</label>
+                    <div class="flex items-center gap-2">
+                        <input type="text" id="bssid_entry" name="bssid_entry" class="form-input flex-grow" placeholder="e.g., 00:11:22:33:44:55">
+                        <button class="btn btn-secondary text-sm px-3 py-2" onclick="showHelp('MAC address of the Access Point (AP) to target. This helps Aircrack-ng focus on a specific network.')">?</button>
+                    </div>
+                </div>
+                <div>
+                    <label for="essid_entry" class="form-label">Target ESSID (-e):</label>
+                    <div class="flex items-center gap-2">
+                        <input type="text" id="essid_entry" name="essid_entry" class="form-input flex-grow" placeholder="e.g., MyHomeWiFi">
+                        <button class="btn btn-secondary text-sm px-3 py-2" onclick="showHelp('ESSID (network name) of the AP to target. This is the human-readable name of the Wi-Fi network.')">?</button>
+                    </div>
+                </div>
+                <div>
+                    <label for="client_mac_entry" class="form-label">Target Client MAC (-c):</label>
+                    <div class="flex items-center gap-2">
+                        <input type="text" id="client_mac_entry" name="client_mac_entry" class="form-input flex-grow" placeholder="e.g., AA:BB:CC:DD:EE:FF">
+                        <button class="btn btn-secondary text-sm px-3 py-2" onclick="showHelp('MAC address of a specific client station to target. Useful for focusing on traffic between the AP and a particular device.')">?</button>
+                    </div>
+                </div>
+                <div>
+                    <label for="interface_entry" class="form-label">Network Interface (-i):</label>
+                    <div class="flex items-center gap-2">
+                        <input type="text" id="interface_entry" name="interface_entry" class="form-input flex-grow" placeholder="e.g., wlan0mon">
+                        <button class="btn btn-secondary text-sm px-3 py-2" onclick="showHelp('Specify the wireless interface to use for live capture. This is typically in monitor mode (e.g., wlan0mon). Note: Aircrack-ng primarily processes .cap files, but some related tools might use this.')">?</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="attack-options" class="tab-content">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label for="attack_mode_var" class="form-label">Attack Mode (-a):</label>
+                    <div class="flex items-center gap-2">
+                        <select id="attack_mode_var" name="attack_mode_var" class="form-select flex-grow">
+                            <option value="">None (Auto-detect)</option>
+                            <option value="1 (WEP Brute-force)">1 (WEP Brute-force)</option>
+                            <option value="2 (WPA/WPA2 Dictionary)" selected>2 (WPA/WPA2 Dictionary)</option>
+                            <option value="3 (WPA/WPA2 PMKID)">3 (WPA/WPA2 PMKID)</option>
+                        </select>
+                        <button class="btn btn-secondary text-sm px-3 py-2" onclick="showHelp('Select the type of attack. Mode 1 for WEP brute-force, Mode 2 for WPA/WPA2 dictionary attack, Mode 3 for WPA/WPA2 PMKID attack.')">?</button>
+                    </div>
+                </div>
+                <div>
+                    <label for="wordlist_entry" class="form-label">Wordlist Path (-w):</label>
+                    <div class="flex items-center gap-2">
+                        <input type="text" id="wordlist_entry" name="wordlist_entry" class="form-input flex-grow" placeholder="e.g., /path/to/wordlist.txt">
+                        <button class="btn btn-secondary text-sm px-3 py-2" onclick="showHelp('Path to the wordlist file for dictionary attacks (WPA/WPA2). This file contains potential passwords to try.')">?</button>
+                    </div>
+                </div>
+                <div>
+                    <label for="single_password_entry" class="form-label">Single Password (-p):</label>
+                    <div class="flex items-center gap-2">
+                        <input type="text" id="single_password_entry" name="single_password_entry" class="form-input flex-grow" placeholder="e.g., mysecretpassword">
+                        <button class="btn btn-secondary text-sm px-3 py-2" onclick="showHelp('Test a single password against the captured handshake. Useful if you suspect a specific password.')">?</button>
+                    </div>
+                </div>
+                <div>
+                    <label for="passphrase_entry" class="form-label">Passphrase (-E):</label>
+                    <div class="flex items-center gap-2">
+                        <input type="text" id="passphrase_entry" name="passphrase_entry" class="form-input flex-grow" placeholder="e.g., mysecretpassphrase">
+                        <button class="btn btn-secondary text-sm px-3 py-2" onclick="showHelp('Test a single passphrase (for WPA/WPA2). Similar to -p, but specifically for passphrases.')">?</button>
+                    </div>
+                </div>
+                <div>
+                    <label for="ptw_acks_entry" class="form-label">PTW Acks (-x):</label>
+                    <div class="flex items-center gap-2">
+                        <input type="number" id="ptw_acks_entry" name="ptw_acks_entry" class="form-input flex-grow" placeholder="e.g., 10000">
+                        <button class="btn btn-secondary text-sm px-3 py-2" onclick="showHelp('Number of PTW Acks to use (for WEP PTW attack). This specifies the number of unique IVs (Initialization Vectors) needed for the PTW attack.')">?</button>
+                    </div>
+                </div>
+                <div>
+                    <label for="key_index_entry" class="form-label">WEP Key Index (-K):</label>
+                    <div class="flex items-center gap-2">
+                        <input type="number" id="key_index_entry" name="key_index_entry" class="form-input flex-grow" placeholder="e.g., 1">
+                        <button class="btn btn-secondary text-sm px-3 py-2" onclick="showHelp('Specify the WEP key index to crack. WEP supports multiple keys, this targets a specific one.')">?</button>
+                    </div>
+                </div>
+                <div>
+                    <label for="delay_entry" class="form-label">Delay (ms) (-d):</label>
+                    <div class="flex items-center gap-2">
+                        <input type="number" id="delay_entry" name="delay_entry" class="form-input flex-grow" placeholder="e.g., 50">
+                        <button class="btn btn-secondary text-sm px-3 py-2" onclick="showHelp('Set a delay in milliseconds between each password attempt during dictionary attacks. Can help avoid detection by some systems.')">?</button>
+                    </div>
+                </div>
+                <div>
+                    <label for="replay_file_entry" class="form-label">Replay File (-r):</label>
+                    <div class="flex items-center gap-2">
+                        <input type="text" id="replay_file_entry" name="replay_file_entry" class="form-input flex-grow" placeholder="e.g., replay.cap">
+                        <button class="btn btn-secondary text-sm px-3 py-2" onclick="showHelp('Specify a file containing packets to be replayed. Used in conjunction with other aircrack-ng tools like aireplay-ng.')">?</button>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2 col-span-full">
+                    <input type="checkbox" id="no_dictionary_var" name="no_dictionary_var" class="form-checkbox">
+                    <label for="no_dictionary_var" class="form-label !mb-0">No Dictionary Attack (-N)</label>
+                    <button class="btn btn-secondary text-sm px-3 py-2" onclick="showHelp('Disable dictionary attack (only for WEP). This forces Aircrack-ng to use other methods like PTW.')">?</button>
+                </div>
+                <div class="flex items-center gap-2 col-span-full">
+                    <input type="checkbox" id="no_ptw_var" name="no_ptw_var" class="form-checkbox">
+                    <label for="no_ptw_var" class="form-label !mb-0">No PTW Attack (-P)</label>
+                    <button class="btn btn-secondary text-sm px-3 py-2" onclick="showHelp('Disable PTW attack (only for WEP). This forces Aircrack-ng to use brute-force or dictionary attacks.')">?</button>
+                </div>
+                <div class="flex items-center gap-2 col-span-full">
+                    <input type="checkbox" id="pmkid_attack_var" name="pmkid_attack_var" class="form-checkbox">
+                    <label for="pmkid_attack_var" class="form-label !mb-0">PMKID Attack (-J)</label>
+                    <button class="btn btn-secondary text-sm px-3 py-2" onclick="showHelp('Perform PMKID attack (for WPA/WPA2). This tries to crack the PMKID (Pairwise Master Key Identifier) without a full 4-way handshake.')">?</button>
+                </div>
+                <div class="flex items-center gap-2 col-span-full">
+                    <input type="checkbox" id="no_pmkid_var" name="no_pmkid_var" class="form-checkbox">
+                    <label for="no_pmkid_var" class="form-label !mb-0">No PMKID Attack (-M)</label>
+                    <button class="btn btn-secondary text-sm px-3 py-2" onclick="showHelp('Disable PMKID attack. Forces Aircrack-ng to rely on the 4-way handshake for WPA/WPA2 cracking.')">?</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="filtering" class="tab-content">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label for="filter_bssid_entry" class="form-label">Filter by BSSID (-b):</label>
+                    <div class="flex items-center gap-2">
+                        <input type="text" id="filter_bssid_entry" name="filter_bssid_entry" class="form-input flex-grow" placeholder="e.g., 00:11:22:33:44:55">
+                        <button class="btn btn-secondary text-sm px-3 py-2" onclick="showHelp('Filter packets by BSSID. Only packets from this specific Access Point will be processed.')">?</button>
+                    </div>
+                </div>
+                <div>
+                    <label for="filter_client_mac_entry" class="form-label">Filter by Client MAC (-c):</label>
+                    <div class="flex items-center gap-2">
+                        <input type="text" id="filter_client_mac_entry" name="filter_client_mac_entry" class="form-input flex-grow" placeholder="e.g., AA:BB:CC:DD:EE:FF">
+                        <button class="btn btn-secondary text-sm px-3 py-2" onclick="showHelp('Filter packets by client MAC address. Only packets from this specific client will be processed.')">?</button>
+                    </div>
+                </div>
+                <div>
+                    <label for="filter_essid_entry" class="form-label">Filter by ESSID (-e):</label>
+                    <div class="flex items-center gap-2">
+                        <input type="text" id="filter_essid_entry" name="filter_essid_entry" class="form-input flex-grow" placeholder="e.g., MyHomeWiFi">
+                        <button class="btn btn-secondary text-sm px-3 py-2" onclick="showHelp('Filter packets by ESSID. Only packets from this specific network name will be processed.')">?</button>
+                    </div>
+                </div>
+                <div>
+                    <label for="filter_channel_entry" class="form-label">Filter by Channel (-C):</label>
+                    <div class="flex items-center gap-2">
+                        <input type="number" id="filter_channel_entry" name="filter_channel_entry" class="form-input flex-grow" placeholder="e.g., 6">
+                        <button class="btn btn-secondary text-sm px-3 py-2" onclick="showHelp('Filter packets by channel. Only packets captured on this specific Wi-Fi channel will be processed.')">?</button>
+                    </div>
+                </div>
+                <div>
+                    <label for="filter_fcs_entry" class="form-label">Filter by FCS (-F):</label>
+                    <div class="flex items-center gap-2">
+                        <input type="text" id="filter_fcs_entry" name="filter_fcs_entry" class="form-input flex-grow" placeholder="e.g., 0x12345678">
+                        <button class="btn btn-secondary text-sm px-3 py-2" onclick="showHelp('Filter packets by Frame Check Sequence (FCS) value. Advanced filtering for specific packet integrity issues.')">?</button>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2 col-span-full">
+                    <input type="checkbox" id="keep_ivs_var" name="keep_ivs_var" class="form-checkbox">
+                    <label for="keep_ivs_var" class="form-label !mb-0">Keep IVs (-k)</label>
+                    <button class="btn btn-secondary text-sm px-3 py-2" onclick="showHelp('Keep IVs (Initialization Vectors) for later use. Useful for collecting IVs for WEP cracking.')">?</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="performance" class="tab-content">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label for="threads_entry" class="form-label">Number of Threads (-t):</label>
+                    <div class="flex items-center gap-2">
+                        <input type="number" id="threads_entry" name="threads_entry" class="form-input flex-grow" placeholder="e.g., 4">
+                        <button class="btn btn-secondary text-sm px-3 py-2" onclick="showHelp('Number of threads to use for cracking. More threads can speed up the process on multi-core CPUs.')">?</button>
+                    </div>
+                </div>
+                <div>
+                    <label for="cpu_affinity_entry" class="form-label">CPU Core Affinity (-C):</label>
+                    <div class="flex items-center gap-2">
+                        <input type="text" id="cpu_affinity_entry" name="cpu_affinity_entry" class="form-input flex-grow" placeholder="e.g., 0,1,2">
+                        <button class="btn btn-secondary text-sm px-3 py-2" onclick="showHelp('Set CPU core affinity (e.g., 0,1,2). This binds the Aircrack-ng process to specific CPU cores for performance optimization.')">?</button>
+                    </div>
+                </div>
+                <div>
+                    <label for="batch_size_entry" class="form-label">Batch Size (-B):</label>
+                    <div class="flex items-center gap-2">
+                        <input type="number" id="batch_size_entry" name="batch_size_entry" class="form-input flex-grow" placeholder="e.g., 128">
+                        <button class="btn btn-secondary text-sm px-3 py-2" onclick="showHelp('Set batch size for processing packets. This affects how many packets are processed at once, impacting performance.')">?</button>
+                    </div>
+                </div>
+                <div>
+                    <label for="gpu_device_entry" class="form-label">GPU Device (--gpu):</label>
+                    <div class="flex items-center gap-2">
+                        <input type="text" id="gpu_device_entry" name="gpu_device_entry" class="form-input flex-grow" placeholder="e.g., 0">
+                        <button class="btn btn-secondary text-sm px-3 py-2" onclick="showHelp('Specify GPU device ID for accelerated cracking (if supported by your Aircrack-ng build and hardware).')">?</button>
+                    </div>
+                </div>
+                <div>
+                    <label for="opencl_device_entry" class="form-label">OpenCL Device (--opencl):</label>
+                    <div class="flex items-center gap-2">
+                        <input type="text" id="opencl_device_entry" name="opencl_device_entry" class="form-input flex-grow" placeholder="e.g., 0:0">
+                        <button class="btn btn-secondary text-sm px-3 py-2" onclick="showHelp('Specify OpenCL platform:device ID for accelerated cracking (e.g., 0:0 for first device on first platform).')">?</button>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2 col-span-full">
+                    <input type="checkbox" id="show_progress_var" name="show_progress_var" class="form-checkbox">
+                    <label for="show_progress_var" class="form-label !mb-0">Show Progress (--show-progress)</label>
+                    <button class="btn btn-secondary text-sm px-3 py-2" onclick="showHelp('Show progress of the cracking process in the output. This provides real-time updates on the attack status.')">?</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="output-options" class="tab-content">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label for="output_file_entry" class="form-label">Output File (-o):</label>
+                    <div class="flex items-center gap-2">
+                        <input type="text" id="output_file_entry" name="output_file_entry" class="form-input flex-grow" placeholder="e.g., cracked_passwords.txt">
+                        <button class="btn btn-secondary text-sm px-3 py-2" onclick="showHelp('Write cracked passwords or other relevant output to a specified file. This saves the results of the attack.')">?</button>
+                    </div>
+                </div>
+                <div>
+                    <label for="log_file_entry" class="form-label">Log File (-L):</label>
+                    <div class="flex items-center gap-2">
+                        <input type="text" id="log_file_entry" name="log_file_entry" class="form-input flex-grow" placeholder="e.g., aircrack_log.txt">
+                        <button class="btn btn-secondary text-sm px-3 py-2" onclick="showHelp('Write all output to a log file. Useful for detailed analysis and debugging.')">?</button>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2 col-span-full">
+                    <input type="checkbox" id="verbose_var" name="verbose_var" class="form-checkbox">
+                    <label for="verbose_var" class="form-label !mb-0">Verbose Output (-v)</label>
+                    <button class="btn btn-secondary text-sm px-3 py-2" onclick="showHelp('Show verbose output. This provides more detailed information during the cracking process.')">?</button>
+                </div>
+                <div class="flex items-center gap-2 col-span-full">
+                    <input type="checkbox" id="quiet_var" name="quiet_var" class="form-checkbox">
+                    <label for="quiet_var" class="form-label !mb-0">Quiet Output (-q)</label>
+                    <button class="btn btn-secondary text-sm px-3 py-2" onclick="showHelp('Suppress non-essential output. Only critical information will be displayed.')">?</button>
+                </div>
+                <div class="flex items-center gap-2 col-span-full">
+                    <input type="checkbox" id="no_color_var" name="no_color_var" class="form-checkbox">
+                    <label for="no_color_var" class="form-label !mb-0">No Color Output (--no-color)</label>
+                    <button class="btn btn-secondary text-sm px-3 py-2" onclick="showHelp('Disable colored output. Useful for environments that do not support ANSI color codes or for plain text logs.')">?</button>
+                </div>
+                <div class="flex items-center gap-2 col-span-full">
+                    <input type="checkbox" id="show_summary_var" name="show_summary_var" class="form-checkbox">
+                    <label for="show_summary_var" class="form-label !mb-0">Show Summary (-s)</label>
+                    <button class="btn btn-secondary text-sm px-3 py-2" onclick="showHelp('Show a summary of the cracking process at the end.')">?</button>
+                </div>
+                <div class="flex items-center gap-2 col-span-full">
+                    <input type="checkbox" id="show_unencrypted_var" name="show_unencrypted_var" class="form-checkbox">
+                    <label for="show_unencrypted_var" class="form-label !mb-0">Show Unencrypted (-u)</label>
+                    <button class="btn btn-secondary text-sm px-3 py-2" onclick="showHelp('Show unencrypted data in the output. This is for advanced debugging and analysis.')">?</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="advanced" class="tab-content">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="flex items-center gap-2 col-span-full">
+                    <input type="checkbox" id="debug_var" name="debug_var" class="form-checkbox">
+                    <label for="debug_var" class="form-label !mb-0">Debug Mode (-D)</label>
+                    <button class="btn btn-secondary text-sm px-3 py-2" onclick="showHelp('Enable debug mode. This provides highly detailed internal debugging information.')">?</button>
+                </div>
+                <div class="flex items-center gap-2 col-span-full">
+                    <input type="checkbox" id="show_help_var" name="show_help_var" class="form-checkbox">
+                    <label for="show_help_var" class="form-label !mb-0">Show Help (--help)</label>
+                    <button class="btn btn-secondary text-sm px-3 py-2" onclick="showHelp('Display the Aircrack-ng help message and exit. Useful for understanding all available command-line options.')">?</button>
+                </div>
+                <div class="flex items-center gap-2 col-span-full">
+                    <input type="checkbox" id="show_version_var" name="show_version_var" class="form-checkbox">
+                    <label for="show_version_var" class="form-label !mb-0">Show Version (--version)</label>
+                    <button class="btn btn-secondary text-sm px-3 py-2" onclick="showHelp('Display the Aircrack-ng version information and exit.')">?</button>
+                </div>
+                <div>
+                    <label for="ivs_file_entry" class="form-label">IVs File (--ivs):</label>
+                    <div class="flex items-center gap-2">
+                        <input type="text" id="ivs_file_entry" name="ivs_file_entry" class="form-input flex-grow" placeholder="e.g., ivs.cap">
+                        <button class="btn btn-secondary text-sm px-3 py-2" onclick="showHelp('Specify an IVS (Initialization Vector) file to use for cracking. This file contains captured IVs for WEP.')">?</button>
+                    </div>
+                </div>
+                <div>
+                    <label for="cap_file_entry" class="form-label">CAP File (--cap-file):</label>
+                    <div class="flex items-center gap-2">
+                        <input type="text" id="cap_file_entry" name="cap_file_entry" class="form-input flex-grow" placeholder="e.g., mycapture.cap">
+                        <button class="btn btn-secondary text-sm px-3 py-2" onclick="showHelp('Specify a CAP file to use for cracking. This is similar to the main input capture file(s) but can be used for additional specific files.')">?</button>
+                    </div>
+                </div>
+                <div class="col-span-full">
+                    <label for="additional_args_entry" class="form-label">Additional Arguments:</label>
+                    <div class="flex items-center gap-2">
+                        <textarea id="additional_args_entry" name="additional_args_entry" class="form-textarea flex-grow" rows="4" placeholder="e.g., --some-flag value --another-option"></textarea>
+                        <button class="btn btn-secondary text-sm px-3 py-2" onclick="showHelp('Any other Aircrack-ng arguments not covered by the GUI. Enter them exactly as you would on the command line, including flags and values.')">?</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Generated Command Display -->
+        <div class="bg-gray-100 p-4 rounded-lg shadow-inner">
+            <h3 class="text-lg font-semibold text-gray-700 mb-2">Generated Aircrack-ng Command:</h3>
+            <pre id="command_text" class="bg-gray-800 text-green-300 p-3 rounded-md text-sm overflow-x-auto whitespace-pre-wrap break-all min-h-[60px]">aircrack-ng</pre>
+            <div class="flex justify-end gap-2 mt-3">
+                <button id="copy_command_button" class="btn btn-secondary">Copy Command</button>
+                <button id="generate_command_button" class="btn btn-primary">Generate Command</button>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex justify-center gap-4 mt-4">
+            <button id="run_button" class="btn btn-primary">Run Aircrack-ng</button>
+            <button id="clear_button" class="btn btn-secondary">Clear Output</button>
+            <button id="save_output_button" class="btn btn-secondary">Save Output</button>
+        </div>
+
+        <!-- Status Bar -->
+        <div id="status_bar" class="status-bar mt-4">Ready</div>
+
+        <!-- Aircrack-ng Output Log -->
+        <div class="mt-6">
+            <h3 class="text-lg font-semibold text-gray-700 mb-2">Aircrack-ng Output:</h3>
+            <div class="flex items-center gap-2 mb-2">
+                <label for="search_entry" class="form-label !mb-0">Search:</label>
+                <input type="text" id="search_entry" class="form-input flex-grow" placeholder="Search output...">
+                <button id="search_button" class="btn btn-secondary text-sm px-3 py-2">Search</button>
+                <button id="clear_search_button" class="btn btn-secondary text-sm px-3 py-2">Clear Search</button>
+            </div>
+            <div id="output_text" class="output-textarea"></div>
+        </div>
+    </div>
+
+    <!-- Help Popup -->
+    <div id="help_overlay" class="overlay"></div>
+    <div id="help_popup" class="help-popup">
+        <h3 class="text-xl font-bold mb-4">Help</h3>
+        <p id="help_text_content" class="text-gray-700 text-sm leading-relaxed"></p>
+        <div class="flex justify-end mt-6">
+            <button class="btn btn-primary" onclick="hideHelp()">Close</button>
+        </div>
+    </div>
+
+    <!-- Message Box -->
+    <div id="messageBox" class="message-box"></div>
+
+    <script>
+        const socket = io(); // Connect to the Socket.IO server
+        const API_BASE_URL = window.location.origin; // Flask app's base URL
+
+        // Cache DOM elements for better performance
+        const elements = {
+            // Tab buttons
+            tabButtons: document.querySelectorAll('.tab-button'),
+            // Tab contents
+            tabContents: document.querySelectorAll('.tab-content'),
+            // Input fields (updated with new fields)
+            capture_file_entry: document.getElementById('capture_file_entry'),
+            bssid_entry: document.getElementById('bssid_entry'),
+            essid_entry: document.getElementById('essid_entry'),
+            client_mac_entry: document.getElementById('client_mac_entry'), // New
+            interface_entry: document.getElementById('interface_entry'), // New
+            attack_mode_var: document.getElementById('attack_mode_var'),
+            wordlist_entry: document.getElementById('wordlist_entry'),
+            single_password_entry: document.getElementById('single_password_entry'),
+            passphrase_entry: document.getElementById('passphrase_entry'),
+            ptw_acks_entry: document.getElementById('ptw_acks_entry'),
+            key_index_entry: document.getElementById('key_index_entry'), // New
+            delay_entry: document.getElementById('delay_entry'), // New
+            replay_file_entry: document.getElementById('replay_file_entry'), // New
+            no_dictionary_var: document.getElementById('no_dictionary_var'),
+            no_ptw_var: document.getElementById('no_ptw_var'),
+            pmkid_attack_var: document.getElementById('pmkid_attack_var'),
+            no_pmkid_var: document.getElementById('no_pmkid_var'),
+            filter_bssid_entry: document.getElementById('filter_bssid_entry'),
+            filter_client_mac_entry: document.getElementById('filter_client_mac_entry'),
+            filter_essid_entry: document.getElementById('filter_essid_entry'),
+            filter_channel_entry: document.getElementById('filter_channel_entry'),
+            filter_fcs_entry: document.getElementById('filter_fcs_entry'), // New
+            keep_ivs_var: document.getElementById('keep_ivs_var'), // New
+            threads_entry: document.getElementById('threads_entry'),
+            cpu_affinity_entry: document.getElementById('cpu_affinity_entry'),
+            batch_size_entry: document.getElementById('batch_size_entry'),
+            gpu_device_entry: document.getElementById('gpu_device_entry'), // New
+            opencl_device_entry: document.getElementById('opencl_device_entry'), // New
+            show_progress_var: document.getElementById('show_progress_var'),
+            output_file_entry: document.getElementById('output_file_entry'),
+            log_file_entry: document.getElementById('log_file_entry'), // New
+            verbose_var: document.getElementById('verbose_var'),
+            quiet_var: document.getElementById('quiet_var'),
+            no_color_var: document.getElementById('no_color_var'),
+            show_summary_var: document.getElementById('show_summary_var'), // New
+            show_unencrypted_var: document.getElementById('show_unencrypted_var'), // New
+            debug_var: document.getElementById('debug_var'),
+            show_help_var: document.getElementById('show_help_var'), // New
+            show_version_var: document.getElementById('show_version_var'), // New
+            ivs_file_entry: document.getElementById('ivs_file_entry'), // New
+            cap_file_entry: document.getElementById('cap_file_entry'), // New
+            additional_args_entry: document.getElementById('additional_args_entry'),
+            // Command display
+            command_text: document.getElementById('command_text'),
+            copy_command_button: document.getElementById('copy_command_button'),
+            generate_command_button: document.getElementById('generate_command_button'),
+            // Action buttons
+            run_button: document.getElementById('run_button'),
+            clear_button: document.getElementById('clear_button'),
+            save_output_button: document.getElementById('save_output_button'),
+            // Status bar
+            status_bar: document.getElementById('status_bar'),
+            // Output log and search
+            search_entry: document.getElementById('search_entry'),
+            search_button: document.getElementById('search_button'),
+            clear_search_button: document.getElementById('clear_search_button'),
+            output_text: document.getElementById('output_text'),
+            // Message box
+            messageBox: document.getElementById('messageBox'),
+            // Help popup
+            helpPopup: document.getElementById('help_popup'),
+            helpOverlay: document.getElementById('help_overlay'),
+            helpTextContent: document.getElementById('help_text_content')
+        };
+
+        let searchStartIndex = 0; // For incremental search in output_text
+        let currentOutputContent = ""; // To store the full output for saving/searching
+
+        // --- Utility Functions ---
+
+        /**
+         * Displays a temporary message box at the top right of the screen.
+         * @param {string} message - The message to display.
+         * @param {string} type - The type of message ('success', 'error', 'warning').
+         */
+        function showMessage(message, type = 'success') {
+            elements.messageBox.textContent = message;
+            elements.messageBox.className = `message-box show ${type}`;
+            setTimeout(() => {
+                elements.messageBox.classList.remove('show');
+            }, 3000); // Message disappears after 3 seconds
+        }
+
+        /**
+         * Shows the help popup with a given text.
+         * @param {string} text - The help text to display.
+         */
+        function showHelp(text) {
+            elements.helpTextContent.textContent = text;
+            elements.helpPopup.classList.add('active');
+            elements.helpOverlay.classList.add('active');
+        }
+
+        /**
+         * Hides the help popup.
+         */
+        function hideHelp() {
+            elements.helpPopup.classList.remove('active');
+            elements.helpOverlay.classList.remove('active');
+        }
+
+        // --- Tab Functionality ---
+
+        elements.tabButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                const tabId = button.dataset.tab;
+
+                // Deactivate all tab buttons and hide all tab contents
+                elements.tabButtons.forEach(btn => btn.classList.remove('active'));
+                elements.tabContents.forEach(content => content.classList.remove('active'));
+
+                // Activate the clicked tab button and show its content
+                button.classList.add('active');
+                document.getElementById(tabId).classList.add('active');
+                generateCommand(); // Regenerate command when tab changes to reflect new options
+            });
+        });
+
+        // --- Command Generation ---
+
+        /**
+         * Gathers all form data from the input elements.
+         * @returns {Object} An object containing all form field values.
+         */
+        function getFormData() {
+            return {
+                capture_file_entry: elements.capture_file_entry.value,
+                bssid_entry: elements.bssid_entry.value,
+                essid_entry: elements.essid_entry.value,
+                client_mac_entry: elements.client_mac_entry.value,
+                interface_entry: elements.interface_entry.value,
+                attack_mode_var: elements.attack_mode_var.value,
+                wordlist_entry: elements.wordlist_entry.value,
+                single_password_entry: elements.single_password_entry.value,
+                passphrase_entry: elements.passphrase_entry.value,
+                ptw_acks_entry: elements.ptw_acks_entry.value,
+                key_index_entry: elements.key_index_entry.value,
+                delay_entry: elements.delay_entry.value,
+                replay_file_entry: elements.replay_file_entry.value,
+                no_dictionary_var: elements.no_dictionary_var.checked,
+                no_ptw_var: elements.no_ptw_var.checked,
+                pmkid_attack_var: elements.pmkid_attack_var.checked,
+                no_pmkid_var: elements.no_pmkid_var.checked,
+                filter_bssid_entry: elements.filter_bssid_entry.value,
+                filter_client_mac_entry: elements.filter_client_mac_entry.value,
+                filter_essid_entry: elements.filter_essid_entry.value,
+                filter_channel_entry: elements.filter_channel_entry.value,
+                filter_fcs_entry: elements.filter_fcs_entry.value,
+                keep_ivs_var: elements.keep_ivs_var.checked,
+                threads_entry: elements.threads_entry.value,
+                cpu_affinity_entry: elements.cpu_affinity_entry.value,
+                batch_size_entry: elements.batch_size_entry.value,
+                gpu_device_entry: elements.gpu_device_entry.value,
+                opencl_device_entry: elements.opencl_device_entry.value,
+                show_progress_var: elements.show_progress_var.checked,
+                output_file_entry: elements.output_file_entry.value,
+                log_file_entry: elements.log_file_entry.value,
+                verbose_var: elements.verbose_var.checked,
+                quiet_var: elements.quiet_var.checked,
+                no_color_var: elements.no_color_var.checked,
+                show_summary_var: elements.show_summary_var.checked,
+                show_unencrypted_var: elements.show_unencrypted_var.checked,
+                debug_var: elements.debug_var.checked,
+                show_help_var: elements.show_help_var.checked,
+                show_version_var: elements.show_version_var.checked,
+                ivs_file_entry: elements.ivs_file_entry.value,
+                cap_file_entry: elements.cap_file_entry.value,
+                additional_args_entry: elements.additional_args_entry.value
+            };
+        }
+
+        /**
+         * Sends form data to the backend to generate the Aircrack-ng command.
+         */
+        async function generateCommand() {
+            const formData = getFormData();
+            try {
+                const response = await fetch(`${API_BASE_URL}/generate_command`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(formData)
+                });
+                const result = await response.json();
+                elements.command_text.textContent = result.command;
+                if (result.status === 'error') {
+                    elements.command_text.classList.add('text-red-400'); // Indicate error
+                    showMessage(result.message, 'error');
+                } else {
+                    elements.command_text.classList.remove('text-red-400');
+                }
+            } catch (error) {
+                console.error('Error generating command:', error);
+                elements.command_text.textContent = `Error generating command: ${error.message}`;
+                elements.command_text.classList.add('text-red-400');
+                showMessage('Failed to generate command. Check console for details.', 'error');
+            }
+        }
+
+        // Add event listeners for input changes to regenerate command
+        // This ensures the command updates dynamically as the user types/selects
+        Object.values(elements).forEach(el => {
+            if (el && (el.tagName === 'INPUT' || el.tagName === 'SELECT' || el.tagName === 'TEXTAREA')) {
+                // Exclude search input from command generation as it's not part of the command
+                if (el.id !== 'search_entry') {
+                    el.addEventListener('input', generateCommand);
+                    el.addEventListener('change', generateCommand); // For checkboxes/selects
+                }
+            }
+        });
+        elements.generate_command_button.addEventListener('click', generateCommand);
+        elements.copy_command_button.addEventListener('click', () => {
+            const commandToCopy = elements.command_text.textContent;
+            // Use execCommand for broader compatibility in some iframe environments
+            try {
+                const tempInput = document.createElement('textarea');
+                tempInput.value = commandToCopy;
+                document.body.appendChild(tempInput);
+                tempInput.select();
+                document.execCommand('copy');
+                document.body.removeChild(tempInput);
+                showMessage('Command copied to clipboard!');
+            } catch (err) {
+                console.error('Failed to copy command (execCommand fallback): ', err);
+                // Fallback to navigator.clipboard if execCommand fails or is not supported
+                navigator.clipboard.writeText(commandToCopy).then(() => {
+                    showMessage('Command copied to clipboard!');
+                }).catch(err => {
+                    console.error('Failed to copy command (navigator.clipboard): ', err);
+                    showMessage('Failed to copy command. Please copy manually.', 'error');
+                });
+            }
+        });
+
+        // --- Aircrack-ng Execution ---
+
+        /**
+         * Sends the generated command to the backend for execution.
+         */
+        async function runAircrack() {
+            const command = elements.command_text.textContent;
+            if (command.startsWith("Error:")) {
+                showMessage("Cannot run: Command is invalid. Please fix input errors.", 'error');
+                return;
+            }
+
+            // Disable run button to prevent multiple executions
+            elements.run_button.disabled = true;
+            elements.clear_button.disabled = true;
+            elements.save_output_button.disabled = true;
+            elements.status_bar.textContent = "Starting Aircrack-ng...";
+            clearOutput(); // Clear previous output before new run
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/run_aircrack`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ command: command })
+                });
+                const result = await response.json();
+                if (response.ok) {
+                    showMessage(result.message);
+                } else {
+                    // If backend returns an error (e.g., already running, invalid command)
+                    showMessage(result.message, result.status);
+                    elements.run_button.disabled = false; // Re-enable if starting failed
+                    elements.clear_button.disabled = false;
+                    elements.save_output_button.disabled = false;
+                    elements.status_bar.textContent = "Ready";
+                }
+            } catch (error) {
+                console.error('Error initiating Aircrack-ng run:', error);
+                showMessage('An error occurred while trying to start Aircrack-ng. Check console.', 'error');
+                elements.run_button.disabled = false; // Re-enable on network error
+                elements.clear_button.disabled = false;
+                elements.save_output_button.disabled = false;
+                elements.status_bar.textContent = "Ready";
+            }
+        }
+
+        elements.run_button.addEventListener('click', runAircrack);
+
+        // --- Output Log Management ---
+
+        /**
+         * Clears the Aircrack-ng output log and resets search.
+         */
+        function clearOutput() {
+            elements.output_text.innerHTML = '';
+            currentOutputContent = "";
+            clearSearchHighlight();
+            elements.status_bar.textContent = "Ready";
+            showMessage("Output cleared.", 'info');
+        }
+        elements.clear_button.addEventListener('click', clearOutput);
+
+        /**
+         * Saves the current output log content to a text file for download.
+         */
+        async function saveOutput() {
+            if (!currentOutputContent.trim()) {
+                showMessage("No output to save.", 'info');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/save_output`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ content: currentOutputContent })
+                });
+
+                if (response.ok) {
+                    // If the server sends a file, handle the download
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.style.display = 'none';
+                    a.href = url;
+                    a.download = 'aircrack_output.txt'; // Suggested filename
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url); // Clean up the object URL
+                    showMessage('Output saved successfully and downloaded!');
+                } else {
+                    const result = await response.json();
+                    showMessage(result.message, result.status || 'error');
+                }
+            } catch (error) {
+                console.error('Error saving output:', error);
+                showMessage('Failed to save output to file. Check console.', 'error');
+            }
+        }
+        elements.save_output_button.addEventListener('click', saveOutput);
+
+        // --- Real-time Output (Socket.IO) ---
+
+        // Listener for streaming output from the backend
+        socket.on('stream_output', (data) => {
+            const line = data.data;
+            // Append new line to the output area
+            elements.output_text.innerHTML += line;
+            // Also append to the full content string for saving/searching
+            currentOutputContent += line;
+            // Auto-scroll to bottom to show latest output
+            elements.output_text.scrollTop = elements.output_text.scrollHeight;
+        });
+
+        // Listener for process status updates from the backend
+        socket.on('process_status', (data) => {
+            elements.status_bar.textContent = data.message;
+            if (data.status === 'running') {
+                elements.run_button.disabled = true;
+                elements.clear_button.disabled = true;
+                elements.save_output_button.disabled = true;
+            } else {
+                elements.run_button.disabled = false;
+                elements.clear_button.disabled = false;
+                elements.save_output_button.disabled = false;
+            }
+        });
+
+        // --- Search Functionality ---
+
+        /**
+         * Searches for a term in the output log and highlights occurrences.
+         * Supports incremental search.
+         */
+        function searchOutput() {
+            const searchTerm = elements.search_entry.value.trim();
+            clearSearchHighlight(); // Clear previous highlights before a new search
+
+            if (!searchTerm) {
+                searchStartIndex = 0; // Reset if search term is empty
+                return;
+            }
+
+            const content = elements.output_text.textContent;
+            let foundIndex = content.toLowerCase().indexOf(searchTerm.toLowerCase(), searchStartIndex);
+
+            if (foundIndex === -1 && searchStartIndex !== 0) {
+                // If no more matches from current position, try from the beginning of the text
+                foundIndex = content.toLowerCase().indexOf(searchTerm.toLowerCase(), 0);
+                if (foundIndex !== -1) {
+                    searchStartIndex = 0; // Reset search start index for the next search
+                    showMessage(`Search wrapped around. Found first occurrence of '${searchTerm}'.`, 'info');
+                }
+            }
+
+            if (foundIndex !== -1) {
+                // To highlight, we need to manipulate the DOM.
+                // Replace the found text with a span containing the highlight class.
+                // This is a simplified approach, for very large outputs, a more
+                // sophisticated virtualized rendering might be needed.
+                const originalText = elements.output_text.textContent;
+                const highlightedText = originalText.substring(0, foundIndex) +
+                                        `<span class="highlight">${originalText.substring(foundIndex, foundIndex + searchTerm.length)}</span>` +
+                                        originalText.substring(foundIndex + searchTerm.length);
+                elements.output_text.innerHTML = highlightedText;
+
+                // Scroll to the highlighted element
+                const highlightedSpan = elements.output_text.querySelector('.highlight');
+                if (highlightedSpan) {
+                    highlightedSpan.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+
+                searchStartIndex = foundIndex + searchTerm.length; // Set start for next search
+            } else {
+                showMessage(`No more occurrences of '${searchTerm}' found.`, 'info');
+                searchStartIndex = 0; // Reset for next search attempt
+            }
+        }
+
+        /**
+         * Clears all search highlights from the output log.
+         */
+        function clearSearchHighlight() {
+            // Restore the original text content by removing all highlight spans
+            elements.output_text.innerHTML = elements.output_text.textContent;
+            searchStartIndex = 0; // Reset search start index
+        }
+
+        elements.search_button.addEventListener('click', searchOutput);
+        elements.search_entry.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter') {
+                event.preventDefault(); // Prevent new line in input field
+                searchOutput();
+            }
+        });
+        elements.clear_search_button.addEventListener('click', clearSearchHighlight);
+
+        // --- Initial Setup ---
+        document.addEventListener('DOMContentLoaded', () => {
+            generateCommand(); // Generate initial command on page load
+            // Show an introductory message to the user
+            showMessage("Welcome to the Aircrack-ng Web GUI! Enter your capture file(s) and configure options, then click 'Run Aircrack-ng'. Use the '?' buttons for help.", 'info');
+        });
+    </script>
+</body>
+</html>

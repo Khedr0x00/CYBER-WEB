@@ -1,0 +1,223 @@
+[
+    {
+        "name": "Extract with Known Password",
+        "description": "Attempts to extract hidden data from a JPEG image using a known password.",
+        "options": {
+            "image_file_entry": "image.jpg",
+            "extract_var": true,
+            "password_entry": "secretpassword",
+            "output_file_entry": "extracted_data.txt"
+        },
+        "example_output": "Stegseek 0.6 - https://github.com/RickdeJager/stegseek\n[+] Found hidden data in 'image.jpg'.\n[+] Extracted data saved to 'extracted_data.txt'.\n"
+    },
+    {
+        "name": "Brute-force with Wordlist",
+        "description": "Attempts to brute-force the password for hidden data in a JPEG image using a wordlist.",
+        "options": {
+            "image_file_entry": "image.jpg",
+            "wordlist_file_entry": "wordlist.txt",
+            "output_file_entry": "found_password.txt"
+        },
+        "example_output": "Stegseek 0.6 - https://github.com/RickdeJager/stegseek\n[+] Trying passwords from wordlist.txt...\n[+] Password found: 'mysecurepass'\n[+] Extracted data saved to 'image.jpg.extracted'.\n"
+    },
+    {
+        "name": "Check Image for Steganography",
+        "description": "Scans a JPEG image to determine if it likely contains hidden data without attempting extraction.",
+        "options": {
+            "image_file_entry": "image.jpg",
+            "check_var": true
+        },
+        "example_output": "Stegseek 0.6 - https://github.com/RickdeJager/stegseek\n[+] 'image.jpg' likely contains hidden data. (Confidence: High)\n"
+    },
+    {
+        "name": "Extract with Verbose Output",
+        "description": "Extracts hidden data and provides more detailed information during the process.",
+        "options": {
+            "image_file_entry": "image.jpg",
+            "extract_var": true,
+            "password_entry": "secretpassword",
+            "output_file_entry": "verbose_extracted.txt",
+            "verbose_var": true
+        },
+        "example_output": "Stegseek 0.6 - https://github.com/RickdeJager/stegseek\n[DEBUG] Initializing JPEG parser...\n[+] Found hidden data in 'image.jpg'.\n[DEBUG] Decrypting with password 'secretpassword'...\n[+] Extracted data saved to 'verbose_extracted.txt'.\n"
+    },
+    {
+        "name": "Brute-force with Custom Output",
+        "description": "Brute-forces with a wordlist and saves the extracted data to a specific file name.",
+        "options": {
+            "image_file_entry": "image.jpg",
+            "wordlist_file_entry": "custom_wordlist.txt",
+            "output_file_entry": "custom_extracted_data.bin"
+        },
+        "example_output": "Stegseek 0.6 - https://github.com/RickdeJager/stegseek\n[+] Trying passwords from custom_wordlist.txt...\n[+] Password found: 'anotherpass'\n[+] Extracted data saved to 'custom_extracted_data.bin'.\n"
+    },
+    {
+        "name": "Extract with Output to Stdout",
+        "description": "Extracts hidden data and prints it directly to the console output.",
+        "options": {
+            "image_file_entry": "image.jpg",
+            "extract_var": true,
+            "password_entry": "secretpassword",
+            "stdout_var": true
+        },
+        "example_output": "Stegseek 0.6 - https://github.com/RickdeJager/stegseek\n[+] Found hidden data in 'image.jpg'.\n[+] Extracted data:\nThis is the secret message hidden in the image.\n"
+    },
+    {
+        "name": "Brute-force with No Output File",
+        "description": "Brute-forces the password but does not save the extracted data to a file.",
+        "options": {
+            "image_file_entry": "image.jpg",
+            "wordlist_file_entry": "small_wordlist.txt",
+            "no_output_file_var": true
+        },
+        "example_output": "Stegseek 0.6 - https://github.com/RickdeJager/stegseek\n[+] Trying passwords from small_wordlist.txt...\n[+] Password found: 'test123'\n[+] Data extracted but not saved to file (due to --no-output-file).\n"
+    },
+    {
+        "name": "Extract with Force Overwrite",
+        "description": "Extracts hidden data and forces overwriting of the output file if it already exists.",
+        "options": {
+            "image_file_entry": "image.jpg",
+            "extract_var": true,
+            "password_entry": "secretpassword",
+            "output_file_entry": "existing_file.txt",
+            "force_overwrite_var": true
+        },
+        "example_output": "Stegseek 0.6 - https://github.com/RickdeJager/stegseek\n[+] Found hidden data in 'image.jpg'.\n[+] Overwriting 'existing_file.txt'.\n[+] Extracted data saved to 'existing_file.txt'.\n"
+    },
+    {
+        "name": "Brute-force with Keep Password",
+        "description": "Brute-forces the password and keeps the extracted password in the output file.",
+        "options": {
+            "image_file_entry": "image.jpg",
+            "wordlist_file_entry": "wordlist.txt",
+            "output_file_entry": "password_and_data.txt",
+            "keep_password_var": true
+        },
+        "example_output": "Stegseek 0.6 - https://github.com/RickdeJager/stegseek\n[+] Trying passwords from wordlist.txt...\n[+] Password found: 'foundpass'\n[+] Extracted data (including password) saved to 'password_and_data.txt'.\n"
+    },
+    {
+        "name": "Extract with No Progress Bar",
+        "description": "Extracts hidden data without displaying the progress bar.",
+        "options": {
+            "image_file_entry": "image.jpg",
+            "extract_var": true,
+            "password_entry": "secretpassword",
+            "output_file_entry": "no_progress.txt",
+            "no_progress_var": true
+        },
+        "example_output": "Stegseek 0.6 - https://github.com/RickdeJager/stegseek\n[+] Found hidden data in 'image.jpg'.\n[+] Extracted data saved to 'no_progress.txt'.\n"
+    },
+    {
+        "name": "Brute-force with Custom CPU Cores",
+        "description": "Uses a specific number of CPU cores for brute-forcing.",
+        "options": {
+            "image_file_entry": "image.jpg",
+            "wordlist_file_entry": "large_wordlist.txt",
+            "cpu_cores_entry": "4"
+        },
+        "example_output": "Stegseek 0.6 - https://github.com/RickdeJager/stegseek\n[+] Using 4 CPU cores for brute-force.\n[+] Trying passwords from large_wordlist.txt...\n[+] Password found: 'complexpass'\n[+] Extracted data saved to 'image.jpg.extracted'.\n"
+    },
+    {
+        "name": "Extract with Show Password",
+        "description": "Extracts hidden data and displays the password in the output.",
+        "options": {
+            "image_file_entry": "image.jpg",
+            "extract_var": true,
+            "password_entry": "mypass",
+            "show_password_var": true
+        },
+        "example_output": "Stegseek 0.6 - https://github.com/RickdeJager/stegseek\n[+] Found hidden data in 'image.jpg'.\n[+] Password: mypass\n[+] Extracted data saved to 'image.jpg.extracted'.\n"
+    },
+    {
+        "name": "Brute-force with Custom Algorithm",
+        "description": "Brute-forces using a specific steganography algorithm (e.g., 'LSB').",
+        "options": {
+            "image_file_entry": "image.jpg",
+            "wordlist_file_entry": "wordlist.txt",
+            "algorithm_entry": "LSB"
+        },
+        "example_output": "Stegseek 0.6 - https://github.com/RickdeJager/stegseek\n[+] Using algorithm: LSB\n[+] Trying passwords from wordlist.txt...\n[+] Password found: 'lsb_pass'\n[+] Extracted data saved to 'image.jpg.extracted'.\n"
+    },
+    {
+        "name": "Extract with Custom Offset",
+        "description": "Extracts hidden data starting from a specific byte offset within the image.",
+        "options": {
+            "image_file_entry": "image.jpg",
+            "extract_var": true,
+            "password_entry": "offsetpass",
+            "offset_entry": "1024",
+            "output_file_entry": "offset_data.txt"
+        },
+        "example_output": "Stegseek 0.6 - https://github.com/RickdeJager/stegseek\n[+] Found hidden data in 'image.jpg' starting at offset 1024.\n[+] Extracted data saved to 'offset_data.txt'.\n"
+    },
+    {
+        "name": "Brute-force with Custom Length",
+        "description": "Brute-forces for a password of a specific length.",
+        "options": {
+            "image_file_entry": "image.jpg",
+            "wordlist_file_entry": "short_wordlist.txt",
+            "length_entry": "6"
+        },
+        "example_output": "Stegseek 0.6 - https://github.com/RickdeJager/stegseek\n[+] Trying passwords of length 6 from short_wordlist.txt...\n[+] Password found: 'sixsix'\n[+] Extracted data saved to 'image.jpg.extracted'.\n"
+    },
+    {
+        "name": "Extract with Debug Output",
+        "description": "Extracts hidden data and provides extensive debug information.",
+        "options": {
+            "image_file_entry": "image.jpg",
+            "extract_var": true,
+            "password_entry": "debugpass",
+            "output_file_entry": "debug_output.txt",
+            "debug_var": true
+        },
+        "example_output": "Stegseek 0.6 - https://github.com/RickdeJager/stegseek\n[DEBUG] Starting debug mode...\n[DEBUG] Reading image header...\n[+] Found hidden data in 'image.jpg'.\n[DEBUG] Decrypting data block 1...\n[+] Extracted data saved to 'debug_output.txt'.\n"
+    },
+    {
+        "name": "Brute-force with Quiet Mode",
+        "description": "Brute-forces the password with minimal output, only showing the found password.",
+        "options": {
+            "image_file_entry": "image.jpg",
+            "wordlist_file_entry": "wordlist.txt",
+            "quiet_var": true
+        },
+        "example_output": "Stegseek 0.6 - https://github.com/RickdeJager/stegseek\n[+] Password found: 'quietpass'\n"
+    },
+    {
+        "name": "Extract with Custom JPEG Quality",
+        "description": "Extracts data from an image that was embedded with a specific JPEG quality setting.",
+        "options": {
+            "image_file_entry": "image.jpg",
+            "extract_var": true,
+            "password_entry": "qualitypass",
+            "jpeg_quality_entry": "80",
+            "output_file_entry": "quality_data.txt"
+        },
+        "example_output": "Stegseek 0.6 - https://github.com/RickdeJager/stegseek\n[+] Assuming JPEG quality 80 for extraction.\n[+] Found hidden data in 'image.jpg'.\n[+] Extracted data saved to 'quality_data.txt'.\n"
+    },
+    {
+        "name": "Brute-force with Custom Threads",
+        "description": "Uses a specific number of threads for parallel brute-forcing (alias for --cpu-cores).",
+        "options": {
+            "image_file_entry": "image.jpg",
+            "wordlist_file_entry": "large_wordlist.txt",
+            "threads_entry": "8"
+        },
+        "example_output": "Stegseek 0.6 - https://github.com/RickdeJager/stegseek\n[+] Using 8 threads for brute-force.\n[+] Trying passwords from large_wordlist.txt...\n[+] Password found: 'multithreadedpass'\n[+] Extracted data saved to 'image.jpg.extracted'.\n"
+    },
+    {
+        "name": "Show Stegseek Version",
+        "description": "Displays the installed Stegseek version and exits.",
+        "options": {
+            "version_var": true
+        },
+        "example_output": "Stegseek 0.6\n"
+    },
+    {
+        "name": "Show Stegseek Help",
+        "description": "Displays the Stegseek help message and exits.",
+        "options": {
+            "help_var": true
+        },
+        "example_output": "Usage: stegseek [options] <image_file>\n\nOptions:\n  -x, --extract         Extract hidden data.\n  -p, --password <pass> Specify password.\n  -w, --wordlist <file> Use wordlist for brute-force.\n  ...\n"
+    }
+]

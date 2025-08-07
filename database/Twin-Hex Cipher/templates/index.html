@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Twin-Hex Cipher Web App</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 2rem;
+        }
+        .container {
+            background-color: #ffffff;
+            border-radius: 1rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            padding: 2.5rem;
+            width: 100%;
+            max-width: 700px;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+        textarea {
+            min-height: 120px;
+            resize: vertical;
+            padding: 1rem;
+            border-radius: 0.75rem;
+            border: 1px solid #cbd5e0;
+            font-size: 1rem;
+            color: #4a5568;
+            transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        }
+        textarea:focus {
+            outline: none;
+            border-color: #6366f1;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+        }
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.75rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .btn-encode {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+        }
+        .btn-encode:hover {
+            background-color: #45a049;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+        }
+        .btn-decode {
+            background-color: #2196F3;
+            color: white;
+            border: none;
+        }
+        .btn-decode:hover {
+            background-color: #1976D2;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+        }
+        .message-box {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: #4CAF50;
+            color: white;
+            padding: 15px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out;
+            transform: translateY(-20px);
+        }
+        .message-box.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .message-box.error {
+            background-color: #f44336;
+        }
+        .loading-spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-left-color: #6366f1;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+            display: none; /* Hidden by default */
+        }
+        .loading-spinner.show {
+            display: inline-block;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-4xl font-bold text-center text-gray-800 mb-4">Twin-Hex Cipher</h1>
+
+        <div>
+            <label for="inputText" class="block text-lg font-medium text-gray-700 mb-2">Input Text:</label>
+            <textarea id="inputText" class="w-full" placeholder="Enter text to encode or decode..."></textarea>
+        </div>
+
+        <div class="flex justify-center space-x-4">
+            <button id="encodeButton" class="btn btn-encode flex items-center gap-2">
+                Encode
+                <span id="encodeSpinner" class="loading-spinner"></span>
+            </button>
+            <button id="decodeButton" class="btn btn-decode flex items-center gap-2">
+                Decode
+                <span id="decodeSpinner" class="loading-spinner"></span>
+            </button>
+        </div>
+
+        <div>
+            <label for="outputText" class="block text-lg font-medium text-gray-700 mb-2">Output:</label>
+            <textarea id="outputText" class="w-full bg-gray-100 cursor-not-allowed" readonly></textarea>
+        </div>
+
+        <div id="messageBox" class="message-box"></div>
+    </div>
+
+    <script>
+        const inputText = document.getElementById('inputText');
+        const outputText = document.getElementById('outputText');
+        const encodeButton = document.getElementById('encodeButton');
+        const decodeButton = document.getElementById('decodeButton');
+        const encodeSpinner = document.getElementById('encodeSpinner');
+        const decodeSpinner = document.getElementById('decodeSpinner');
+        const messageBox = document.getElementById('messageBox');
+
+        /**
+         * Displays a temporary message box to the user.
+         * @param {string} message - The message to display.
+         * @param {string} type - 'success' or 'error' to determine styling.
+         */
+        function showMessage(message, type = 'success') {
+            messageBox.textContent = message;
+            messageBox.className = 'message-box show';
+            if (type === 'error') {
+                messageBox.classList.add('error');
+            } else {
+                messageBox.classList.remove('error');
+            }
+            setTimeout(() => {
+                messageBox.classList.remove('show');
+            }, 3000);
+        }
+
+        /**
+         * Sets the loading state for a button and its spinner.
+         * @param {HTMLButtonElement} button - The button element.
+         * @param {HTMLElement} spinner - The spinner element.
+         * @param {boolean} isLoading - True to show loading, false to hide.
+         */
+        function setLoading(button, spinner, isLoading) {
+            button.disabled = isLoading;
+            if (isLoading) {
+                spinner.classList.add('show');
+            } else {
+                spinner.classList.remove('show');
+            }
+        }
+
+        /**
+         * Handles the encoding process.
+         */
+        encodeButton.addEventListener('click', async () => {
+            const textToEncode = inputText.value.trim();
+            if (!textToEncode) {
+                showMessage("Please enter text to encode.", "error");
+                return;
+            }
+
+            setLoading(encodeButton, encodeSpinner, true);
+            outputText.value = 'Encoding...';
+
+            try {
+                const response = await fetch('/encode', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ text: textToEncode }),
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.status === 'success') {
+                    outputText.value = result.encoded_text;
+                    showMessage("Text encoded successfully!");
+                } else {
+                    outputText.value = `Error: ${result.error || 'Unknown error'}`;
+                    showMessage(result.error || "An error occurred during encoding.", "error");
+                }
+            } catch (error) {
+                console.error("Fetch error during encoding:", error);
+                outputText.value = `Network Error: ${error.message}`;
+                showMessage("Network error during encoding. Please check server.", "error");
+            } finally {
+                setLoading(encodeButton, encodeSpinner, false);
+            }
+        });
+
+        /**
+         * Handles the decoding process.
+         */
+        decodeButton.addEventListener('click', async () => {
+            const textToDecode = inputText.value.trim();
+            if (!textToDecode) {
+                showMessage("Please enter text to decode.", "error");
+                return;
+            }
+
+            setLoading(decodeButton, decodeSpinner, true);
+            outputText.value = 'Decoding...';
+
+            try {
+                const response = await fetch('/decode', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ text: textToDecode }),
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.status === 'success') {
+                    outputText.value = result.decoded_text;
+                    showMessage("Text decoded successfully!");
+                } else {
+                    outputText.value = `Error: ${result.error || 'Unknown error'}`;
+                    showMessage(result.error || "An error occurred during decoding.", "error");
+                }
+            } catch (error) {
+                console.error("Fetch error during decoding:", error);
+                outputText.value = `Network Error: ${error.message}`;
+                showMessage("Network error during decoding. Please check server.", "error");
+            } finally {
+                setLoading(decodeButton, decodeSpinner, false);
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,163 @@
+[
+    {
+        "name": "Basic Directory Fuzzing",
+        "description": "Fuzzes common directory paths on a target website.",
+        "options": {
+            "target_url_entry": "http://example.com/FUZZ",
+            "wordlist_payload_entry": "file,/usr/share/wordlists/wfuzz/general/common.txt",
+            "hide_code_entry": "404"
+        },
+        "example_output": "=====================================================================\nID           Response   Lines    Word       Chars       Payload\n=====================================================================\n\n00000:  C=200      3 L      10 W       123 C       'index.html'\n00001:  C=200      5 L      20 W       250 C       'admin/'\n00002:  C=301      2 L      12 W       180 C       'login'\n\nTotal requests: 1000\n"
+    },
+    {
+        "name": "Subdomain Enumeration",
+        "description": "Fuzzes subdomains using a common wordlist.",
+        "options": {
+            "target_url_entry": "http://FUZZ.example.com/",
+            "wordlist_payload_entry": "file,/usr/share/wordlists/wfuzz/general/medium.txt",
+            "hide_code_entry": "404"
+        },
+        "example_output": "=====================================================================\nID           Response   Lines    Word       Chars       Payload\n=====================================================================\n\n00000:  C=200      10 L      30 W       400 C       'www'\n00001:  C=200      8 L      25 W       350 C       'dev'\n00002:  C=302      2 L      15 W       200 C       'test'\n\nTotal requests: 500\n"
+    },
+    {
+        "name": "Parameter Fuzzing (GET)",
+        "description": "Fuzzes a GET parameter for common vulnerabilities.",
+        "options": {
+            "target_url_entry": "http://example.com/search?q=FUZZ",
+            "wordlist_payload_entry": "file,/usr/share/wordlists/wfuzz/injection/SQL.txt",
+            "hide_code_entry": "200,404"
+        },
+        "example_output": "=====================================================================\nID           Response   Lines    Word       Chars       Payload\n=====================================================================\n\n00000:  C=500      15 L      50 W       800 C       'UNION SELECT'\n00001:  C=400      5 L      10 W       150 C       'OR 1=1--'\n\nTotal requests: 200\n"
+    },
+    {
+        "name": "Parameter Fuzzing (POST)",
+        "description": "Fuzzes a POST parameter with a numerical range.",
+        "options": {
+            "target_url_entry": "http://example.com/login",
+            "request_method_select": "POST",
+            "data_entry": "username=admin&password=FUZZ",
+            "wordlist_payload_entry": "range,1000-9999",
+            "hide_lines_entry": "0"
+        },
+        "example_output": "=====================================================================\nID           Response   Lines    Word       Chars       Payload\n=====================================================================\n\n00000:  C=200      12 L      45 W       600 C       '1234' (successful login size)\n\nTotal requests: 9000\n"
+    },
+    {
+        "name": "Header Fuzzing (User-Agent)",
+        "description": "Fuzzes the User-Agent header with a list of common agents.",
+        "options": {
+            "target_url_entry": "http://example.com/",
+            "headers_entry": "User-Agent: FUZZ",
+            "wordlist_payload_entry": "file,/usr/share/wordlists/wfuzz/general/user_agents.txt",
+            "hide_code_entry": "404"
+        },
+        "example_output": "=====================================================================\nID           Response   Lines    Word       Chars       Payload\n=====================================================================\n\n00000:  C=200      10 L      30 W       400 C       'Mozilla/5.0'\n00001:  C=200      10 L      30 W       400 C       'Googlebot'\n\nTotal requests: 50\n"
+    },
+    {
+        "name": "Fuzzing with Multiple Payloads",
+        "description": "Fuzzes both directory and file extension simultaneously.",
+        "options": {
+            "target_url_entry": "http://example.com/FUZZ.FUZ2Z",
+            "wordlist_payload_entry": "file,/usr/share/wordlists/wfuzz/general/common.txt",
+            "slice_payload_entry": "file,/usr/share/wordlists/wfuzz/general/extensions.txt",
+            "hide_code_entry": "404"
+        },
+        "example_output": "=====================================================================\nID           Response   Lines    Word       Chars       Payload\n=====================================================================\n\n00000:  C=200      5 L      15 W       200 C       'index','html'\n00001:  C=200      7 L      20 W       250 C       'config','php'\n\nTotal requests: 5000\n"
+    },
+    {
+        "name": "Recursive Directory Fuzzing (Depth 2)",
+        "description": "Recursively fuzzes directories up to a specified depth.",
+        "options": {
+            "target_url_entry": "http://example.com/FUZZ",
+            "wordlist_payload_entry": "file,/usr/share/wordlists/wfuzz/general/common.txt",
+            "hide_code_entry": "404",
+            "recursive_var": true,
+            "recursion_depth_entry": "2"
+        },
+        "example_output": "=====================================================================\nID           Response   Lines    Word       Chars       Payload\n=====================================================================\n\n00000:  C=200      3 L      10 W       123 C       'admin/'\n00001:  C=200      5 L      20 W       250 C       'admin/panel/'\n00002:  C=301      2 L      12 W       180 C       'admin/config.php'\n\nTotal requests: 2500\n"
+    },
+    {
+        "name": "Fuzzing with Proxy",
+        "description": "Routes Wfuzz traffic through a specified HTTP proxy.",
+        "options": {
+            "target_url_entry": "http://example.com/FUZZ",
+            "wordlist_payload_entry": "file,/usr/share/wordlists/wfuzz/general/common.txt",
+            "proxy_entry": "http://127.0.0.1:8080",
+            "hide_code_entry": "404"
+        },
+        "example_output": "=====================================================================\nID           Response   Lines    Word       Chars       Payload\n=====================================================================\n\n00000:  C=200      3 L      10 W       123 C       'index.html'\n\nTotal requests: 1000\n"
+    },
+    {
+        "name": "Fuzzing with Custom Delay",
+        "description": "Adds a delay between requests to avoid detection or rate limits.",
+        "options": {
+            "target_url_entry": "http://example.com/FUZZ",
+            "wordlist_payload_entry": "file,/usr/share/wordlists/wfuzz/general/common.txt",
+            "delay_entry": "0.5",
+            "hide_code_entry": "404"
+        },
+        "example_output": "=====================================================================\nID           Response   Lines    Word       Chars       Payload\n=====================================================================\n\n00000:  C=200      3 L      10 W       123 C       'index.html'\n\nTotal requests: 1000\n"
+    },
+    {
+        "name": "Fuzzing with Increased Concurrency",
+        "description": "Sends multiple requests concurrently to speed up fuzzing.",
+        "options": {
+            "target_url_entry": "http://example.com/FUZZ",
+            "wordlist_payload_entry": "file,/usr/share/wordlists/wfuzz/general/common.txt",
+            "concurrency_entry": "20",
+            "hide_code_entry": "404"
+        },
+        "example_output": "=====================================================================\nID           Response   Lines    Word       Chars       Payload\n=====================================================================\n\n00000:  C=200      3 L      10 W       123 C       'index.html'\n\nTotal requests: 1000\n"
+    },
+    {
+        "name": "Hide by Size",
+        "description": "Hides responses with a specific size (useful for filtering default error pages).",
+        "options": {
+            "target_url_entry": "http://example.com/FUZZ",
+            "wordlist_payload_entry": "file,/usr/share/wordlists/wfuzz/general/common.txt",
+            "hide_size_entry": "1234"
+        },
+        "example_output": "=====================================================================\nID           Response   Lines    Word       Chars       Payload\n=====================================================================\n\n00000:  C=200      5 L      15 W       200 C       'admin'\n\nTotal requests: 1000\n"
+    },
+    {
+        "name": "Show by Lines",
+        "description": "Shows only responses with a specific number of lines.",
+        "options": {
+            "target_url_entry": "http://example.com/FUZZ",
+            "wordlist_payload_entry": "file,/usr/share/wordlists/wfuzz/general/common.txt",
+            "show_lines_entry": "10"
+        },
+        "example_output": "=====================================================================\nID           Response   Lines    Word       Chars       Payload\n=====================================================================\n\n00000:  C=200      10 L      30 W       400 C       'config.php'\n\nTotal requests: 1000\n"
+    },
+    {
+        "name": "Fuzzing with Base64 Encoder",
+        "description": "Encodes the payload using Base64.",
+        "options": {
+            "target_url_entry": "http://example.com/param=FUZZ",
+            "wordlist_payload_entry": "file,/usr/share/wordlists/wfuzz/general/common.txt",
+            "encoders_entry": "base64",
+            "hide_code_entry": "404"
+        },
+        "example_output": "=====================================================================\nID           Response   Lines    Word       Chars       Payload\n=====================================================================\n\n00000:  C=200      3 L      10 W       123 C       'aW5kZXguaHRtbA=='\n\nTotal requests: 1000\n"
+    },
+    {
+        "name": "Fuzzing with Calibration",
+        "description": "Performs a calibration phase to detect common responses.",
+        "options": {
+            "target_url_entry": "http://example.com/FUZZ",
+            "wordlist_payload_entry": "file,/usr/share/wordlists/wfuzz/general/common.txt",
+            "calibration_var": true
+        },
+        "example_output": ":: Calibration ::\n* Calibrating for 404 responses. (10 requests)\n* Calibration complete. Hiding 404 responses.\n\n=====================================================================\nID           Response   Lines    Word       Chars       Payload\n=====================================================================\n\n00000:  C=200      3 L      10 W       123 C       'index.html'\n\nTotal requests: 1010\n"
+    },
+    {
+        "name": "Fuzzing with Request File",
+        "description": "Uses a raw HTTP request from a file as a template for fuzzing.",
+        "options": {
+            "target_url_entry": "http://example.com/",
+            "wordlist_payload_entry": "file,/usr/share/wordlists/wfuzz/general/common.txt",
+            "request_file_var": true,
+            "reqfile_replace_entry": "request.txt"
+        },
+        "example_output": "=====================================================================\nID           Response   Lines    Word       Chars       Payload\n=====================================================================\n\n00000:  C=200      3 L      10 W       123 C       'admin'\n\nTotal requests: 1000\n"
+    }
+]

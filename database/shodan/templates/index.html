@@ -1,0 +1,1547 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shodan Web GUI</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons CDN -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #1a202c; /* Dark background */
+            color: #e2e8f0; /* Light text */
+        }
+        .tab-button.active {
+            background-color: #3498DB; /* Peter River Blue */
+            color: black;
+            font-weight: bold;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        /* Custom scrollbar for output area */
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 12px;
+            height: 12px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #2C3E50; /* Dark Blue/Grey */
+            border-radius: 10px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background-color: #3498DB; /* Peter River Blue */
+            border-radius: 10px;
+            border: 3px solid #2C3E50;
+        }
+        .custom-scrollbar::-webkit-scrollbar-corner {
+            background: #2C3E50;
+        }
+
+        /* Specific colors for Shodan output */
+        .output-green { color: #2ECC71; } /* Emerald Green */
+        .output-red { color: #E74C3C; }   /* Alizarin Red */
+        .output-blue { color: #3498DB; }  /* Peter River Blue */
+        .output-orange { color: #F39C12; } /* Orange */
+        .output-default { color: #ECF0F1; } /* Light Grey */
+        .highlight { background-color: yellow; color: black; }
+
+        /* Help popup styling */
+        .help-popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #2C3E50; /* Dark Blue/Grey */
+            border-radius: 0.5rem;
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            padding: 1.5rem;
+            width: 90%;
+            max-width: 500px;
+            max-height: 80vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            border: 1px solid #3498DB; /* Add a border for better visibility */
+        }
+        .help-popup-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 999;
+        }
+
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.8); /* Dark modal background */
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-content {
+            background-color: #1a202c; /* Modal background */
+            margin: auto;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+            width: 90%;
+            max-width: 700px;
+            max-height: 90vh;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid #3498DB; /* Blue border for modal */
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #3498DB;
+            margin-bottom: 15px;
+        }
+        .modal-header h2 {
+            @apply text-xl font-semibold text-blue-400; /* Blue modal title */
+        }
+        .modal-close {
+            @apply text-gray-400 hover:text-blue-400 text-2xl font-bold;
+            cursor: pointer;
+        }
+        .modal-body {
+            flex-grow: 1;
+            overflow-y: auto;
+            @apply text-gray-300;
+        }
+        .modal-footer {
+            padding-top: 15px;
+            border-top: 1px solid #3498DB;
+            margin-top: 15px;
+            text-align: right;
+        }
+
+        /* Input field styling */
+        input[type="text"], input[type="number"], select, textarea {
+            @apply bg-gray-600 text-white rounded-md border border-gray-500 shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 p-2;
+        }
+        input[type="checkbox"] {
+            @apply form-checkbox h-5 w-5 text-blue-600 rounded bg-gray-600 border-gray-500;
+        }
+
+        /* Button styling */
+        .btn-primary {
+            @apply px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 flex items-center justify-center transition-colors duration-200;
+        }
+        .btn-secondary {
+            @apply px-4 py-2 bg-gray-700 text-gray-200 rounded-md hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-opacity-50 flex items-center justify-center transition-colors duration-200;
+        }
+        .btn-success {
+            @apply px-6 py-3 bg-green-600 text-white rounded-lg text-lg font-semibold hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50 flex items-center transition-colors duration-200 transform hover:scale-105;
+        }
+        .btn-danger {
+            @apply px-6 py-3 bg-red-600 text-white rounded-lg text-lg font-semibold hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50 flex items-center transition-colors duration-200 transform hover:scale-105;
+        }
+        .btn-info {
+            @apply px-6 py-3 bg-purple-600 text-white rounded-lg text-lg font-semibold hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50 flex items-center transition-colors duration-200 transform hover:scale-105;
+        }
+    </style>
+</head>
+<body class="p-4 min-h-screen flex flex-col items-center">
+    <div class="bg-gray-800 p-6 rounded-lg shadow-xl w-full max-w-6xl mb-6">
+        <div class="flex items-center justify-between mb-6">
+            <h1 class="text-3xl font-bold text-blue-400">Shodan Web GUI</h1>
+            <div class="flex space-x-2">
+                <button id="install_shodan_linux_button" class="btn-primary">
+                    <i data-lucide="download" class="w-5 h-5 mr-2"></i> Install Shodan (Linux)
+                </button>
+                <button id="install_shodan_termux_button" class="btn-primary">
+                    <i data-lucide="download" class="w-5 h-5 mr-2"></i> Install Shodan (Termux)
+                </button>
+                <button id="download_shodan_windows_button" class="btn-primary">
+                    <i data-lucide="download" class="w-5 h-5 mr-2"></i> Install Shodan (Windows)
+                </button>
+            </div>
+        </div>
+
+        <!-- API Key Input -->
+        <div class="bg-gray-700 p-4 rounded-lg shadow-md mb-4">
+            <h2 class="text-xl font-semibold text-blue-300 mb-2">Shodan API Key</h2>
+            <div class="flex items-center">
+                <label for="shodan_api_key_entry" class="w-48 text-right pr-4">API Key:</label>
+                <input type="text" id="shodan_api_key_entry" name="shodan_api_key_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" placeholder="Enter your Shodan API Key" onkeyup="generateCommand()">
+                <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Your Shodan API Key. You can find it on your Shodan account dashboard. It is required for most Shodan commands.')">?</button>
+            </div>
+        </div>
+
+        <!-- Tabs Navigation -->
+        <div class="flex flex-wrap justify-center bg-gray-700 rounded-t-lg p-2 mb-4">
+            <button class="tab-button px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200 hover:bg-blue-600 active" data-tab="search" data-command-type="search">Search</button>
+            <button class="tab-button px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200 hover:bg-blue-600" data-tab="host" data-command-type="host">Host Lookup</button>
+            <button class="tab-button px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200 hover:bg-blue-600" data-tab="exploit-search" data-command-type="exploit_search">Exploit Search</button>
+            <button class="tab-button px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200 hover:bg-blue-600" data-tab="dns-lookup" data-command-type="dns_lookup">DNS Lookup</button>
+            <button class="tab-button px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200 hover:bg-blue-600" data-tab="dns-reverse" data-command-type="dns_reverse">DNS Reverse</button>
+            <button class="tab-button px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200 hover:bg-blue-600" data-tab="myip" data-command-type="myip">My IP</button>
+            <button class="tab-button px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200 hover:bg-blue-600" data-tab="account-profile" data-command-type="account_profile">Account Profile</button>
+            <button class="tab-button px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200 hover:bg-blue-600" data-tab="examples">Examples</button>
+        </div>
+
+        <!-- Tab Content -->
+        <div id="tab-content-container" class="bg-gray-700 p-4 rounded-b-lg mb-4 max-h-[500px] overflow-y-auto custom-scrollbar">
+            <!-- Search Tab -->
+            <div id="search" class="tab-content active">
+                <h2 class="text-xl font-semibold text-blue-300 mb-4">Shodan Search</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="flex items-center">
+                        <label for="search_query_entry" class="w-48 text-right pr-4">Search Query:</label>
+                        <input type="text" id="search_query_entry" name="search_query_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="generateCommand()">
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('The search query for Shodan (e.g., \'apache\', \'port:80 country:US\', \'vuln:CVE-2021-XXXX\').')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <label for="search_limit_entry" class="w-48 text-right pr-4">Limit Results (--limit):</label>
+                        <input type="number" id="search_limit_entry" name="search_limit_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="generateCommand()">
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('The number of results to return (default: 100).')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <label for="search_fields_entry" class="w-48 text-right pr-4">Fields to Display (--fields):</label>
+                        <input type="text" id="search_fields_entry" name="search_fields_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="generateCommand()">
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Comma-separated list of fields to show (e.g., \'ip_str,port,org,os\').')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <label for="search_dataview_entry" class="w-48 text-right pr-4">Data View (--dataview):</label>
+                        <input type="text" id="search_dataview_entry" name="search_dataview_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="generateCommand()">
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('View results as a different data type (e.g., \'ports\', \'vulns\').')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <label for="search_minmax_entry" class="w-48 text-right pr-4">Min/Max Filter (--minmax):</label>
+                        <input type="text" id="search_minmax_entry" name="search_minmax_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="generateCommand()">
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Filter results by a min/max range (e.g., \'port:80-443\').')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <label for="search_facets_entry" class="w-48 text-right pr-4">Facets (--facets):</label>
+                        <input type="text" id="search_facets_entry" name="search_facets_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="generateCommand()">
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Comma-separated list of facets to return (e.g., \'country,os,port\').')">?</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Host Lookup Tab -->
+            <div id="host" class="tab-content">
+                <h2 class="text-xl font-semibold text-blue-300 mb-4">Shodan Host Lookup</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="flex items-center">
+                        <label for="host_ip_entry" class="w-48 text-right pr-4">IP Address:</label>
+                        <input type="text" id="host_ip_entry" name="host_ip_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="generateCommand()">
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('The IP address of the host to look up.')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" id="host_history_var" name="host_history_var" class="form-checkbox h-5 w-5 text-blue-600 rounded bg-gray-600 border-gray-500" onchange="generateCommand()">
+                        <label for="host_history_var" class="ml-2">Show History (--history)</label>
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Show the historical data for the host.')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <label for="host_dataview_entry" class="w-48 text-right pr-4">Data View (--dataview):</label>
+                        <input type="text" id="host_dataview_entry" name="host_dataview_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="generateCommand()">
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('View results as a different data type (e.g., \'ports\', \'vulns\').')">?</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Exploit Search Tab -->
+            <div id="exploit-search" class="tab-content">
+                <h2 class="text-xl font-semibold text-blue-300 mb-4">Shodan Exploit Search</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="flex items-center">
+                        <label for="exploit_query_entry" class="w-48 text-right pr-4">Exploit Query:</label>
+                        <input type="text" id="exploit_query_entry" name="exploit_query_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="generateCommand()">
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('The search query for exploits (e.g., \'apache struts\', \'CVE-2017-XXXX\').')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <label for="exploit_author_entry" class="w-48 text-right pr-4">Author (--author):</label>
+                        <input type="text" id="exploit_author_entry" name="exploit_author_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="generateCommand()">
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Filter by the author of the exploit.')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <label for="exploit_platform_entry" class="w-48 text-right pr-4">Platform (--platform):</label>
+                        <input type="text" id="exploit_platform_entry" name="exploit_platform_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="generateCommand()">
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Filter by the platform the exploit targets (e.g., \'windows\', \'linux\').')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <label for="exploit_type_entry" class="w-48 text-right pr-4">Type (--type):</label>
+                        <input type="text" id="exploit_type_entry" name="exploit_type_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="generateCommand()">
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Filter by the type of exploit (e.g., \'remote\', \'local\').')">?</button>
+                    </div>
+                    <div class="flex items-center">
+                        <label for="exploit_port_entry" class="w-48 text-right pr-4">Port (--port):</label>
+                        <input type="number" id="exploit_port_entry" name="exploit_port_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="generateCommand()">
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('Filter by the port associated with the exploit.')">?</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- DNS Lookup Tab -->
+            <div id="dns-lookup" class="tab-content">
+                <h2 class="text-xl font-semibold text-blue-300 mb-4">Shodan DNS Lookup</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="flex items-center">
+                        <label for="dns_lookup_hostname_entry" class="w-48 text-right pr-4">Hostname:</label>
+                        <input type="text" id="dns_lookup_hostname_entry" name="dns_lookup_hostname_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="generateCommand()">
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('The hostname to perform a DNS lookup on (e.g., \'google.com\').')">?</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- DNS Reverse Tab -->
+            <div id="dns-reverse" class="tab-content">
+                <h2 class="text-xl font-semibold text-blue-300 mb-4">Shodan DNS Reverse Lookup</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="flex items-center">
+                        <label for="dns_reverse_ip_entry" class="w-48 text-right pr-4">IP Address:</label>
+                        <input type="text" id="dns_reverse_ip_entry" name="dns_reverse_ip_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="generateCommand()">
+                        <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-2 py-1 rounded" onclick="showHelp('The IP address to perform a reverse DNS lookup on (e.g., \'8.8.8.8\').')">?</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- My IP Tab -->
+            <div id="myip" class="tab-content">
+                <h2 class="text-xl font-semibold text-blue-300 mb-4">Shodan My IP</h2>
+                <p class="text-gray-300">This command will display your current external IP address as seen by Shodan.</p>
+            </div>
+
+            <!-- Account Profile Tab -->
+            <div id="account-profile" class="tab-content">
+                <h2 class="text-xl font-semibold text-blue-300 mb-4">Shodan Account Profile</h2>
+                <p class="text-gray-300">This command will display information about your Shodan account, including your API key, query credits, and scan credits.</p>
+            </div>
+
+            <!-- Examples Tab -->
+            <div id="examples" class="tab-content">
+                <h2 class="text-xl font-semibold text-blue-300 mb-4">Examples</h2>
+                <div class="mb-4 flex items-center">
+                    <label for="example_search_entry" class="w-32 text-right pr-4">Search Examples:</label>
+                    <input type="text" id="example_search_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="filterExamples()">
+                    <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded" onclick="clearExampleSearch()">Clear Search</button>
+                </div>
+                <div id="examples_list" class="grid grid-cols-1 gap-4">
+                    <!-- Examples will be loaded here by JavaScript -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Generated Command -->
+        <div class="bg-gray-700 p-4 rounded-lg shadow-md mb-4">
+            <h2 class="text-xl font-semibold text-blue-300 mb-2">Generated Shodan Command</h2>
+            <textarea id="command_text" class="w-full h-24 p-2 rounded bg-gray-900 text-blue-400 font-mono text-sm resize-none custom-scrollbar" readonly></textarea>
+            <div class="flex justify-end mt-2 space-x-2">
+                <button class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md transition-colors duration-200" onclick="copyCommand()">Copy Command</button>
+                <button class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md transition-colors duration-200" onclick="generateCommand()">Generate Command</button>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex justify-center space-x-4 mb-4">
+            <button id="run_shodan_button" class="btn-success">
+                <i data-lucide="play" class="w-6 h-6 mr-2"></i> Run Shodan
+            </button>
+            <button class="btn-danger" onclick="clearOutput()">
+                <i data-lucide="trash-2" class="w-6 h-6 mr-2"></i> Clear Output
+            </button>
+            <button class="btn-info" onclick="saveOutput()">
+                <i data-lucide="save" class="w-6 h-6 mr-2"></i> Save Output
+            </button>
+        </div>
+
+        <!-- Status Bar -->
+        <div id="status_bar" class="bg-gray-900 text-white text-sm p-2 rounded-md mb-4 text-center">Ready</div>
+
+        <!-- Shodan Output -->
+        <div class="bg-gray-700 p-4 rounded-lg shadow-md">
+            <h2 class="text-xl font-semibold text-blue-300 mb-2">Shodan Output</h2>
+            <div class="flex items-center mb-2">
+                <label for="search_entry" class="pr-2">Search:</label>
+                <input type="text" id="search_entry" class="flex-1 p-2 rounded bg-gray-600 text-white border border-gray-500" onkeyup="searchOutput()">
+                <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded" onclick="searchOutput()">Search</button>
+                <button class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded" onclick="clearSearchHighlight()">Clear Search</button>
+            </div>
+            <pre id="output_text" class="w-full h-96 p-2 rounded bg-gray-900 text-gray-200 font-mono text-sm overflow-auto custom-scrollbar"></pre>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="text-gray-500 text-sm mt-4">
+        Created by khedr0x00
+    </div>
+
+    <!-- Global Message/Alert Modal -->
+    <div id="messageModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="messageModalTitle">Alert</h2>
+                <span class="modal-close" onclick="closeMessageModal()">&times;</span>
+            </div>
+            <div class="modal-body" id="messageModalBody"></div>
+            <div class="modal-footer">
+                <button onclick="closeMessageModal()" class="btn-primary">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirmation Modal for Linux/Termux Installation -->
+    <div id="installConfirmModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="installConfirmModalTitle">Confirm Installation</h2>
+                <span class="modal-close" onclick="closeInstallConfirmModal()">&times;</span>
+            </div>
+            <div class="modal-body" id="installConfirmModalBody"></div>
+            <div class="modal-footer flex justify-end space-x-4">
+                <button onclick="closeInstallConfirmModal()" class="btn-secondary">Cancel</button>
+                <button id="confirmInstallButton" class="btn-success">Install Now</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Example Output Modal -->
+    <div id="exampleOutputModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="exampleOutputModalTitle">Example Output</h2>
+                <span class="modal-close" onclick="closeExampleOutputModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <pre id="exampleOutputModalText" class="w-full h-auto p-2 rounded bg-gray-900 text-gray-200 font-mono text-sm overflow-auto custom-scrollbar"></pre>
+            </div>
+            <div class="modal-footer">
+                <button onclick="closeExampleOutputModal()" class="btn-primary">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize Lucide icons
+        lucide.createIcons();
+
+        // Global variable to store examples
+        let allExamples = [];
+        let currentScanId = null;
+        let pollInterval = null;
+        let searchStartIndex = 0; // For incremental search in output
+        let currentOutputBuffer = ""; // Buffer to accumulate real-time output
+        let currentCommandType = "search"; // Default command type
+
+        // Function to show/hide tabs
+        function showTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            document.querySelectorAll('.tab-button').forEach(button => {
+                button.classList.remove('active');
+            });
+            const activeButton = document.querySelector(`.tab-button[data-tab="${tabId}"]`);
+            activeButton.classList.add('active');
+            document.getElementById(tabId).classList.add('active');
+
+            // Set the current command type based on the active tab's data-command-type attribute
+            currentCommandType = activeButton.dataset.commandType || tabId; // Fallback to tabId if data-command-type is not set
+            generateCommand(); // Regenerate command on tab change
+        }
+
+        // Event listeners for tab buttons
+        document.querySelectorAll('.tab-button').forEach(button => {
+            button.addEventListener('click', () => {
+                showTab(button.dataset.tab);
+            });
+        });
+
+        // --- Helper for showing custom modals ---
+        function showMessageModal(title, message, isHtml = false) {
+            document.getElementById('messageModalTitle').innerText = title;
+            const messageBody = document.getElementById('messageModalBody');
+            if (isHtml) {
+                messageBody.innerHTML = message;
+            } else {
+                messageBody.innerText = message;
+            }
+            document.getElementById('messageModal').style.display = 'flex';
+        }
+
+        function closeMessageModal() {
+            document.getElementById('messageModal').style.display = 'none';
+        }
+
+        function showInstallConfirmModal(title, message, onConfirm) {
+            document.getElementById('installConfirmModalTitle').innerText = title;
+            document.getElementById('installConfirmModalBody').innerHTML = message;
+            const confirmButton = document.getElementById('confirmInstallButton');
+            confirmButton.onclick = () => {
+                closeInstallConfirmModal();
+                onConfirm();
+            };
+            document.getElementById('installConfirmModal').style.display = 'flex';
+        }
+
+        function closeInstallConfirmModal() {
+            document.getElementById('installConfirmModal').style.display = 'none';
+        }
+
+        function showExampleOutputModal(title, output) {
+            document.getElementById('exampleOutputModalTitle').innerText = title;
+            const outputPre = document.getElementById('exampleOutputModalText');
+            outputPre.innerHTML = ''; // Clear previous content
+
+            // Apply coloring based on Shodan-like output
+            insertColoredText(outputPre, output);
+            document.getElementById('exampleOutputModal').style.display = 'flex';
+        }
+
+        function closeExampleOutputModal() {
+            document.getElementById('exampleOutputModal').style.display = 'none';
+        }
+
+
+        // Function to collect form data
+        function getFormData() {
+            const formData = {};
+            // Add the current command type
+            formData['command_type'] = currentCommandType;
+
+            // Get API key from its dedicated input
+            formData['shodan_api_key_entry'] = document.getElementById('shodan_api_key_entry').value;
+
+            // Collect data from all relevant input fields within the tab-content-container
+            document.querySelectorAll('#tab-content-container input, #tab-content-container select, #tab-content-container textarea').forEach(element => {
+                if (element.type === 'checkbox') {
+                    formData[element.id] = element.checked;
+                } else if (element.type === 'number') {
+                    formData[element.id] = element.value ? parseFloat(element.value) : '';
+                } else {
+                    formData[element.id] = element.value;
+                }
+            });
+            return formData;
+        }
+
+        // Function to generate Shodan command
+        async function generateCommand() {
+            const formData = getFormData();
+            try {
+                const response = await fetch('/generate_command', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(formData),
+                });
+                const data = await response.json();
+                document.getElementById('command_text').value = data.command;
+            } catch (error) {
+                console.error('Error generating command:', error);
+                document.getElementById('command_text').value = 'Error generating command.';
+            }
+        }
+
+        // Function to copy command to clipboard
+        function copyCommand() {
+            const commandText = document.getElementById('command_text');
+            commandText.select();
+            document.execCommand('copy');
+            showMessageModal('Command Copied', 'The command has been copied to your clipboard!');
+        }
+
+        // Function to run Shodan
+        async function runShodan() {
+            if (currentScanId) {
+                showMessageModal('Shodan Running', 'Shodan is already running. Please wait for it to finish.');
+                return;
+            }
+
+            const command = document.getElementById('command_text').value;
+            if (!command) {
+                showMessageModal('Error', 'No command to run.');
+                return;
+            }
+
+            // Disable run button and clear output
+            document.getElementById('run_shodan_button').disabled = true;
+            document.getElementById('output_text').innerHTML = '';
+            currentOutputBuffer = "";
+            clearSearchHighlight();
+            showStatus('Starting Shodan command...', 'blue');
+
+            try {
+                const response = await fetch('/run_shodan', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ command: command }),
+                });
+                const data = await response.json();
+                if (data.status === 'error') {
+                    showMessageModal('Error', data.message);
+                    showStatus(`Error: ${data.message}`, 'red');
+                    document.getElementById('run_shodan_button').disabled = false;
+                } else {
+                    currentScanId = data.scan_id;
+                    showStatus(`Shodan command started (ID: ${currentScanId}). Fetching output...`, 'blue');
+                    // Start polling for output
+                    pollInterval = setInterval(pollOutput, 500); // Poll every 500ms
+                }
+            } catch (error) {
+                console.error('Error starting Shodan:', error);
+                showMessageModal('Error', 'An error occurred while starting Shodan.');
+                showStatus('An error occurred while starting Shodan.', 'red');
+                document.getElementById('run_shodan_button').disabled = false;
+            }
+        }
+
+        // Polling for Shodan output
+        async function pollOutput() {
+            if (!currentScanId) {
+                clearInterval(pollInterval);
+                pollInterval = null;
+                return;
+            }
+
+            try {
+                const response = await fetch(`/get_scan_output/${currentScanId}`);
+                const data = await response.json();
+                const outputTextElement = document.getElementById('output_text');
+                
+                if (data.output) {
+                    // Only append new output to the buffer
+                    const newOutputSegment = data.output.substring(currentOutputBuffer.length);
+                    currentOutputBuffer += newOutputSegment;
+                    insertColoredText(outputTextElement, currentOutputBuffer);
+                }
+
+                if (data.status === 'running') {
+                    showStatus('Shodan is running...', 'blue');
+                } else if (data.status === 'completed' || data.status === 'success' || data.status === 'error') {
+                    clearInterval(pollInterval);
+                    pollInterval = null;
+                    currentScanId = null;
+                    currentOutputBuffer = data.output; // Get final complete output
+                    insertColoredText(outputTextElement, currentOutputBuffer);
+                    if (data.status === 'completed' || data.status === 'success') {
+                        showStatus('Shodan command completed successfully.', 'green');
+                    } else {
+                        showStatus(`Command failed: ${data.message || 'Unknown error'}`, 'red');
+                        showMessageModal('Command Error', data.message || 'An unknown error occurred during the command execution.');
+                    }
+                    document.getElementById('run_shodan_button').disabled = false;
+                    // Re-enable install buttons if they were disabled for installation
+                    document.getElementById('install_shodan_linux_button').disabled = false;
+                    document.getElementById('install_shodan_termux_button').disabled = false;
+                    document.getElementById('download_shodan_windows_button').disabled = false;
+                } else if (data.status === 'not_found') {
+                    clearInterval(pollInterval);
+                    pollInterval = null;
+                    currentScanId = null;
+                    showStatus(`Command failed: ${data.message || 'Process ID not found or expired.'}`, 'red');
+                    showMessageModal('Command Error', data.message || 'Process ID not found or expired.');
+                    document.getElementById('run_shodan_button').disabled = false;
+                    // Re-enable install buttons if they were disabled for installation
+                    document.getElementById('install_shodan_linux_button').disabled = false;
+                    document.getElementById('install_shodan_termux_button').disabled = false;
+                    document.getElementById('download_shodan_windows_button').disabled = false;
+                }
+            } catch (error) {
+                console.error('Error polling output:', error);
+                showMessageModal('Polling Error', 'An error occurred while fetching output.');
+                showStatus('An error occurred while fetching output.', 'red');
+                clearInterval(pollInterval);
+                pollInterval = null;
+                currentScanId = null;
+                document.getElementById('run_shodan_button').disabled = false;
+                // Re-enable install buttons if they were disabled for installation
+                document.getElementById('install_shodan_linux_button').disabled = false;
+                document.getElementById('install_shodan_termux_button').disabled = false;
+                document.getElementById('download_shodan_windows_button').disabled = false;
+            }
+        }
+
+        // Helper to insert colored text based on Shodan output patterns
+        function insertColoredText(element, text) {
+            element.innerHTML = ''; // Clear current content to re-insert with spans
+            const lines = text.split('\n');
+            const fragment = document.createDocumentFragment();
+
+            lines.forEach(line => {
+                const span = document.createElement('span');
+                let className = 'output-default';
+
+                if (line.toLowerCase().includes('error') || line.toLowerCase().includes('failed')) {
+                    className = 'output-red';
+                } else if (line.toLowerCase().includes('shodan command finished') || line.toLowerCase().includes('completed') || line.toLowerCase().includes('executing command') || line.toLowerCase().includes('detected')) {
+                    className = 'output-blue';
+                } else if (line.toLowerCase().includes('warning')) {
+                    className = 'output-orange';
+                } else if (line.match(/^\d+\.\d+\.\d+\.\d+:\d+/)) { // Simple IP:Port pattern for green
+                    className = 'output-green';
+                }
+                
+                span.className = className;
+                span.textContent = line + '\n'; // Add newline back for pre tag
+                fragment.appendChild(span);
+            });
+            element.appendChild(fragment);
+            element.scrollTop = element.scrollHeight; // Scroll to bottom
+        }
+
+        // Function to clear output
+        function clearOutput() {
+            document.getElementById('output_text').innerHTML = '';
+            currentOutputBuffer = "";
+            showStatus('Ready');
+            clearSearchHighlight();
+            if (currentScanId) {
+                clearInterval(pollInterval);
+                pollInterval = null;
+                currentScanId = null;
+            }
+        }
+
+        // Function to save output
+        async function saveOutput() {
+            const outputContent = document.getElementById('output_text').innerText;
+            if (!outputContent.trim()) {
+                showMessageModal('Save Output', 'No output to save.');
+                return;
+            }
+
+            // Prompt for filename (simple browser prompt)
+            const defaultFilename = `shodan_output_${new Date().toISOString().slice(0,10)}.txt`;
+            const filename = prompt("Enter filename to save:", defaultFilename);
+
+            if (filename) {
+                try {
+                    const response = await fetch('/save_output', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ content: outputContent, filename: filename })
+                    });
+                    const data = await response.json();
+
+                    if (data.status === 'success') {
+                        showMessageModal('Save Output', `Output saved on the server. You can download it now.`);
+                        // Offer download link
+                        if (data.download_url) {
+                            const downloadLink = document.createElement('a');
+                            downloadLink.href = data.download_url;
+                            downloadLink.download = filename; // Suggest filename for download
+                            downloadLink.style.display = 'none';
+                            document.body.appendChild(downloadLink);
+                            downloadLink.click();
+                            document.body.removeChild(downloadLink);
+                        }
+                    } else {
+                        showMessageModal('Save Error', `Failed to save file: ${data.message}`);
+                    }
+                } catch (error) {
+                    console.error('Error saving output:', error);
+                    showMessageModal('Save Error', `Failed to save file: ${error.message}`);
+                }
+            }
+        }
+
+        // Function to update status bar
+        function showStatus(message, color = 'white') {
+            const statusBar = document.getElementById('status_bar');
+            statusBar.textContent = message;
+            statusBar.style.color = color;
+        }
+
+        // Function to search output
+        function searchOutput() {
+            const searchTerm = document.getElementById('search_entry').value.trim().toLowerCase();
+            const outputTextElement = document.getElementById('output_text');
+            const fullText = outputTextElement.textContent; // Use textContent to get plain text
+
+            clearSearchHighlight(); // Clear existing highlights first
+
+            if (!searchTerm) {
+                searchStartIndex = 0;
+                return;
+            }
+
+            let found = false;
+            let newContent = '';
+            let lastIndex = 0;
+
+            const regex = new RegExp(searchTerm, 'gi'); // 'gi' for global and case-insensitive
+
+            let match;
+            while ((match = regex.exec(fullText)) !== null) {
+                found = true;
+                const index = match.index;
+                const matchedText = match[0];
+
+                // Append content before the match
+                newContent += escapeHtml(fullText.substring(lastIndex, index));
+                // Append the highlighted match
+                newContent += `<mark class="highlight">${escapeHtml(matchedText)}</mark>`;
+                lastIndex = index + matchedText.length;
+            }
+            newContent += escapeHtml(fullText.substring(lastIndex)); // Append remaining content
+
+            outputTextElement.innerHTML = newContent;
+
+            if (!found) {
+                showMessageModal('Search', `No occurrences of '${searchTerm}' found.`);
+            } else {
+                // Scroll to the first highlighted element
+                const firstHighlight = outputTextElement.querySelector('mark.highlight');
+                if (firstHighlight) {
+                    firstHighlight.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }
+        }
+
+        // Function to clear search highlight
+        function clearSearchHighlight() {
+            const outputTextElement = document.getElementById('output_text');
+            const currentContent = outputTextElement.textContent; // Get plain text content
+            outputTextElement.innerHTML = ''; // Clear existing content
+            insertColoredText(outputTextElement, currentContent); // Re-insert without highlights
+            searchStartIndex = 0;
+        }
+
+        // Function to show help popup
+        function showHelp(helpText) {
+            const overlay = document.createElement('div');
+            overlay.className = 'help-popup-overlay';
+            overlay.onclick = () => {
+                document.body.removeChild(overlay);
+                document.body.removeChild(popup);
+            };
+            document.body.appendChild(overlay);
+
+            const popup = document.createElement('div');
+            popup.className = 'help-popup';
+            popup.innerHTML = `
+                <h3 class="text-xl font-bold text-blue-300 mb-4">Help</h3>
+                <div class="flex-grow overflow-y-auto custom-scrollbar p-2 bg-gray-600 rounded text-gray-200 text-sm mb-4">
+                    ${helpText.replace(/\n/g, '<br>')}
+                </div>
+                <button class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md self-center" onclick="this.parentNode.parentNode.removeChild(this.parentNode); document.body.removeChild(document.querySelector('.help-popup-overlay'));">Close</button>
+            `;
+            document.body.appendChild(popup);
+        }
+
+        // --- Examples Tab Functions ---
+        async function loadExamples() {
+            try {
+                // Fetch examples from the backend (assuming /get_examples endpoint)
+                const response = await fetch('/get_examples');
+                if (response.ok) {
+                    allExamples = await response.json();
+                } else {
+                    // Fallback to hardcoded examples if backend fails
+                    console.warn("Could not fetch examples from backend, using hardcoded examples.");
+                    allExamples = [
+                        {
+                            "name": "Basic Web Server Search",
+                            "description": "Finds web servers (port 80) in Germany.",
+                            "options": {
+                                "search_query_entry": "port:80 country:DE",
+                                "search_limit_entry": "10",
+                                "search_fields_entry": "ip_str,port,org,os",
+                                "command_type": "search"
+                            },
+                            "example_output": "1.1.1.1:80 - Organization: Example Corp, OS: Linux\n2.2.2.2:80 - Organization: Another Org, OS: Ubuntu\n..."
+                        },
+                        {
+                            "name": "Vulnerable FTP Servers",
+                            "description": "Searches for FTP servers with known vulnerabilities (CVE-2017-XXXX).",
+                            "options": {
+                                "search_query_entry": "port:21 \"220 FTP Server\" vuln:CVE-2017",
+                                "search_limit_entry": "5",
+                                "search_fields_entry": "ip_str,port,vulns",
+                                "command_type": "search"
+                            },
+                            "example_output": "192.168.1.10:21 - Vulns: CVE-2017-XXXX\n192.168.1.11:21 - Vulns: CVE-2017-YYYY\n..."
+                        },
+                        {
+                            "name": "MongoDB Instances without Authentication",
+                            "description": "Finds MongoDB databases exposed to the internet without authentication.",
+                            "options": {
+                                "search_query_entry": "mongodb port:27017 -authentication",
+                                "search_limit_entry": "15",
+                                "search_fields_entry": "ip_str,port,country,asn",
+                                "command_type": "search"
+                            },
+                            "example_output": "5.5.5.5:27017 - Country: US, ASN: AS12345\n6.6.6.6:27017 - Country: FR, ASN: AS67890\n..."
+                        },
+                        {
+                            "name": "RDP Servers in Specific Country",
+                            "description": "Lists RDP (Remote Desktop Protocol) servers in Brazil.",
+                            "options": {
+                                "search_query_entry": "port:3389 country:BR",
+                                "search_limit_entry": "20",
+                                "search_fields_entry": "ip_str,port,os,city",
+                                "command_type": "search"
+                            },
+                            "example_output": "10.0.0.1:3389 - OS: Windows, City: Sao Paulo\n10.0.0.2:3389 - OS: Windows, City: Rio de Janeiro\n..."
+                        },
+                        {
+                            "name": "Cameras with Default Passwords",
+                            "description": "Identifies network cameras with common default credentials.",
+                            "options": {
+                                "search_query_entry": "webcam default password",
+                                "search_limit_entry": "10",
+                                "search_fields_entry": "ip_str,port,product,http.title",
+                                "command_type": "search"
+                            },
+                            "example_output": "11.11.11.11:80 - Product: IP Camera, Title: Login\n12.12.12.12:8080 - Product: CCTV, Title: Admin Panel\n..."
+                        },
+                        {
+                            "name": "Host Information by IP",
+                            "description": "Retrieves detailed information about a specific IP address.",
+                            "options": {
+                                "host_ip_entry": "1.1.1.1",
+                                "host_history_var": true,
+                                "command_type": "host"
+                            },
+                            "example_output": "IP: 1.1.1.1\nOrganization: Example ISP\nCountry: US\nPorts: 22, 80, 443\nLast Update: 2023-01-01\n..."
+                        },
+                        {
+                            "name": "Search for specific CVE",
+                            "description": "Searches for systems vulnerable to a specific CVE (e.g., Heartbleed).",
+                            "options": {
+                                "search_query_entry": "vuln:CVE-2014-0160",
+                                "search_limit_entry": "10",
+                                "search_fields_entry": "ip_str,port,hostnames,vulns",
+                                "command_type": "search"
+                            },
+                            "example_output": "1.2.3.4:443 - Hostname: vulnerable.example.com, Vulns: CVE-2014-0160\n..."
+                        },
+                        {
+                            "name": "Search for Industrial Control Systems (ICS)",
+                            "description": "Finds exposed industrial control systems using common ICS ports.",
+                            "options": {
+                                "search_query_entry": "port:502,102,20000 product:Siemens,Schneider",
+                                "search_limit_entry": "5",
+                                "search_fields_entry": "ip_str,port,product,country",
+                                "command_type": "search"
+                            },
+                            "example_output": "192.168.10.1:502 - Product: Siemens S7, Country: DE\n..."
+                        },
+                        {
+                            "name": "Search for Open Databases",
+                            "description": "Identifies publicly accessible database services (e.g., MySQL, PostgreSQL).",
+                            "options": {
+                                "search_query_entry": "port:3306,5432,27017,6379,9200",
+                                "search_limit_entry": "10",
+                                "search_fields_entry": "ip_str,port,product,version,country",
+                                "command_type": "search"
+                            },
+                            "example_output": "203.0.113.1:3306 - Product: MySQL, Version: 5.7, Country: US\n..."
+                        },
+                        {
+                            "name": "Search for SSH Servers",
+                            "description": "Finds SSH servers.",
+                            "options": {
+                                "search_query_entry": "port:22",
+                                "search_limit_entry": "10",
+                                "search_fields_entry": "ip_str,port,os,version",
+                                "command_type": "search"
+                            },
+                            "example_output": "1.1.1.1:22 - OS: Linux, Version: OpenSSH 8.2\n..."
+                        },
+                        {
+                            "name": "Search for Apache Servers",
+                            "description": "Finds Apache HTTP servers.",
+                            "options": {
+                                "search_query_entry": "apache",
+                                "search_limit_entry": "10",
+                                "search_fields_entry": "ip_str,port,http.server,os",
+                                "command_type": "search"
+                            },
+                            "example_output": "1.1.1.1:80 - Server: Apache/2.4.41, OS: Ubuntu\n..."
+                        },
+                        {
+                            "name": "Search for Nginx Servers",
+                            "description": "Finds Nginx HTTP servers.",
+                            "options": {
+                                "search_query_entry": "nginx",
+                                "search_limit_entry": "10",
+                                "search_fields_entry": "ip_str,port,http.server,os",
+                                "command_type": "search"
+                            },
+                            "example_output": "1.1.1.1:80 - Server: nginx/1.18.0, OS: Debian\n..."
+                        },
+                        {
+                            "name": "Search for IIS Servers",
+                            "description": "Finds Microsoft IIS web servers.",
+                            "options": {
+                                "search_query_entry": "iis",
+                                "search_limit_entry": "10",
+                                "search_fields_entry": "ip_str,port,http.server,os",
+                                "command_type": "search"
+                            },
+                            "example_output": "1.1.1.1:80 - Server: Microsoft-IIS/10.0, OS: Windows\n..."
+                        },
+                        {
+                            "name": "Search for SCADA Systems",
+                            "description": "Finds SCADA systems (Supervisory Control and Data Acquisition).",
+                            "options": {
+                                "search_query_entry": "scada",
+                                "search_limit_entry": "5",
+                                "search_fields_entry": "ip_str,port,product,country",
+                                "command_type": "search"
+                            },
+                            "example_output": "1.1.1.1:502 - Product: Modbus/TCP, Country: US\n..."
+                        },
+                        {
+                            "name": "Search for Telnet Servers",
+                            "description": "Finds Telnet servers (port 23).",
+                            "options": {
+                                "search_query_entry": "port:23",
+                                "search_limit_entry": "10",
+                                "search_fields_entry": "ip_str,port,os",
+                                "command_type": "search"
+                            },
+                            "example_output": "1.1.1.1:23 - OS: Linux\n..."
+                        },
+                        {
+                            "name": "Search for SNMP Devices",
+                            "description": "Finds devices with SNMP (Simple Network Management Protocol) enabled.",
+                            "options": {
+                                "search_query_entry": "port:161",
+                                "search_limit_entry": "10",
+                                "search_fields_entry": "ip_str,port,product,os",
+                                "command_type": "search"
+                            },
+                            "example_output": "1.1.1.1:161 - Product: Cisco IOS, OS: Cisco IOS\n..."
+                        },
+                        {
+                            "name": "Search for Vulnerable WordPress Sites",
+                            "description": "Finds WordPress sites with known vulnerabilities.",
+                            "options": {
+                                "search_query_entry": "wordpress vuln:CVE",
+                                "search_limit_entry": "10",
+                                "search_fields_entry": "ip_str,port,http.title,vulns",
+                                "command_type": "search"
+                            },
+                            "example_output": "1.1.1.1:80 - Title: My WordPress Blog, Vulns: CVE-202X-XXXX\n..."
+                        },
+                        {
+                            "name": "Search for IoT Devices",
+                            "description": "Finds various Internet of Things (IoT) devices.",
+                            "options": {
+                                "search_query_entry": "iot",
+                                "search_limit_entry": "10",
+                                "search_fields_entry": "ip_str,port,product,country",
+                                "command_type": "search"
+                            },
+                            "example_output": "1.1.1.1:80 - Product: Smart Home Hub, Country: US\n..."
+                        },
+                        {
+                            "name": "Search for OpenSSH Servers with Specific Version",
+                            "description": "Finds OpenSSH servers running a specific version (e.g., 7.4).",
+                            "options": {
+                                "search_query_entry": "openssh 7.4",
+                                "search_limit_entry": "10",
+                                "search_fields_entry": "ip_str,port,version,os",
+                                "command_type": "search"
+                            },
+                            "example_output": "1.1.1.1:22 - Version: OpenSSH 7.4, OS: Debian\n..."
+                        },
+                        {
+                            "name": "Search for Databases in Specific City",
+                            "description": "Finds databases exposed in a particular city.",
+                            "options": {
+                                "search_query_entry": "port:3306 city:London",
+                                "search_limit_entry": "5",
+                                "search_fields_entry": "ip_str,port,product,country,city",
+                                "command_type": "search"
+                            },
+                            "example_output": "1.1.1.1:3306 - Product: MySQL, Country: GB, City: London\n..."
+                        },
+                        {
+                            "name": "Search for Devices by Organization",
+                            "description": "Finds devices belonging to a specific organization.",
+                            "options": {
+                                "search_query_entry": "org:\"Google LLC\"",
+                                "search_limit_entry": "10",
+                                "search_fields_entry": "ip_str,port,org,country",
+                                "command_type": "search"
+                            },
+                            "example_output": "1.1.1.1:443 - Org: Google LLC, Country: US\n..."
+                        },
+                        {
+                            "name": "Search for Devices by ASN",
+                            "description": "Finds devices within a specific Autonomous System Number (ASN).",
+                            "options": {
+                                "search_query_entry": "asn:AS15169",
+                                "search_limit_entry": "10",
+                                "search_fields_entry": "ip_str,port,asn,country",
+                                "command_type": "search"
+                            },
+                            "example_output": "1.1.1.1:80 - ASN: AS15169, Country: US\n..."
+                        },
+                        {
+                            "name": "Search for Devices with Specific HTTP Title",
+                            "description": "Finds web servers with a particular title in their HTTP response.",
+                            "options": {
+                                "search_query_entry": "http.title:\"Welcome to my server\"",
+                                "search_limit_entry": "5",
+                                "search_fields_entry": "ip_str,port,http.title",
+                                "command_type": "search"
+                            },
+                            "example_output": "1.1.1.1:80 - Title: Welcome to my server\n..."
+                        },
+                        {
+                            "name": "Search for Devices with Specific HTTP Body Content",
+                            "description": "Finds web servers containing specific text in their HTTP body.",
+                            "options": {
+                                "search_query_entry": "http.html:\"Powered by WordPress\"",
+                                "search_limit_entry": "5",
+                                "search_fields_entry": "ip_str,port,http.title",
+                                "command_type": "search"
+                            },
+                            "example_output": "1.1.1.1:80 - Title: My Blog\n..."
+                        },
+                        {
+                            "name": "Search for Devices by OS",
+                            "description": "Finds devices running a specific operating system.",
+                            "options": {
+                                "search_query_entry": "os:\"Windows Server 2012\"",
+                                "search_limit_entry": "10",
+                                "search_fields_entry": "ip_str,port,os,country",
+                                "command_type": "search"
+                            },
+                            "example_output": "1.1.1.1:3389 - OS: Windows Server 2012, Country: US\n..."
+                        },
+                        {
+                            "name": "Search for Devices by Product",
+                            "description": "Finds devices running a specific product (e.g., Apache, Nginx, OpenSSH).",
+                            "options": {
+                                "search_query_entry": "product:\"OpenSSH\"",
+                                "search_limit_entry": "10",
+                                "search_fields_entry": "ip_str,port,product,version",
+                                "command_type": "search"
+                            },
+                            "example_output": "1.1.1.1:22 - Product: OpenSSH, Version: 8.2\n..."
+                        },
+                        {
+                            "name": "Search for Devices by Version",
+                            "description": "Finds devices running a specific version of a product.",
+                            "options": {
+                                "search_query_entry": "nginx version:1.18.0",
+                                "search_limit_entry": "5",
+                                "search_fields_entry": "ip_str,port,product,version",
+                                "command_type": "search"
+                            },
+                            "example_output": "1.1.1.1:80 - Product: nginx, Version: 1.18.0\n..."
+                        },
+                        {
+                            "name": "Search for Devices by Port Range",
+                            "description": "Finds devices with open ports within a specified range.",
+                            "options": {
+                                "search_query_entry": "port:8000-9000",
+                                "search_limit_entry": "10",
+                                "search_fields_entry": "ip_str,port,product",
+                                "command_type": "search"
+                            },
+                            "example_output": "1.1.1.1:8080 - Product: Apache Tomcat\n..."
+                        },
+                        {
+                            "name": "Search for Devices with SSL Certificate Issuer",
+                            "description": "Finds devices with SSL certificates issued by a specific entity.",
+                            "options": {
+                                "search_query_entry": "ssl.cert.issuer.cn:\"Let's Encrypt\"",
+                                "search_limit_entry": "5",
+                                "search_fields_entry": "ip_str,port,ssl.cert.issuer.cn",
+                                "command_type": "search"
+                            },
+                            "example_output": "1.1.1.1:443 - Issuer: Let's Encrypt\n..."
+                        },
+                        {
+                            "name": "Search for Devices with HTTP Status Code",
+                            "description": "Finds web servers returning a specific HTTP status code.",
+                            "options": {
+                                "search_query_entry": "http.status:403",
+                                "search_limit_entry": "5",
+                                "search_fields_entry": "ip_str,port,http.status,http.title",
+                                "command_type": "search"
+                            },
+                            "example_output": "1.1.1.1:80 - Status: 403, Title: Forbidden\n..."
+                        },
+                        {
+                            "name": "Search for Devices with Anonymous FTP Login",
+                            "description": "Finds FTP servers allowing anonymous login.",
+                            "options": {
+                                "search_query_entry": "ftp.anon:true",
+                                "search_limit_entry": "5",
+                                "search_fields_entry": "ip_str,port,ftp.features",
+                                "command_type": "search"
+                            },
+                            "example_output": "1.1.1.1:21 - Features: anonymous login allowed\n..."
+                        }
+                    ];
+                }
+                filterExamples(); // Display all examples initially
+            } catch (error) {
+                console.error('Error loading examples:', error);
+                showStatus('Error loading examples. Using hardcoded examples.', 'red');
+                // Ensure allExamples is populated even if fetch fails
+                allExamples = [
+                    {
+                        "name": "Basic Web Server Search",
+                        "description": "Finds web servers (port 80) in Germany.",
+                        "options": {
+                            "search_query_entry": "port:80 country:DE",
+                            "search_limit_entry": "10",
+                            "search_fields_entry": "ip_str,port,org,os",
+                            "command_type": "search"
+                        },
+                        "example_output": "1.1.1.1:80 - Organization: Example Corp, OS: Linux\n2.2.2.2:80 - Organization: Another Org, OS: Ubuntu\n..."
+                    },
+                    {
+                        "name": "Vulnerable FTP Servers",
+                        "description": "Searches for FTP servers with known vulnerabilities (CVE-2017-XXXX).",
+                        "options": {
+                            "search_query_entry": "port:21 \"220 FTP Server\" vuln:CVE-2017",
+                            "search_limit_entry": "5",
+                            "search_fields_entry": "ip_str,port,vulns",
+                            "command_type": "search"
+                        },
+                        "example_output": "192.168.1.10:21 - Vulns: CVE-2017-XXXX\n192.168.1.11:21 - Vulns: CVE-2017-YYYY\n..."
+                    },
+                    {
+                        "name": "MongoDB Instances without Authentication",
+                        "description": "Finds MongoDB databases exposed to the internet without authentication.",
+                        "options": {
+                            "search_query_entry": "mongodb port:27017 -authentication",
+                            "search_limit_entry": "15",
+                            "search_fields_entry": "ip_str,port,country,asn",
+                            "command_type": "search"
+                        },
+                        "example_output": "5.5.5.5:27017 - Country: US, ASN: AS12345\n6.6.6.6:27017 - Country: FR, ASN: AS67890\n..."
+                        },
+                    {
+                        "name": "RDP Servers in Specific Country",
+                        "description": "Lists RDP (Remote Desktop Protocol) servers in Brazil.",
+                        "options": {
+                            "search_query_entry": "port:3389 country:BR",
+                            "search_limit_entry": "20",
+                            "search_fields_entry": "ip_str,port,os,city",
+                            "command_type": "search"
+                        },
+                        "example_output": "10.0.0.1:3389 - OS: Windows, City: Sao Paulo\n10.0.0.2:3389 - OS: Windows, City: Rio de Janeiro\n..."
+                    },
+                    {
+                        "name": "Cameras with Default Passwords",
+                        "description": "Identifies network cameras with common default credentials.",
+                        "options": {
+                            "search_query_entry": "webcam default password",
+                            "search_limit_entry": "10",
+                            "search_fields_entry": "ip_str,port,product,http.title",
+                            "command_type": "search"
+                        },
+                        "example_output": "11.11.11.11:80 - Product: IP Camera, Title: Login\n12.12.12.12:8080 - Product: CCTV, Title: Admin Panel\n..."
+                    },
+                    {
+                        "name": "Host Information by IP",
+                        "description": "Retrieves detailed information about a specific IP address.",
+                        "options": {
+                            "host_ip_entry": "1.1.1.1",
+                            "host_history_var": true,
+                            "command_type": "host"
+                        },
+                        "example_output": "IP: 1.1.1.1\nOrganization: Example ISP\nCountry: US\nPorts: 22, 80, 443\nLast Update: 2023-01-01\n..."
+                    },
+                    {
+                        "name": "Search for specific CVE",
+                        "description": "Searches for systems vulnerable to a specific CVE (e.g., Heartbleed).",
+                        "options": {
+                            "search_query_entry": "vuln:CVE-2014-0160",
+                            "search_limit_entry": "10",
+                            "search_fields_entry": "ip_str,port,hostnames,vulns",
+                            "command_type": "search"
+                        },
+                        "example_output": "1.2.3.4:443 - Hostname: vulnerable.example.com, Vulns: CVE-2014-0160\n..."
+                    },
+                    {
+                        "name": "Search for Industrial Control Systems (ICS)",
+                        "description": "Finds exposed industrial control systems using common ICS ports.",
+                        "options": {
+                            "search_query_entry": "port:502,102,20000 product:Siemens,Schneider",
+                            "search_limit_entry": "5",
+                            "search_fields_entry": "ip_str,port,product,country",
+                            "command_type": "search"
+                        },
+                        "example_output": "192.168.10.1:502 - Product: Siemens S7, Country: DE\n..."
+                    },
+                    {
+                        "name": "Search for Open Databases",
+                        "description": "Identifies publicly accessible database services (e.g., MySQL, PostgreSQL).",
+                        "options": {
+                            "search_query_entry": "port:3306,5432,27017,6379,9200",
+                            "search_limit_entry": "10",
+                            "search_fields_entry": "ip_str,port,product,version,country",
+                            "command_type": "search"
+                        },
+                        "example_output": "203.0.113.1:3306 - Product: MySQL, Version: 5.7, Country: US\n..."
+                    },
+                    {
+                        "name": "Search for SSH Servers",
+                        "description": "Finds SSH servers.",
+                        "options": {
+                            "search_query_entry": "port:22",
+                            "search_limit_entry": "10",
+                            "search_fields_entry": "ip_str,port,os,version",
+                            "command_type": "search"
+                        },
+                        "example_output": "1.1.1.1:22 - OS: Linux, Version: OpenSSH 8.2\n..."
+                    }
+                ];
+                filterExamples();
+            }
+        }
+
+
+        function filterExamples() {
+            const searchQuery = document.getElementById('example_search_entry').value.toLowerCase();
+            const examplesList = document.getElementById('examples_list');
+            examplesList.innerHTML = ''; // Clear current list
+
+            allExamples.forEach(example => {
+                if (example.name.toLowerCase().includes(searchQuery) || example.description.toLowerCase().includes(searchQuery)) {
+                    const exampleDiv = document.createElement('div');
+                    exampleDiv.className = 'bg-gray-800 p-4 rounded-lg shadow-md flex flex-col md:flex-row justify-between items-start md:items-center';
+                    exampleDiv.innerHTML = `
+                        <div>
+                            <h3 class="text-lg font-semibold text-blue-300">${escapeHtml(example.name)}</h3>
+                            <p class="text-sm text-gray-400 mb-2 md:mb-0">${escapeHtml(example.description)}</p>
+                        </div>
+                        <div class="flex mt-2 md:mt-0 space-x-2">
+                            <button class="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded-md text-sm" onclick="loadExampleOptions(${escapeHtml(JSON.stringify(example.options))})">Select</button>
+                            <button class="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1 rounded-md text-sm" onclick="showExampleOutputModal('${escapeHtml(example.name)} Output', ${escapeHtml(JSON.stringify(example.example_output))})">Output</button>
+                        </div>
+                    `;
+                    examplesList.appendChild(exampleDiv);
+                }
+            });
+            lucide.createIcons(); // Re-render Lucide icons for new elements
+        }
+
+        function clearExampleSearch() {
+            document.getElementById('example_search_entry').value = '';
+            filterExamples();
+        }
+
+        function loadExampleOptions(options) {
+            clearAllInputs(); // Clear all inputs first
+
+            // Set the current command type based on the example's command_type
+            if (options.command_type) {
+                showTab(options.command_type); // This will also update currentCommandType
+            }
+
+            // Populate form fields with example options
+            for (const key in options) {
+                const element = document.getElementById(key);
+                if (element) {
+                    if (element.type === 'checkbox') {
+                        element.checked = options[key];
+                    } else if (element.tagName === 'TEXTAREA') {
+                        element.value = options[key];
+                    } else {
+                        element.value = options[key];
+                    }
+                }
+            }
+            generateCommand(); // Re-generate command after loading
+            showMessageModal('Example Loaded', 'Example options have been loaded. Check other tabs and the generated command.');
+        }
+
+        // Helper to escape HTML for safe display
+        function escapeHtml(text) {
+            if (typeof text !== 'string') {
+                text = String(text);
+            }
+            const map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+            return text.replace(/[&<>"']/g, function(m) { return map[m]; });
+        }
+
+        // Helper to unescape HTML entities
+        function unescapeHtml(html) {
+            const doc = new DOMParser().parseFromString(html, 'text/html');
+            return doc.documentElement.textContent;
+        }
+
+        function clearAllInputs() {
+            document.querySelectorAll('input[type="text"], input[type="number"], textarea').forEach(element => {
+                element.value = '';
+            });
+            document.querySelectorAll('input[type="checkbox"]').forEach(element => {
+                element.checked = false;
+            });
+            document.querySelectorAll('select').forEach(element => {
+                element.value = ''; // Clear dropdown selection
+            });
+            // Ensure the API key field is also cleared
+            document.getElementById('shodan_api_key_entry').value = '';
+            generateCommand();
+        }
+
+        // Function to handle Shodan installation
+        async function handleShodanInstallation(platformType) {
+            const linuxButton = document.getElementById('install_shodan_linux_button');
+            const termuxButton = document.getElementById('install_shodan_termux_button');
+            const windowsButton = document.getElementById('download_shodan_windows_button');
+
+            // Disable all install buttons during an installation attempt
+            linuxButton.disabled = true;
+            termuxButton.disabled = true;
+            windowsButton.disabled = true;
+
+            showStatus('Checking system and preparing for installation...', 'blue');
+            document.getElementById('output_text').innerHTML = ''; // Clear output area
+            currentOutputBuffer = ""; // Clear output buffer for installation logs
+
+            if (platformType === 'linux' || platformType === 'termux') {
+                const osName = platformType === 'termux' ? "Termux" : "Linux";
+                const installInstructions = `
+                    Your operating system is <strong>${osName}</strong>. Do you want to install Shodan CLI now?
+                    <br><br>
+                    This process will:
+                    <ol class="list-decimal list-inside ml-4 mt-2">
+                        <li>Update your package lists (<code>apt update</code> or <code>pkg update</code>).</li>
+                        <li>Install Python's package manager (<code>pip</code> or <code>pip3</code>) if not present.</li>
+                        <li>Install the Shodan CLI using pip (<code>pip install shodan</code> or <code>pip3 install shodan</code>).</li>
+                    </ol>
+                    <br>
+                    After installation, you will need to initialize Shodan with your API key in the terminal:
+                    <br>
+                    <code>shodan init YOUR_API_KEY</code>
+                    <br><br>
+                    <strong>This operation requires superuser privileges (<code>sudo</code> on Linux) and might ask for your password in the server console.</strong>
+                `;
+                showInstallConfirmModal(
+                    'Install Shodan CLI',
+                    installInstructions,
+                    async () => {
+                        // This function will be called if the user confirms
+                        showStatus(`Installing Shodan CLI on ${osName}...`, 'blue');
+                        try {
+                            const response = await fetch('/install_shodan', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ platform: platformType }) // Pass platform type to backend
+                            });
+                            const data = await response.json();
+
+                            if (data.status === 'error') {
+                                showStatus(`Shodan CLI installation failed: ${data.message}`, 'red');
+                                showMessageModal('Shodan CLI Installation Failed', `Failed to install/update Shodan CLI: ${data.message}<br><br>Output:<pre>${escapeHtml(data.output)}</pre>`, true);
+                                insertColoredText(document.getElementById('output_text'), data.output);
+                                // Re-enable buttons on error
+                                linuxButton.disabled = false;
+                                termuxButton.disabled = false;
+                                windowsButton.disabled = false;
+                            } else { // status is 'running' for real-time output
+                                currentScanId = data.scan_id; // Use the scan_id returned by the backend
+                                showStatus(`Shodan CLI installation started (ID: ${currentScanId}). Fetching output...`, 'blue');
+                                pollInterval = setInterval(pollOutput, 500); // Start polling for output
+                            }
+                        } catch (error) {
+                            console.error('Error during Shodan CLI installation fetch:', error);
+                            showStatus('An error occurred during installation.', 'red');
+                            showMessageModal('Shodan CLI Installation Error', `An error occurred while trying to install Shodan CLI: ${error.message}. Check server logs for more details.`);
+                            // Re-enable buttons on error
+                            linuxButton.disabled = false;
+                            termuxButton.disabled = false;
+                            windowsButton.disabled = false;
+                        }
+                    }
+                );
+            } else if (platformType === 'windows') {
+                const downloadMessage = `
+                    Shodan CLI cannot be installed directly via this web interface on Windows.
+                    <br><br>
+                    You have two main options to install Shodan CLI on Windows:
+                    <br><br>
+                    <ol class="list-decimal list-inside ml-4">
+                        <li>
+                            <strong>Using Pip (Recommended if Python is installed):</strong>
+                            <br>
+                            If you have Python installed, open Command Prompt or PowerShell and run:
+                            <br>
+                            <code>pip install shodan</code>
+                            <br>
+                            If you have multiple Python versions, you might need to use <code>pip3 install shodan</code>.
+                        </li>
+                        <li>
+                            <strong>Download Executable (Less common for CLI):</strong>
+                            <br>
+                            While not common for the CLI, you can find information on the official Shodan website.
+                            For the CLI, pip is generally preferred.
+                        </li>
+                    </ol>
+                    <br>
+                    After installation, you will need to initialize Shodan with your API key in the terminal:
+                    <br>
+                    <code>shodan init YOUR_API_KEY</code>
+                    <br><br>
+                    For more details, visit the official Shodan documentation:
+                    <br>
+                    <a href="https://cli.shodan.io/docs" target="_blank" class="text-blue-400 hover:underline">Shodan CLI Documentation</a>
+                `;
+                showMessageModal('Install Shodan CLI', downloadMessage, true); // Use isHtml = true
+                showStatus('Shodan CLI installation is not directly supported on Windows via this interface.', 'orange');
+                // Re-enable buttons immediately for Windows as no backend process is started
+                linuxButton.disabled = false;
+                termuxButton.disabled = false;
+                windowsButton.disabled = false;
+            } else {
+                showMessageModal('Install Shodan CLI', `Shodan CLI installation is not automatically supported for your operating system (${navigator.platform}). Please install Shodan CLI manually.`);
+                showStatus('Shodan CLI installation is not supported for this system.', 'orange');
+                // Re-enable buttons immediately for unsupported OS
+                linuxButton.disabled = false;
+                termuxButton.disabled = false;
+                windowsButton.disabled = false;
+            }
+        }
+
+
+        // Initial setup
+        document.addEventListener('DOMContentLoaded', () => {
+            clearAllInputs(); // Clear all inputs on page load to ensure no default values
+            showTab('search'); // Show the search tab by default
+            loadExamples(); // Load examples for the Examples tab
+            document.getElementById('run_shodan_button').addEventListener('click', runShodan);
+            
+            // New event listeners for specific installation buttons
+            document.getElementById('install_shodan_linux_button').addEventListener('click', () => handleShodanInstallation('linux'));
+            document.getElementById('install_shodan_termux_button').addEventListener('click', () => handleShodanInstallation('termux'));
+            document.getElementById('download_shodan_windows_button').addEventListener('click', () => handleShodanInstallation('windows'));
+        });
+    </script>
+</body>
+</html>

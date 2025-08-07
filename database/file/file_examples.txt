@@ -1,0 +1,175 @@
+[
+    {
+        "name": "Basic File Type Identification",
+        "description": "Identifies the type of a common text file.",
+        "options": {
+            "target_entry": "/etc/passwd"
+        },
+        "example_output": "/etc/passwd: ASCII text"
+    },
+    {
+        "name": "MIME Type Output",
+        "description": "Outputs the MIME type of an image file.",
+        "options": {
+            "target_entry": "/usr/share/icons/hicolor/scalable/apps/gimp.svg",
+            "mime_type_var": true
+        },
+        "example_output": "/usr/share/icons/hicolor/scalable/apps/gimp.svg: image/svg+xml; charset=us-ascii"
+    },
+    {
+        "name": "Brief Mode for a Binary",
+        "description": "Identifies a binary file type without prepending the filename.",
+        "options": {
+            "target_entry": "/bin/ls",
+            "brief_mode_var": true
+        },
+        "example_output": "ELF 64-bit LSB executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, for GNU/Linux 3.2.0, BuildID[sha1]=..., stripped"
+    },
+    {
+        "name": "Examine Compressed File",
+        "description": "Looks inside a gzipped file to identify its contents.",
+        "options": {
+            "target_entry": "/var/log/syslog.1.gz",
+            "compressed_var": true
+        },
+        "example_output": "/var/log/syslog.1.gz: gzip compressed data, last modified: Mon Jul 29 10:00:00 2025, from Unix, original size 12345"
+    },
+    {
+        "name": "Follow Symbolic Link",
+        "description": "Identifies the type of the file that a symbolic link points to.",
+        "options": {
+            "target_entry": "/usr/bin/python3",
+            "follow_symlinks_var": true
+        },
+        "example_output": "/usr/bin/python3: ELF 64-bit LSB shared object, x86-64, version 1 (SYSV), dynamically linked, BuildID[sha1]=..., stripped"
+    },
+    {
+        "name": "Output File Extension",
+        "description": "Shows possible file extensions for a given file.",
+        "options": {
+            "target_entry": "/etc/hosts",
+            "extension_var": true
+        },
+        "example_output": "/etc/hosts: text/plain/txt"
+    },
+    {
+        "name": "Read Files from a List",
+        "description": "Analyzes multiple files listed in a separate text file. (Requires 'my_files.txt' to exist with file paths)",
+        "options": {
+            "target_entry": "",
+            "file_list_entry": "my_files.txt"
+        },
+        "example_output": "file_from_list_1.txt: ASCII text\nfile_from_list_2.jpg: JPEG image data, JFIF standard 1.01\nfile_from_list_3.pdf: PDF document, version 1.4"
+    },
+    {
+        "name": "Compile Magic File",
+        "description": "Compiles a custom magic file for faster loading. (Requires root/permissions and a valid magic file path)",
+        "options": {
+            "magic_file_entry": "/usr/share/file/magic",
+            "compile_magic_var_C": true,
+            "target_entry": ""
+        },
+        "example_output": "magic.mgc: 12345 bytes"
+    },
+    {
+        "name": "Uncompile Magic File",
+        "description": "Prints the contents of a compiled magic file in human-readable form. (Requires a compiled magic file path)",
+        "options": {
+            "magic_file_entry": "/usr/share/file/magic.mgc",
+            "uncompile_magic_var": true,
+            "target_entry": ""
+        },
+        "example_output": "0x00000000: byte 0xEF\n0x00000001: byte 0xBB\n0x00000002: byte 0xBF\n...\n(Full magic file content)"
+    },
+    {
+        "name": "Exclude Text Test",
+        "description": "Identifies a file type, excluding the 'text' test. Useful for binary files that might also contain text.",
+        "options": {
+            "target_entry": "/var/log/dpkg.log",
+            "exclude_tests_entry": ["text"]
+        },
+        "example_output": "/var/log/dpkg.log: data"
+    },
+    {
+        "name": "Output MIME Encoding Only",
+        "description": "Shows only the MIME encoding of a file.",
+        "options": {
+            "target_entry": "/etc/lsb-release",
+            "mime_encoding_only_var": true
+        },
+        "example_output": "/etc/lsb-release: us-ascii"
+    },
+    {
+        "name": "Brief MIME Type Output",
+        "description": "Combines brief mode with MIME type output for concise results.",
+        "options": {
+            "target_entry": "/bin/bash",
+            "brief_mode_var": true,
+            "mime_type_var": true
+        },
+        "example_output": "application/x-executable; charset=binary"
+    },
+    {
+        "name": "Preserve Access Date",
+        "description": "Analyzes a file while ensuring its last access time is not updated.",
+        "options": {
+            "target_entry": "/etc/fstab",
+            "preserve_date_var": true
+        },
+        "example_output": "/etc/fstab: ASCII text"
+    },
+    {
+        "name": "Raw Output for a Script",
+        "description": "Shows raw output for a shell script, without octal translations.",
+        "options": {
+            "target_entry": "/usr/bin/env",
+            "raw_output_var": true
+        },
+        "example_output": "/usr/bin/env: #!/bin/bash\n# This is a shell script\n..."
+        },
+    {
+        "name": "Identify a Special Device File",
+        "description": "Uses -s to identify a character special device (e.g., /dev/urandom).",
+        "options": {
+            "target_entry": "/dev/urandom",
+            "special_files_var": true
+        },
+        "example_output": "/dev/urandom: character special (1/9)"
+    },
+    {
+        "name": "Keep Going (Multiple Matches)",
+        "description": "Demonstrates -k where file might find multiple matches for a file's type.",
+        "options": {
+            "target_entry": "/bin/ls",
+            "keep_going_var": true
+        },
+        "example_output": "/bin/ls: ELF 64-bit LSB executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, for GNU/Linux 3.2.0, BuildID[sha1]=..., stripped\n- from: ELF 64-bit LSB executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, for GNU/Linux 3.2.0, BuildID[sha1]=..., stripped"
+    },
+    {
+        "name": "Custom Separator",
+        "description": "Uses a custom string to separate the filename and the file result.",
+        "options": {
+            "target_entry": "/etc/hosts",
+            "separator_entry": " ===> "
+        },
+        "example_output": "/etc/hosts ===> ASCII text"
+    },
+    {
+        "name": "Show Version of File Utility",
+        "description": "Displays the version information of the 'file' utility.",
+        "options": {
+            "version_var": true,
+            "target_entry": ""
+        },
+        "example_output": "file-5.39\nmagic file from /usr/share/file/magic"
+    },
+    {
+        "name": "Show Help for File Utility",
+        "description": "Displays the help message for the 'file' utility.",
+        "options": {
+            "help_var": true,
+            "target_entry": ""
+        },
+        "example_output": "Usage: file [OPTION...] file...\nDetermine file type of files.\n\n  -b, --brief                do not prepend filenames to output lines\n  -c, --compile              compile magic file\n  -C, --compile-only         compile magic file and exit\n  -d, --debug                print debugging messages\n..."
+    }
+]

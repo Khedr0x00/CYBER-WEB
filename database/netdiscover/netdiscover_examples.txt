@@ -1,0 +1,98 @@
+[
+    {
+        "name": "Basic Scan (Specific Interface)",
+        "description": "Performs a basic active scan on a specified network interface (e.g., eth0).",
+        "options": {
+            "interface_entry": "eth0"
+        },
+        "example_output": "Starting netdiscover 0.5.0~beta7 ( https://github.com/netdiscover/netdiscover )\n\n Currently scanning: 192.168.1.0/24   |   Passive: No\n \n ARP Reply:           192.168.1.1     00:11:22:33:44:55   (Gateway)\n ARP Reply:           192.168.1.100   AA:BB:CC:DD:EE:FF   (MyDevice)\n ARP Reply:           192.168.1.101   11:22:33:44:55:66   (AnotherDevice)\n \n Total hosts found: 2"
+    },
+    {
+        "name": "Passive Scan (Sniff Only)",
+        "description": "Listens passively for ARP traffic without sending any requests. Useful for quiet network monitoring.",
+        "options": {
+            "interface_entry": "eth0",
+            "passive_mode_var": true
+        },
+        "example_output": "Starting netdiscover 0.5.0~beta7 ( https://github.com/netdiscover/netdiscover )\n\n Currently scanning: Passive Mode   |   Passive: Yes\n \n ARP Reply:           192.168.1.1     00:11:22:33:44:55   (Gateway)\n ARP Reply:           192.168.1.100   AA:BB:CC:DD:EE:FF   (MyDevice)\n \n (Waiting for more traffic...)"
+    },
+    {
+        "name": "Scan Specific Range",
+        "description": "Scans a custom IP range (e.g., 192.168.1.100/28) using the default interface.",
+        "options": {
+            "range_entry": "192.168.1.100/28"
+        },
+        "example_output": "Starting netdiscover 0.5.0~beta7 ( https://github.com/netdiscover/netdiscover )\n\n Currently scanning: 192.168.1.96/28   |   Passive: No\n \n ARP Reply:           192.168.1.97    00:1A:2B:3C:4D:5E   (Router)\n ARP Reply:           192.168.1.100   AA:BB:CC:DD:EE:FF   (MyDevice)\n \n Total hosts found: 2"
+    },
+    {
+        "name": "Scan from List File",
+        "description": "Scans multiple IP ranges specified in a text file (one range per line).",
+        "options": {
+            "list_file_entry": "/path/to/my_ranges.txt"
+        },
+        "example_output": "Starting netdiscover 0.5.0~beta7 ( https://github.com/netdiscover/netdiscover )\n\n Currently scanning: /path/to/my_ranges.txt   |   Passive: No\n \n ARP Reply:           192.168.1.1     00:11:22:33:44:55   (Gateway)\n ARP Reply:           192.168.2.1     AA:BB:CC:DD:EE:FF   (Another Gateway)\n \n Total hosts found: 2"
+    },
+    {
+        "name": "Fast Mode Scan",
+        "description": "Performs a faster scan by not waiting for traffic. Useful in quiet networks where you want quick results.",
+        "options": {
+            "interface_entry": "eth0",
+            "fast_mode_var": true
+        },
+        "example_output": "Starting netdiscover 0.5.0~beta7 ( https://github.com/netdiscover/netdiscover )\n\n Currently scanning: 192.168.1.0/24   |   Passive: No\n \n ARP Reply:           192.168.1.1     00:11:22:33:44:55   (Gateway)\n ARP Reply:           192.168.1.100   AA:BB:CC:DD:EE:FF   (MyDevice)\n \n Total hosts found: 2"
+    },
+    {
+        "name": "Scan with Custom Sleep Time",
+        "description": "Sets a custom delay between each ARP request in milliseconds (e.g., 50ms) to reduce network impact.",
+        "options": {
+            "interface_entry": "eth0",
+            "sleep_time_entry": "50"
+        },
+        "example_output": "Starting netdiscover 0.5.0~beta7 ( https://github.com/netdiscover/netdiscover )\n\n Currently scanning: 192.168.1.0/24   |   Passive: No\n \n ARP Reply:           192.168.1.1     00:11:22:33:44:55   (Gateway)\n ARP Reply:           192.168.1.100   AA:BB:CC:DD:EE:FF   (MyDevice)\n \n Total hosts found: 2"
+    },
+    {
+        "name": "Scan with Custom ARP Count",
+        "description": "Sends a specific number of ARP requests for each host (e.g., 2 requests per host).",
+        "options": {
+            "interface_entry": "eth0",
+            "count_entry": "2"
+        },
+        "example_output": "Starting netdiscover 0.5.0~beta7 ( https://github.com/netdiscover/netdiscover )\n\n Currently scanning: 192.168.1.0/24   |   Passive: No\n \n ARP Reply:           192.168.1.1     00:11:22:33:44:55   (Gateway)\n ARP Reply:           192.168.1.100   AA:BB:CC:DD:EE:FF   (MyDevice)\n \n Total hosts found: 2"
+    },
+    {
+        "name": "Scan with PCAP Filter",
+        "description": "Applies a PCAP filter expression to capture only specific traffic (e.g., only ARP packets).",
+        "options": {
+            "interface_entry": "eth0",
+            "pcap_filter_entry": "arp"
+        },
+        "example_output": "Starting netdiscover 0.5.0~beta7 ( https://github.com/netdiscover/netdiscover )\n\n Currently scanning: 192.168.1.0/24   |   Passive: No\n \n ARP Reply:           192.168.1.1     00:11:22:33:44:55   (Gateway)\n ARP Reply:           192.168.1.100   AA:BB:CC:DD:EE:FF   (MyDevice)\n \n Total hosts found: 2"
+    },
+    {
+        "name": "Loop Mode (Continuous Scan)",
+        "description": "Continuously scans the network, useful for monitoring new devices joining or leaving.",
+        "options": {
+            "interface_entry": "eth0",
+            "loop_mode_var": true
+        },
+        "example_output": "Starting netdiscover 0.5.0~beta7 ( https://github.com/netdiscover/netdiscover )\n\n Currently scanning: 192.168.1.0/24   |   Passive: No\n \n ARP Reply:           192.168.1.1     00:11:22:33:44:55   (Gateway)\n ARP Reply:           192.168.1.100   AA:BB:CC:DD:EE:FF   (MyDevice)\n \n (Looping... Press Ctrl+C to stop)"
+    },
+    {
+        "name": "No Header Output",
+        "description": "Suppresses the header line in the output, which is useful for scripting or parsing results directly.",
+        "options": {
+            "interface_entry": "eth0",
+            "no_header_var": true
+        },
+        "example_output": "ARP Reply:           192.168.1.1     00:11:22:33:44:55   (Gateway)\nARP Reply:           192.168.1.100   AA:BB:CC:DD:EE:FF   (MyDevice)\nARP Reply:           192.168.1.101   11:22:33:44:55:66   (AnotherDevice)"
+    },
+    {
+        "name": "Print Results Only",
+        "description": "Prints only the discovered hosts in a parsable format, without extra messages.",
+        "options": {
+            "interface_entry": "eth0",
+            "print_results_var": true
+        },
+        "example_output": "192.168.1.1\t00:11:22:33:44:55\n192.168.1.100\tAA:BB:CC:DD:EE:FF\n192.168.1.101\t11:22:33:44:55:66"
+    }
+]
