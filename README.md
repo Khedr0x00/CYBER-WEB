@@ -13,13 +13,13 @@ apt install python3-pip
 pip install flask
 git clone https://github.com/Khedr0x00/Space-Web
 cd Space-Web
-php -S localhost:8000
+php -S localhost:8080
 ```
 
 ## oneliner
 
 ```
-pip install flask && git clone https://github.com/Khedr0x00/Space-Web && cd Space-Web && php -S localhost:8000
+sudo apt update && sudo apt install -y php python3 python3-pip git && pip install flask && git clone https://github.com/Khedr0x00/Space-Web && cd Space-Web && php -S localhost:8080
 ```
 
 
