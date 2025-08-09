@@ -10,10 +10,10 @@ function getSettings() {
     if (file_exists(SETTINGS_FILE)) {
         $settings = json_decode(file_get_contents(SETTINGS_FILE), true);
         // Ensure default values if settings are missing
-        return array_merge(['showCover' => true, 'enableCardAnimation' => true, 'openInIframe' => false, 'showFullUrl' => false, 'enableTaskbar' => false], $settings ?: []);
+        return array_merge(['showCover' => true, 'enableCardAnimation' => true, 'openInIframe' => false, 'showFullUrl' => false, 'enableTaskbar' => false, 'base_url' => ''], $settings ?: []);
     }
     // Default settings if file doesn't exist
-    return ['showCover' => true, 'enableCardAnimation' => true, 'openInIframe' => false, 'showFullUrl' => false, 'enableTaskbar' => false];
+    return ['showCover' => true, 'enableCardAnimation' => true, 'openInIframe' => false, 'showFullUrl' => false, 'enableTaskbar' => false, 'base_url' => ''];
 }
 
 /**

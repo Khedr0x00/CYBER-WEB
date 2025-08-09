@@ -17,10 +17,21 @@ require_once __DIR__ . DIRECTORY_SEPARATOR . 'settings.php';
 function handleApiAction($action, $databaseBaseDir, $pidsDir, $nextPortFile, $pythonExecutable) {
     header('Content-Type: application/json');
 
+    // Calculate the base path of the application dynamically to fix the URL issue
+    $scriptName = $_SERVER['SCRIPT_NAME'];
+    $scriptPath = dirname($scriptName);
+    // If the script is in the web root, the path is '/', so we use an empty string to avoid a double slash
+    $basePath = $scriptPath === '/' || $scriptPath === '\\' ? '' : $scriptPath;
+
+
     switch ($action) {
         case 'list_folders':
             $folders = [];
             if (is_dir($databaseBaseDir)) {
+                // Get settings to check for custom base URL
+                $settings = getSettings();
+                $baseUrl = $settings['base_url'] ?? '';
+
                 foreach (scandir($databaseBaseDir) as $folderName) {
                     if ($folderName === '.' || $folderName === '..') {
                         continue;
@@ -39,8 +50,14 @@ function handleApiAction($action, $databaseBaseDir, $pidsDir, $nextPortFile, $py
                     $screenFilePath = $folderPath . DIRECTORY_SEPARATOR . SCREEN_FILE_NAME;
 
 
-                    $isPythonApp = file_exists($pythonAppFilePath);
-                    $isPhpApp = file_exists($phpAppFilePath);
+                    $hasPythonApp = file_exists($pythonAppFilePath);
+                    $hasPhpApp = file_exists($phpAppFilePath);
+                    
+                    // Only process folders that are either Python or PHP apps
+                    if (!$hasPythonApp && !$hasPhpApp) {
+                        continue;
+                    }
+
                     $hasRequirementsFile = file_exists($requirementsFilePath);
                     $hasInstallScript = file_exists($installScriptPath);
                     $hasCategoryFile = file_exists($categoryFilePath);
@@ -68,7 +85,30 @@ function handleApiAction($action, $databaseBaseDir, $pidsDir, $nextPortFile, $py
                         $screenResolution = trim(file_get_contents($screenFilePath));
                     }
 
-                    if ($isPythonApp) {
+                    $folderData = [
+                        'name' => $folderName,
+                        'type' => '', // Will be set below
+                        'is_running' => false,
+                        'port' => null,
+                        'full_url' => '', // For Python apps
+                        'has_python_app' => $hasPythonApp,
+                        'has_php_app' => $hasPhpApp,
+                        'php_url' => null, // New field for the php app url
+                        'has_requirements_file' => $hasRequirementsFile,
+                        'has_install_script' => $hasInstallScript,
+                        'has_category_file' => $hasCategoryFile,
+                        'category_text' => $categoryText,
+                        'has_tags_file' => $hasTagsFile,
+                        'tags_text' => $tagsText,
+                        'has_gui_py_file' => $hasGuiPyFile,
+                        'has_sqlmap_examples_file' => $hasSqlmapExamplesFile,
+                        'has_notes_file' => $hasNotesFile,
+                        'has_screen_file' => $hasScreenFile,
+                        'screen_resolution' => $screenResolution
+                    ];
+
+                    if ($hasPythonApp) {
+                        $folderData['type'] = 'python';
                         $pidFile = $pidsDir . DIRECTORY_SEPARATOR . $folderName . '.json';
                         $isRunning = false;
                         $port = null;
@@ -96,48 +136,37 @@ function handleApiAction($action, $databaseBaseDir, $pidsDir, $nextPortFile, $py
                             }
                         }
 
-                        $folders[] = [
-                            'name' => $folderName,
-                            'type' => 'python',
-                            'is_running' => $isRunning,
-                            'port' => $port,
-                            'full_url' => $fullUrl,
-                            'has_requirements_file' => $hasRequirementsFile,
-                            'has_install_script' => $hasInstallScript,
-                            'has_category_file' => $hasCategoryFile,
-                            'category_text' => $categoryText,
-                            'has_tags_file' => $hasTagsFile,
-                            'tags_text' => $tagsText,
-                            'has_gui_py_file' => $hasGuiPyFile,
-                            'has_sqlmap_examples_file' => $hasSqlmapExamplesFile,
-                            'has_notes_file' => $hasNotesFile,
-                            // NEW: Add screen file info
-                            'has_screen_file' => $hasScreenFile,
-                            'screen_resolution' => $screenResolution
-                        ];
-                    } elseif ($isPhpApp) {
-                        $phpAppUrl = 'http://127.0.0.1:' . WEB_SERVER_PORT . '/database/' . $folderName . '/index.php';
-
-                        $folders[] = [
-                            'name' => $folderName,
-                            'type' => 'php',
-                            'is_running' => true,
-                            'url' => $phpAppUrl,
-                            'full_url' => $phpAppUrl,
-                            'has_requirements_file' => false,
-                            'has_install_script' => false,
-                            'has_category_file' => $hasCategoryFile,
-                            'category_text' => $categoryText,
-                            'has_tags_file' => $hasTagsFile,
-                            'tags_text' => $tagsText,
-                            'has_gui_py_file' => $hasGuiPyFile,
-                            'has_sqlmap_examples_file' => $hasSqlmapExamplesFile,
-                            'has_notes_file' => $hasNotesFile,
-                            // NEW: Add screen file info
-                            'has_screen_file' => $hasScreenFile,
-                            'screen_resolution' => $screenResolution
-                        ];
+                        $folderData['is_running'] = $isRunning;
+                        $folderData['port'] = $port;
+                        
+                        // NEW: Custom URL logic for Python apps
+                        if ($isRunning && !empty($baseUrl) && $port !== null) {
+                            $regex_hyphen = '/-\d+/';
+                            if (preg_match($regex_hyphen, $baseUrl)) {
+                                // Replace the hyphen and port number with the new port
+                                $newUrl = preg_replace($regex_hyphen, '-' . $port, $baseUrl);
+                                $folderData['full_url'] = $newUrl;
+                            } else {
+                                // Fallback to appending the port if no such pattern is found
+                                $folderData['full_url'] = "{$baseUrl}:{$port}";
+                            }
+                        } else {
+                            $folderData['full_url'] = "http://127.0.0.1:{$port}";
+                        }
                     }
+
+                    // Handle PHP apps, whether they are standalone or alongside a Python app
+                    if ($hasPhpApp) {
+                         if (empty($folderData['type'])) {
+                            $folderData['type'] = 'php';
+                         }
+                        // Use the custom base URL if provided, otherwise fallback to local URL
+                        $baseUrlToUse = !empty($baseUrl) ? rtrim($baseUrl, '/') : 'http://127.0.0.1:' . WEB_SERVER_PORT;
+                        $phpAppUrl = $baseUrlToUse . $basePath . '/database/' . $folderName . '/index.php';
+                        $folderData['php_url'] = $phpAppUrl;
+                    }
+                    
+                    $folders[] = $folderData;
                 }
             }
             echo json_encode($folders);
@@ -485,17 +514,37 @@ function handleApiAction($action, $databaseBaseDir, $pidsDir, $nextPortFile, $py
             $showFullUrl = $input['showFullUrl'] ?? false;
             $enableTaskbar = $input['enableTaskbar'] ?? false;
 
+            // Retain the existing base_url value
+            $currentSettings = getSettings();
+            $baseUrl = $currentSettings['base_url'] ?? '';
+
             $settings = [
                 'showCover' => (bool)$showCover,
                 'enableCardAnimation' => (bool)$enableCardAnimation,
                 'openInIframe' => (bool)$openInIframe,
                 'showFullUrl' => (bool)$showFullUrl,
-                'enableTaskbar' => (bool)$enableTaskbar
+                'enableTaskbar' => (bool)$enableTaskbar,
+                'base_url' => $baseUrl // Use the existing base_url
             ];
             if (saveSettings($settings)) {
                 echo json_encode(['status' => 'success', 'message' => 'Settings saved successfully.']);
             } else {
                 echo json_encode(['status' => 'error', 'message' => 'Failed to save settings.']);
+            }
+            break;
+
+        case 'save_base_url':
+            $input = json_decode(file_get_contents('php://input'), true);
+            $baseUrl = $input['base_url'] ?? '';
+            
+            // Get current settings to preserve other values
+            $settings = getSettings();
+            $settings['base_url'] = $baseUrl;
+
+            if (saveSettings($settings)) {
+                echo json_encode(['status' => 'success', 'message' => 'Base URL saved successfully.']);
+            } else {
+                echo json_encode(['status' => 'error', 'message' => 'Failed to save base URL.']);
             }
             break;
 
@@ -558,6 +607,7 @@ function handleApiAction($action, $databaseBaseDir, $pidsDir, $nextPortFile, $py
 
             $projectName = trim($input['project_name'] ?? '');
             $appPyCode = $input['app_code'] ?? '';
+            $indexPhpCode = $input['php_code'] ?? ''; // New PHP code field
             $indexHtmlCode = $input['html_code'] ?? '';
             $categoryName = trim($input['category_name'] ?? '');
             $requirementsTxtCode = $input['requirements_code'] ?? '';
@@ -566,9 +616,7 @@ function handleApiAction($action, $databaseBaseDir, $pidsDir, $nextPortFile, $py
             $guiPyCode = $input['gui_py_code'] ?? '';
             $sqlmapExamplesCode = $input['sqlmap_examples_code'] ?? '';
             $notesCode = $input['notes_code'] ?? '';
-            // NEW: Get screen.txt content
             $screenTxtCode = $input['screen_txt_code'] ?? '';
-
 
             if (empty($projectName)) {
                 echo json_encode(['status' => 'error', 'message' => 'Project name cannot be empty.']);
@@ -585,6 +633,7 @@ function handleApiAction($action, $databaseBaseDir, $pidsDir, $nextPortFile, $py
             $templatesPath = $projectPath . DIRECTORY_SEPARATOR . 'templates';
             $categoryFilePath = $projectPath . DIRECTORY_SEPARATOR . 'category.txt';
             $appPyFilePath = $projectPath . DIRECTORY_SEPARATOR . 'app.py';
+            $indexPhpFilePath = $projectPath . DIRECTORY_SEPARATOR . 'index.php'; // New PHP file path
             $indexHtmlFilePath = $templatesPath . DIRECTORY_SEPARATOR . 'index.html';
             $requirementsFilePath = $projectPath . DIRECTORY_SEPARATOR . 'requirements.txt';
             $installScriptPath = $projectPath . DIRECTORY_SEPARATOR . 'install.sh';
@@ -592,7 +641,6 @@ function handleApiAction($action, $databaseBaseDir, $pidsDir, $nextPortFile, $py
             $guiPyFilePath = $projectPath . DIRECTORY_SEPARATOR . 'gui.py';
             $sqlmapExamplesFilePath = $projectPath . DIRECTORY_SEPARATOR . 'examples.txt';
             $notesFilePath = $projectPath . DIRECTORY_SEPARATOR . NOTES_FILE_NAME;
-            // NEW: Path for screen.txt
             $screenFilePath = $projectPath . DIRECTORY_SEPARATOR . SCREEN_FILE_NAME;
 
 
@@ -606,19 +654,26 @@ function handleApiAction($action, $databaseBaseDir, $pidsDir, $nextPortFile, $py
                 break;
             }
 
-            if (!mkdir($templatesPath, 0777, true)) {
+            if (!empty($indexHtmlCode) && !mkdir($templatesPath, 0777, true)) {
                 rrmdir($projectPath);
                 echo json_encode(['status' => 'error', 'message' => "Failed to create templates directory: {$templatesPath}."]);
                 break;
             }
 
-            if (file_put_contents($appPyFilePath, $appPyCode) === false) {
+            if (!empty($appPyCode) && file_put_contents($appPyFilePath, $appPyCode) === false) {
                 rrmdir($projectPath);
                 echo json_encode(['status' => 'error', 'message' => "Failed to save app.py for project '{$projectName}'."]);
                 break;
             }
 
-            if (file_put_contents($indexHtmlFilePath, $indexHtmlCode) === false) {
+            // New: Save index.php code if it exists
+            if (!empty($indexPhpCode) && file_put_contents($indexPhpFilePath, $indexPhpCode) === false) {
+                rrmdir($projectPath);
+                echo json_encode(['status' => 'error', 'message' => "Failed to save index.php for project '{$projectName}'."]);
+                break;
+            }
+
+            if (!empty($indexHtmlCode) && file_put_contents($indexHtmlFilePath, $indexHtmlCode) === false) {
                 rrmdir($projectPath);
                 echo json_encode(['status' => 'error', 'message' => "Failed to save index.html for project '{$projectName}'."]);
                 break;
@@ -666,11 +721,10 @@ function handleApiAction($action, $databaseBaseDir, $pidsDir, $nextPortFile, $py
 
             if (!empty($notesCode)) {
                 if (file_put_contents($notesFilePath, $notesCode) === false) {
-                    error_log("Failed to save notes.txt for project '{$projectName}'.");
+                    error_log("Failed to save " . NOTES_FILE_NAME . " for project '{$projectName}'.");
                 }
             }
 
-            // NEW: Save screen.txt
             if (!empty($screenTxtCode)) {
                 if (file_put_contents($screenFilePath, $screenTxtCode) === false) {
                     error_log("Failed to save screen.txt for project '{$projectName}'.");
@@ -686,6 +740,7 @@ function handleApiAction($action, $databaseBaseDir, $pidsDir, $nextPortFile, $py
 
             $files = [
                 'app_py' => $folderPath . DIRECTORY_SEPARATOR . 'app.py',
+                'index_php' => $folderPath . DIRECTORY_SEPARATOR . 'index.php',
                 'index_html' => $folderPath . DIRECTORY_SEPARATOR . 'templates' . DIRECTORY_SEPARATOR . 'index.html',
                 'requirements_txt' => $folderPath . DIRECTORY_SEPARATOR . 'requirements.txt',
                 'install_sh' => $folderPath . DIRECTORY_SEPARATOR . 'install.sh',
@@ -694,7 +749,6 @@ function handleApiAction($action, $databaseBaseDir, $pidsDir, $nextPortFile, $py
                 'gui_py' => $folderPath . DIRECTORY_SEPARATOR . 'gui.py',
                 'sqlmap_examples_txt' => $folderPath . DIRECTORY_SEPARATOR . 'examples.txt',
                 'notes_txt' => $folderPath . DIRECTORY_SEPARATOR . NOTES_FILE_NAME,
-                // NEW: Add screen.txt to files to fetch
                 'screen_txt' => $folderPath . DIRECTORY_SEPARATOR . SCREEN_FILE_NAME
             ];
 
@@ -710,6 +764,7 @@ function handleApiAction($action, $databaseBaseDir, $pidsDir, $nextPortFile, $py
 
             $folderName = $input['folder_name'] ?? '';
             $appPyCode = $input['app_py'] ?? '';
+            $indexPhpCode = $input['index_php'] ?? '';
             $indexHtmlCode = $input['index_html'] ?? '';
             $requirementsTxtCode = $input['requirements_txt'] ?? '';
             $installScriptCode = $input['install_sh'] ?? '';
@@ -718,7 +773,6 @@ function handleApiAction($action, $databaseBaseDir, $pidsDir, $nextPortFile, $py
             $guiPyCode = $input['gui_py'] ?? '';
             $sqlmapExamplesCode = $input['sqlmap_examples_txt'] ?? '';
             $notesCode = $input['notes_txt'] ?? '';
-            // NEW: Get screen.txt content
             $screenTxtCode = $input['screen_txt'] ?? '';
 
             if (empty($folderName)) {
@@ -732,21 +786,44 @@ function handleApiAction($action, $databaseBaseDir, $pidsDir, $nextPortFile, $py
             if (!is_dir($folderPath)) {
                 mkdir($folderPath, 0777, true);
             }
-            if (!is_dir($templatesPath)) {
+            if (!empty($indexHtmlCode) && !is_dir($templatesPath)) {
                 mkdir($templatesPath, 0777, true);
             }
 
             $success = true;
             $messages = [];
 
-            if (file_put_contents($folderPath . DIRECTORY_SEPARATOR . 'app.py', $appPyCode) === false) {
-                $success = false;
-                $messages[] = 'Failed to save app.py.';
+            if (!empty($appPyCode)) {
+                if (file_put_contents($folderPath . DIRECTORY_SEPARATOR . 'app.py', $appPyCode) === false) {
+                    $success = false;
+                    $messages[] = 'Failed to save app.py.';
+                }
+            } else {
+                 if (file_exists($folderPath . DIRECTORY_SEPARATOR . 'app.py')) {
+                    unlink($folderPath . DIRECTORY_SEPARATOR . 'app.py');
+                }
             }
 
-            if (file_put_contents($templatesPath . DIRECTORY_SEPARATOR . 'index.html', $indexHtmlCode) === false) {
-                $success = false;
-                $messages[] = 'Failed to save index.html.';
+            if (!empty($indexPhpCode)) {
+                if (file_put_contents($folderPath . DIRECTORY_SEPARATOR . 'index.php', $indexPhpCode) === false) {
+                    $success = false;
+                    $messages[] = 'Failed to save index.php.';
+                }
+            } else {
+                 if (file_exists($folderPath . DIRECTORY_SEPARATOR . 'index.php')) {
+                    unlink($folderPath . DIRECTORY_SEPARATOR . 'index.php');
+                }
+            }
+
+            if (!empty($indexHtmlCode)) {
+                if (file_put_contents($templatesPath . DIRECTORY_SEPARATOR . 'index.html', $indexHtmlCode) === false) {
+                    $success = false;
+                    $messages[] = 'Failed to save index.html.';
+                }
+            } else {
+                 if (file_exists($templatesPath . DIRECTORY_SEPARATOR . 'index.html')) {
+                    unlink($templatesPath . DIRECTORY_SEPARATOR . 'index.html');
+                }
             }
 
             if (!empty($requirementsTxtCode)) {
@@ -823,7 +900,6 @@ function handleApiAction($action, $databaseBaseDir, $pidsDir, $nextPortFile, $py
                 }
             }
 
-            // NEW: Save screen.txt content
             $screenFilePath = $folderPath . DIRECTORY_SEPARATOR . SCREEN_FILE_NAME;
             if (!empty($screenTxtCode)) {
                 if (file_put_contents($screenFilePath, $screenTxtCode) === false) {
@@ -1053,7 +1129,6 @@ function handleApiAction($action, $databaseBaseDir, $pidsDir, $nextPortFile, $py
             echo json_encode(['status' => 'success', 'message' => 'notes.txt saved successfully.']);
             break;
 
-        // NEW: API endpoint to get screen.txt content
         case 'get_screen_content':
             $folderName = $_GET['folder_name'] ?? '';
             $screenFilePath = $databaseBaseDir . DIRECTORY_SEPARATOR . $folderName . DIRECTORY_SEPARATOR . SCREEN_FILE_NAME;
@@ -1067,7 +1142,6 @@ function handleApiAction($action, $databaseBaseDir, $pidsDir, $nextPortFile, $py
             echo json_encode(['status' => 'success', 'content' => $content]);
             break;
 
-        // NEW: API endpoint to save screen.txt content
         case 'save_screen_content':
             $input = json_decode(file_get_contents('php://input'), true);
             $folderName = $input['folder_name'] ?? '';
@@ -1094,9 +1168,6 @@ function handleApiAction($action, $databaseBaseDir, $pidsDir, $nextPortFile, $py
             break;
 
         default:
-            // No action specified, or invalid action, let index.php render the HTML
-            // This case is now handled by the initial check in index.php
             break;
     }
 }
-

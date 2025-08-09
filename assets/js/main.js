@@ -5,6 +5,8 @@ const settingsBtn = document.getElementById('settingsBtn');
 const stopAllAppsBtn = document.getElementById('stopAllAppsBtn');
 const createProjectBtn = document.getElementById('createProjectBtn');
 const mainContent = document.getElementById('mainContent');
+// NEW: Edit URL button element
+const editUrlBtn = document.getElementById('editUrlBtn');
 
 // Global state variables, initialized from PHP in index.php
 let allFolders = [];
@@ -100,6 +102,7 @@ function createFolderCard(folder) {
 
     card.prepend(borderLightEffect);
 
+    // Initial inner HTML with all icons and placeholders
     card.innerHTML += `
         <div class="card-overlay">
             <i class="fas fa-image upload-icon" data-folder="${folder.name}" title="Upload Cover Image"></i>
@@ -114,7 +117,7 @@ function createFolderCard(folder) {
             <i class="fas fa-sticky-note notes-icon" data-folder="${folder.name}" title="Edit Notes"></i>
             ${folder.has_screen_file ? `<i class="fas fa-expand screen-icon" data-folder="${folder.name}" title="Edit Screen Resolution"></i>` : ''}
             <div class="folder-name">${folder.name}</div>
-            <div class="app-type">${folder.type.toUpperCase()}</div>
+            <div class="app-type"></div>
             ${folder.has_category_file && folder.category_text ? `<div class="category-display">${folder.category_text}</div>` : ''}
             <div class="tags-display"></div>
             <div class="status-indicator"></div>
@@ -138,25 +141,33 @@ function updateFolderCardContent(cardElement, folder) {
     const tagsDisplay = cardElement.querySelector('.tags-display');
     const fullUrlDisplay = cardElement.querySelector('.full-url-display');
     const buttonsContainer = cardElement.querySelector('.card-buttons');
-    const downloadIcon = cardElement.querySelector('.download-icon');
-    const installScriptIcon = cardElement.querySelector('.install-script-icon');
-    const uploadIcon = cardElement.querySelector('.upload-icon');
-    const editIcon = cardElement.querySelector('.edit-icon');
-    const deleteIcon = cardElement.querySelector('.delete-icon');
-    const guiIcon = cardElement.querySelector('.gui-icon');
-    const terminalIcon = cardElement.querySelector('.terminal-icon');
-    const explorerIcon = cardElement.querySelector('.explorer-icon');
-    const examplesIcon = cardElement.querySelector('.examples-icon');
-    const notesIcon = cardElement.querySelector('.notes-icon');
-    const screenIcon = cardElement.querySelector('.screen-icon'); // Get screen icon
+    const appTypeDisplay = cardElement.querySelector('.app-type');
 
-    const statusClass = folder.is_running ? 'status-running' : 'status-stopped';
-    const statusText = folder.is_running ? 'Running' : 'Stopped';
-    statusIndicator.className = `status-indicator ${statusClass}`;
-    statusIndicator.textContent = statusText;
+    // Update the app type based on what files exist
+    let appType = '';
+    if (folder.has_python_app && folder.has_php_app) {
+        appType = 'PYTHON & PHP';
+    } else if (folder.has_python_app) {
+        appType = 'PYTHON';
+    } else if (folder.has_php_app) {
+        appType = 'PHP';
+    }
+    appTypeDisplay.textContent = appType;
 
-    portDisplay.textContent = folder.port ? `Port: ${folder.port}` : '';
-    portDisplay.style.display = (folder.type === 'python' && folder.port) ? 'block' : 'none';
+
+    // Update status and port for Python apps
+    if (folder.has_python_app) {
+        const statusClass = folder.is_running ? 'status-running' : 'status-stopped';
+        const statusText = folder.is_running ? 'Running' : 'Stopped';
+        statusIndicator.className = `status-indicator ${statusClass}`;
+        statusIndicator.textContent = statusText;
+        portDisplay.textContent = folder.port ? `Port: ${folder.port}` : '';
+        portDisplay.style.display = (folder.port) ? 'block' : 'none';
+    } else {
+        statusIndicator.style.display = 'none';
+        portDisplay.style.display = 'none';
+    }
+
 
     if (categoryDisplay) {
         categoryDisplay.textContent = folder.category_text || '';
@@ -180,27 +191,9 @@ function updateFolderCardContent(cardElement, folder) {
     buttonsContainer.innerHTML = '';
     fullUrlDisplay.innerHTML = '';
 
-    let urlToUseForOpen = '';
-    if (folder.type === 'python') {
-        if (folder.is_running && folder.full_url) {
-            urlToUseForOpen = folder.full_url;
-            if (showFullUrlGlobally) {
-                fullUrlDisplay.textContent = urlToUseForOpen;
-                fullUrlDisplay.style.display = 'block';
-                fullUrlDisplay.onclick = () => handleOpenUrl(urlToUseForOpen, folder.name, folder.type, folder.screen_resolution ? parseInt(folder.screen_resolution.split('x')[0], 10) : null, folder.screen_resolution ? parseInt(folder.screen_resolution.split('x')[1], 10) : null);
-            } else {
-                fullUrlDisplay.style.display = 'none';
-            }
-        } else {
-            urlToUseForOpen = '';
-            fullUrlDisplay.style.display = 'none';
-        }
-    } else if (folder.type === 'php') {
-        urlToUseForOpen = folder.full_url;
-        fullUrlDisplay.style.display = 'none';
-    }
 
-    if (folder.type === 'python') {
+    // Add buttons based on what files are present
+    if (folder.has_python_app) {
         const startBtn = document.createElement('button');
         startBtn.className = 'btn btn-start';
         startBtn.textContent = 'Start';
@@ -215,22 +208,45 @@ function updateFolderCardContent(cardElement, folder) {
         stopBtn.onclick = () => stopApp(folder.name);
         buttonsContainer.appendChild(stopBtn);
 
-        if (folder.is_running && urlToUseForOpen && !showFullUrlGlobally) {
-            const openUrlBtn = document.createElement('button');
-            openUrlBtn.className = 'btn btn-open-url';
-            openUrlBtn.textContent = 'Open URL';
-            // Pass resolution to handleOpenUrl when opening via button
-            openUrlBtn.onclick = () => handleOpenUrl(urlToUseForOpen, folder.name, folder.type, folder.screen_resolution ? parseInt(folder.screen_resolution.split('x')[0], 10) : null, folder.screen_resolution ? parseInt(folder.screen_resolution.split('x')[1], 10) : null);
-            buttonsContainer.appendChild(openUrlBtn);
+        if (folder.is_running && folder.full_url) {
+            const openPythonUrlBtn = document.createElement('button');
+            openPythonUrlBtn.className = 'btn btn-open-url';
+            openPythonUrlBtn.textContent = 'Open App';
+            openPythonUrlBtn.onclick = () => handleOpenUrl(folder.full_url, folder.name, 'python', folder.screen_resolution ? parseInt(folder.screen_resolution.split('x')[0], 10) : null, folder.screen_resolution ? parseInt(folder.screen_resolution.split('x')[1], 10) : null);
+            buttonsContainer.appendChild(openPythonUrlBtn);
         }
-    } else if (folder.type === 'php') {
-        const openUrlBtn = document.createElement('button');
-        openUrlBtn.className = 'btn btn-open-url';
-        openUrlBtn.textContent = 'Open URL';
-        // Pass resolution to handleOpenUrl when opening via button
-        openUrlBtn.onclick = () => handleOpenUrl(urlToUseForOpen, folder.name, folder.type, folder.screen_resolution ? parseInt(folder.screen_resolution.split('x')[0], 10) : null, folder.screen_resolution ? parseInt(folder.screen_resolution.split('x')[1], 10) : null);
-        buttonsContainer.appendChild(openUrlBtn);
     }
+
+    if (folder.has_php_app) {
+        const openPhpUrlBtn = document.createElement('button');
+        openPhpUrlBtn.className = 'btn btn-web';
+        openPhpUrlBtn.textContent = 'Web';
+        openPhpUrlBtn.onclick = () => handleOpenUrl(folder.php_url, folder.name + ' (Web)', 'php', folder.screen_resolution ? parseInt(folder.screen_resolution.split('x')[0], 10) : null, folder.screen_resolution ? parseInt(folder.screen_resolution.split('x')[1], 10) : null);
+        buttonsContainer.appendChild(openPhpUrlBtn);
+    }
+
+    // Handle full URL display for Python apps when enabled
+    if (folder.has_python_app && showFullUrlGlobally && folder.is_running && folder.full_url) {
+        fullUrlDisplay.textContent = folder.full_url;
+        fullUrlDisplay.style.display = 'block';
+        fullUrlDisplay.onclick = () => handleOpenUrl(folder.full_url, folder.name, 'python', folder.screen_resolution ? parseInt(folder.screen_resolution.split('x')[0], 10) : null, folder.screen_resolution ? parseInt(folder.screen_resolution.split('x')[1], 10) : null);
+    } else {
+        fullUrlDisplay.style.display = 'none';
+    }
+
+
+    // Icons logic (remains the same)
+    const downloadIcon = cardElement.querySelector('.download-icon');
+    const installScriptIcon = cardElement.querySelector('.install-script-icon');
+    const uploadIcon = cardElement.querySelector('.upload-icon');
+    const editIcon = cardElement.querySelector('.edit-icon');
+    const deleteIcon = cardElement.querySelector('.delete-icon');
+    const guiIcon = cardElement.querySelector('.gui-icon');
+    const terminalIcon = cardElement.querySelector('.terminal-icon');
+    const explorerIcon = cardElement.querySelector('.explorer-icon');
+    const examplesIcon = cardElement.querySelector('.examples-icon');
+    const notesIcon = cardElement.querySelector('.notes-icon');
+    const screenIcon = cardElement.querySelector('.screen-icon');
 
     if (downloadIcon) {
         downloadIcon.style.display = folder.has_requirements_file ? 'block' : 'none';
@@ -299,12 +315,11 @@ function updateFolderCardContent(cardElement, folder) {
             openNotesModal(folder.name);
         };
     }
-    // Screen icon logic: now opens the edit modal
     if (screenIcon) {
         screenIcon.style.display = folder.has_screen_file ? 'block' : 'none';
         screenIcon.onclick = (event) => {
             event.stopPropagation();
-            openScreenModal(folder.name); // Open the screen.txt edit modal
+            openScreenModal(folder.name);
         };
     }
 }
@@ -394,11 +409,7 @@ async function startApp(folderName, buttonElement) {
         const result = await response.json();
         if (response.ok) {
             showMessage(result.message);
-            const folderCard = renderedCards.get(folderName);
-            if (folderCard) {
-                const updatedFolder = { ...allFolders.find(f => f.name === folderName), is_running: true, port: result.url ? result.url.split(':').pop() : null, full_url: result.full_url };
-                updateFolderCardContent(folderCard, updatedFolder);
-            }
+            // Re-fetch to update the card with the new running state and URL
             fetchAndDisplayFolders();
         } else {
             showMessage(result.message, 'error');
@@ -407,7 +418,7 @@ async function startApp(folderName, buttonElement) {
         console.error('Error starting app:', error);
         showMessage('An error occurred while trying to start the app.', 'error');
     } finally {
-        // Button state will be updated by fetchAndDisplayFolders
+        // Button state will be updated by the fetchAndDisplayFolders polling
     }
 }
 
@@ -425,11 +436,7 @@ async function stopApp(folderName) {
         const result = await response.json();
         if (response.ok) {
             showMessage(result.message);
-            const folderCard = renderedCards.get(folderName);
-            if (folderCard) {
-                const updatedFolder = { ...allFolders.find(f => f.name === folderName), is_running: false, port: null, full_url: '' };
-                updateFolderCardContent(folderCard, updatedFolder);
-            }
+            // Re-fetch to update the card with the new stopped state
             fetchAndDisplayFolders();
         } else {
             showMessage(result.message, 'error');
@@ -654,7 +661,6 @@ function openScreenWithResolution(url, title, folderType, width = null, height =
     handleOpenUrl(url, title, folderType, width, height);
 }
 
-
 // Event Listeners for main elements
 searchInput.addEventListener('input', (event) => {
     currentSearchTerm = event.target.value;
@@ -663,6 +669,18 @@ searchInput.addEventListener('input', (event) => {
 
 stopAllAppsBtn.addEventListener('click', stopAllApps);
 createProjectBtn.addEventListener('click', openCreateProjectModal);
+// NEW: Event listener for the "Edit URL" button
+editUrlBtn.addEventListener('click', () => {
+    window.open('edit_base_url.php', '_blank');
+});
+
+// Listen for messages from child iframes (like edit_base_url.php)
+window.addEventListener('message', (event) => {
+    if (event.data.type === 'reloadLauncher') {
+        fetchAndDisplayFolders();
+        showMessage('Launcher has been refreshed to apply URL changes.');
+    }
+});
 
 // Initial fetch and polling for updates
 document.addEventListener('DOMContentLoaded', fetchSettings);

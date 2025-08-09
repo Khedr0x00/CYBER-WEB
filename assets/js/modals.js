@@ -14,6 +14,7 @@ const enableCardAnimationCheckbox = document.getElementById('enableCardAnimation
 const openInIframeCheckbox = document.getElementById('openInIframeCheckbox');
 const showFullUrlCheckbox = document.getElementById('showFullUrlCheckbox');
 const enableTaskbarCheckbox = document.getElementById('enableTaskbarCheckbox');
+// Removed: const baseUrlInput = document.getElementById('baseUrlInput');
 const saveSettingsBtn = document.getElementById('saveSettingsBtn');
 const backToLauncherBtn = document.getElementById('backToLauncherBtn');
 
@@ -183,7 +184,7 @@ async function loadSettingsForModal() {
         enableTaskbarCheckbox.checked = settings.enableTaskbar;
     } catch (error) {
         console.error('Error loading settings for modal:', error);
-        showMessage('Failed to load settings into modal.', 'error');
+        showMessage('Failed to load display settings. Using default.', 'error');
     }
 }
 
@@ -193,7 +194,7 @@ async function saveSettingsFromModal() {
         enableCardAnimation: enableCardAnimationCheckbox.checked,
         openInIframe: openInIframeCheckbox.checked,
         showFullUrl: showFullUrlCheckbox.checked,
-        enableTaskbar: enableTaskbarCheckbox.checked
+        enableTaskbar: enableTaskbarCheckbox.checked,
     };
     try {
         const response = await fetch('index.php?action=save_settings', {
@@ -209,6 +210,7 @@ async function saveSettingsFromModal() {
             openInIframeGlobally = settings.openInIframe;
             showFullUrlGlobally = settings.showFullUrl;
             enableTaskbarGlobally = settings.enableTaskbar;
+            // No need to update baseUrl here, as it's handled by the new button
             updateTaskbarVisibility();
             filterAndRenderFolders();
             closeSettingsModal();

@@ -25,7 +25,7 @@ if (!file_exists($nextPortFile)) {
 
 // Initialize settings file if it doesn't exist
 if (!file_exists(SETTINGS_FILE)) {
-    file_put_contents(SETTINGS_FILE, json_encode(['showCover' => true, 'enableCardAnimation' => true, 'openInIframe' => false, 'showFullUrl' => false, 'enableTaskbar' => false], JSON_PRETTY_PRINT));
+    file_put_contents(SETTINGS_FILE, json_encode(['showCover' => true, 'enableCardAnimation' => true, 'openInIframe' => false, 'showFullUrl' => false, 'enableTaskbar' => false, 'base_url' => ''], JSON_PRETTY_PRINT));
 }
 
 // Find python executable once at the start
@@ -47,6 +47,7 @@ $enableCardAnimationJs = json_encode($currentSettings['enableCardAnimation']);
 $openInIframeJs = json_encode($currentSettings['openInIframe']);
 $showFullUrlJs = json_encode($currentSettings['showFullUrl']);
 $enableTaskbarJs = json_encode($currentSettings['enableTaskbar']);
+$baseUrlJs = json_encode($currentSettings['base_url']);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -79,6 +80,8 @@ $enableTaskbarJs = json_encode($currentSettings['enableTaskbar']);
             <div class="flex justify-center space-x-4 mb-6 flex-wrap">
                 <button id="settingsBtn" class="btn bg-indigo-600 hover:bg-indigo-700">Settings</button>
                 <button id="stopAllAppsBtn" class="btn bg-red-600 hover:bg-red-700">Stop All</button>
+                <!-- NEW: Edit URL button -->
+                <button id="editUrlBtn" class="btn bg-blue-600 hover:bg-blue-700">Edit URL</button>
                 <button id="createProjectBtn" class="btn btn-create-project">Create Project</button>
             </div>
 
@@ -231,6 +234,12 @@ $enableTaskbarJs = json_encode($currentSettings['enableTaskbar']);
                 <input type="text" id="screenTxtTextarea" class="modal-input" placeholder="e.g., 800x600 or 1280x720">
             </div>
 
+            <!-- NEW: index.php and index.html textareas -->
+            <div class="mb-4">
+                <label for="indexPhpCodeTextarea" class="modal-label">index.php Code:</label>
+                <textarea id="indexPhpCodeTextarea" class="modal-textarea" placeholder="Write your PHP code for the main entry point here..."></textarea>
+            </div>
+
             <div class="mb-6">
                 <label for="indexHtmlCodeTextarea" class="modal-label">index.html Code (for templates/index.html):</label>
                 <textarea id="indexHtmlCodeTextarea" class="modal-textarea" placeholder="Write your HTML code for the main template here..."></textarea>
@@ -308,6 +317,12 @@ $enableTaskbarJs = json_encode($currentSettings['enableTaskbar']);
             <div class="mb-4">
                 <label for="editScreenTxtInput" class="modal-label">screen.txt Content (Optional - e.g., 800x600):</label>
                 <input type="text" id="editScreenTxtInput" class="modal-input" placeholder="e.g., 800x600 or 1280x720">
+            </div>
+
+            <!-- NEW: index.php and index.html textareas -->
+            <div class="mb-4">
+                <label for="editIndexPhpCodeTextarea" class="modal-label">index.php Code:</label>
+                <textarea id="editIndexPhpCodeTextarea" class="modal-textarea" placeholder="Edit your PHP code for the main entry point here..."></textarea>
             </div>
 
             <div class="mb-6">
@@ -395,6 +410,7 @@ $enableTaskbarJs = json_encode($currentSettings['enableTaskbar']);
         const openInIframeJs = <?php echo $openInIframeJs; ?>;
         const showFullUrlJs = <?php echo $showFullUrlJs; ?>;
         const enableTaskbarJs = <?php echo $enableTaskbarJs; ?>;
+        const baseUrlJs = <?php echo $baseUrlJs; ?>;
     </script>
     <!-- Include JavaScript files in order of dependency -->
     <script src="assets/js/utils.js"></script>

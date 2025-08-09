@@ -241,6 +241,14 @@ h1, h2, p {
     cursor: not-allowed;
     box-shadow: none;
 }
+.btn-web {
+    background-color: #3b82f6; /* Blue 500 */
+    border-color: #2563eb; /* Blue 600 */
+}
+.btn-web:hover {
+    background-color: #2563eb; /* Blue 600 */
+}
+
 .search-input {
     width: 100%;
     padding: 0.75rem 1rem;
